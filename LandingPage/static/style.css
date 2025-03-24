@@ -16,9 +16,14 @@ h1 {
     -webkit-text-fill-color: transparent;
 }
   
-i{
-    font-size: 100px;
+.container {
+    display: flex;
+    justify-content: space-between;
+    
+  }
+  
+.icon {
+    margin-left: auto;
     color: black;
-    display: inline-block;
-    visibility: visible;
-}
+  }
+
