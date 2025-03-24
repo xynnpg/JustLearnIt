@@ -34,7 +34,70 @@ h1 {
     border-radius: 50px;
     background: #e0e0e0;
     box-shadow: 20px 20px 60px #bebebe,
-                  -20px -20px 60px #ffffff;
+                -20px -20px 60px #ffffff;
     align-self: center;
     margin-bottom: 100px;
-   }
+    font-family: 'Charming', sans-serif;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 50px;
+}
+
+.card2 {
+    width: 700px;
+    height: 400px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2); /* Gradient subtil */
+    box-shadow: 20px 20px 60px #bebebe,
+                -20px -20px 60px #ffffff;
+    font-family: 'Charming', sans-serif;
+    padding: 40px;
+    transition: transform 0.3s ease; /* Animație la hover */
+}
+
+.card2:hover {
+    transform: scale(1.02); /* Mică mărire la hover */
+}
+
+/* Stiluri pentru text */
+h2 {
+    font-family: 'Charming', sans-serif;
+    font-size: 40px;
+    background: linear-gradient(to right, #ff6b6b, #4ecdc4); /* Gradient colorat */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; /* Textul urmează gradientul */
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: bold;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Umbră mai pronunțată */
+    transition: transform 0.3s ease;
+}
+
+h2:hover {
+    transform: translateY(-5px); /* Mică ridicare la hover */
+}
+
+h3 {
+    font-family: 'Charming', sans-serif;
+    font-size: 22px;
+    color: #2d3436; /* Gri închis elegant */
+    line-height: 1.8;
+    text-align: justify;
+}
+
+.highlight {
+    background: #ffeaa7; /* Galben deschis pentru evidențiere */
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: #d63031; /* Roșu pentru contrast */
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.highlight:hover {
+    background: #fab1a0; /* Schimbare culoare la hover */
+}
+
+
