@@ -1,7 +1,7 @@
 :root {
     --primColor: rgba(255, 255, 255, 0.9);
     --secoColor: #ff4e50;
-    --cornerRad: 50px;
+    --cornerRad: 20px;
 }
 
 body {
@@ -14,7 +14,7 @@ body {
 
 @font-face {
     font-family: 'Charming';
-    src: url(fonts/charming.ttf);
+    src: url(fonts/font.ttf);
 }
 
 h1 {
