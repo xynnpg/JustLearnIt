@@ -1,49 +1,289 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio - Tests</title>
-    <link rel="stylesheet" href="{{ url_for('studio.static', filename='style.css') }}">
-</head>
-<body>
-    <div class="studio-container">
-        <h1>Studio - Tests</h1>
-        <div class="subject-switcher">
+{% extends "studio.html" %}
+
+{% block studio_content %}
+<div class="test-creator">
+    <h2>{% if test %}Edit Test{% else %}Create New Test{% endif %}</h2>
+    
+    <div class="subject-selector">
+        <select id="subject-select" class="form-control">
             {% for subj in subjects %}
-                <a href="{{ url_for('studio.tests', subject=subj) }}" class="subject-btn {{ 'active' if subj == subject else '' }}">{{ subj }}</a>
+                <option value="{{ subj }}" {% if subj == subject %}selected{% endif %}>{{ subj }}</option>
             {% endfor %}
-        </div>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2>Add New Test</h2>
-        <form method="POST" class="studio-form">
-            <div class="form-group">
-                <label for="test_title">Test Title</label>
-                <input type="text" id="test_title" name="test_title" required>
-            </div>
-            <div class="form-group">
-                <label for="test_content">Test Content</label>
-                <textarea id="test_content" name="test_content" rows="10" required></textarea>
-            </div>
-            <button type="submit">Save Test</button>
-        </form>
-
-        <h2>Existing Tests</h2>
-        <ul class="lesson-list">
-            {% for test in tests %}
-                <li>{{ test }}</li>
-            {% endfor %}
-        </ul>
-
-        <a href="{{ url_for('studio.lessons', subject=subject) }}" class="switch-btn">Switch to Lessons</a>
-        <a href="{{ url_for('landing.index') }}" class="back-btn">Back to Home</a>
+        </select>
     </div>
-</body>
-</html>
+
+    <div class="form-group">
+        <label for="test-title">Test Title</label>
+        <input type="text" id="test-title" class="form-control" value="{{ test.title if test else '' }}">
+    </div>
+
+    <div id="questions-container">
+        <!-- Questions will be added here -->
+    </div>
+
+    <div class="question-actions">
+        <button id="add-question" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Question
+        </button>
+    </div>
+
+    <div class="form-actions">
+        <button id="save-test" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Test
+        </button>
+        <a href="{{ url_for('studio.tests') }}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+    </div>
+</div>
+
+<script>
+    // Question templates
+    const questionTemplates = {
+        multiple_choice: `
+            <div class="question-card">
+                <div class="question-header">
+                    <select class="question-type">
+                        <option value="multiple_choice" selected>Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="short_answer">Short Answer</option>
+                        <option value="essay">Essay</option>
+                    </select>
+                    <button class="remove-question-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea class="question-text form-control" rows="2"></textarea>
+                </div>
+                <div class="options-container">
+                    <div class="option-item">
+                        <input type="radio" name="correct-option" checked>
+                        <input type="text" class="form-control option-text" placeholder="Option 1">
+                        <button class="remove-option-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="option-item">
+                        <input type="radio" name="correct-option">
+                        <input type="text" class="form-control option-text" placeholder="Option 2">
+                        <button class="remove-option-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <button class="add-option-btn btn btn-sm btn-secondary">
+                    <i class="fas fa-plus"></i> Add Option
+                </button>
+            </div>
+        `,
+        true_false: `
+            <div class="question-card">
+                <div class="question-header">
+                    <select class="question-type">
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false" selected>True/False</option>
+                        <option value="short_answer">Short Answer</option>
+                        <option value="essay">Essay</option>
+                    </select>
+                    <button class="remove-question-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea class="question-text form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Correct Answer</label>
+                    <select class="correct-answer form-control">
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                    </select>
+                </div>
+            </div>
+        `,
+        short_answer: `
+            <div class="question-card">
+                <div class="question-header">
+                    <select class="question-type">
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="short_answer" selected>Short Answer</option>
+                        <option value="essay">Essay</option>
+                    </select>
+                    <button class="remove-question-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea class="question-text form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Correct Answer</label>
+                    <input type="text" class="correct-answer form-control">
+                </div>
+            </div>
+        `,
+        essay: `
+            <div class="question-card">
+                <div class="question-header">
+                    <select class="question-type">
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="short_answer">Short Answer</option>
+                        <option value="essay" selected>Essay</option>
+                    </select>
+                    <button class="remove-question-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea class="question-text form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Sample Answer</label>
+                    <textarea class="sample-answer form-control" rows="4"></textarea>
+                </div>
+            </div>
+        `
+    };
+
+    // Initialize the test creator
+    $(document).ready(function() {
+        $('#subject-select').select2();
+        
+        // Add question button click handler
+        $('#add-question').click(function() {
+            addQuestion('multiple_choice');
+        });
+        
+        // Load existing test if editing
+        {% if test %}
+        loadTest({{ test|tojson|safe }});
+        {% endif %}
+    });
+
+    function addQuestion(type) {
+        const $question = $(questionTemplates[type]);
+        $('#questions-container').append($question);
+        
+        // Set up event handlers for this question
+        $question.find('.question-type').change(function() {
+            const newType = $(this).val();
+            const $card = $(this).closest('.question-card');
+            $card.replaceWith($(questionTemplates[newType]));
+        });
+        
+        $question.find('.remove-question-btn').click(function() {
+            $(this).closest('.question-card').remove();
+        });
+        
+        $question.find('.add-option-btn').click(function() {
+            const $optionsContainer = $(this).prev('.options-container');
+            const $newOption = $(`
+                <div class="option-item">
+                    <input type="radio" name="correct-option">
+                    <input type="text" class="form-control option-text" placeholder="New option">
+                    <button class="remove-option-btn"><i class="fas fa-times"></i></button>
+                </div>
+            `);
+            $optionsContainer.append($newOption);
+            $newOption.find('.remove-option-btn').click(function() {
+                $(this).closest('.option-item').remove();
+            });
+        });
+        
+        $question.find('.remove-option-btn').click(function() {
+            $(this).closest('.option-item').remove();
+        });
+    }
+
+    function loadTest(testData) {
+        $('#test-title').val(testData.title);
+        
+        testData.questions.forEach(question => {
+            addQuestion(question.type);
+            const $lastQuestion = $('#questions-container .question-card').last();
+            
+            $lastQuestion.find('.question-text').val(question.text);
+            
+            if (question.type === 'multiple_choice') {
+                const $optionsContainer = $lastQuestion.find('.options-container');
+                $optionsContainer.empty();
+                
+                question.options.forEach((option, index) => {
+                    const $option = $(`
+                        <div class="option-item">
+                            <input type="radio" name="correct-option" ${index === question.correctIndex ? 'checked' : ''}>
+                            <input type="text" class="form-control option-text" value="${option}">
+                            <button class="remove-option-btn"><i class="fas fa-times"></i></button>
+                        </div>
+                    `);
+                    $optionsContainer.append($option);
+                });
+            } else if (question.type === 'true_false') {
+                $lastQuestion.find('.correct-answer').val(question.correctAnswer);
+            } else if (question.type === 'short_answer') {
+                $lastQuestion.find('.correct-answer').val(question.correctAnswer);
+            } else if (question.type === 'essay') {
+                $lastQuestion.find('.sample-answer').val(question.sampleAnswer);
+            }
+        });
+    }
+
+    $('#save-test').click(function() {
+        const title = $('#test-title').val();
+        const subject = $('#subject-select').val();
+        const questions = [];
+        
+        if (!title) {
+            alert('Please enter a test title');
+            return;
+        }
+        
+        $('.question-card').each(function() {
+            const type = $(this).find('.question-type').val();
+            const text = $(this).find('.question-text').val();
+            const question = { type, text };
+            
+            if (type === 'multiple_choice') {
+                question.options = [];
+                $(this).find('.option-item').each(function(index) {
+                    const optionText = $(this).find('.option-text').val();
+                    question.options.push(optionText);
+                    
+                    if ($(this).find('input[type="radio"]').is(':checked')) {
+                        question.correctIndex = index;
+                    }
+                });
+            } else if (type === 'true_false') {
+                question.correctAnswer = $(this).find('.correct-answer').val();
+            } else if (type === 'short_answer') {
+                question.correctAnswer = $(this).find('.correct-answer').val();
+            } else if (type === 'essay') {
+                question.sampleAnswer = $(this).find('.sample-answer').val();
+            }
+            
+            questions.push(question);
+        });
+        
+        if (questions.length === 0) {
+            alert('Please add at least one question');
+            return;
+        }
+        
+        // Send data to server
+        fetch("{{ url_for('studio.tests') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                questions: questions,
+                subject: subject
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{{ url_for('studio.tests') }}?subject=" + subject;
+            } else {
+                alert('Error saving test: ' + data.message);
+            }
+        });
+    });
+</script>
+{% endblock %}

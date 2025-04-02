@@ -3,23 +3,63 @@
 {% block title %}Professor Studio - JustLearnIt{% endblock %}
 
 {% block content %}
-    <h2>Welcome to Your Studio, {{ user.name or 'Professor' }}!</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <div class="info">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Subject:</strong> {{ user.subject }}</p>
-        <p>This is your personal studio where you can manage your teaching resources and create content for your students.</p>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+
+<div class="studio-container">
+    <div class="studio-header">
+        <h1><i class="fas fa-chalkboard-teacher"></i> Professor Studio</h1>
+        <div class="user-info">
+            <span class="badge">{{ user.subject }}</span>
+            <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar">
+        </div>
     </div>
-    
-    <div class="actions">
-        <p><a href="{{ url_for('account.account') }}">Back to Account</a></p>
-        <p><a href="{{ url_for('login.logout') }}">Logout</a></p>
+
+    <div class="studio-nav">
+        <a href="{{ url_for('studio.studio') }}" class="nav-btn {% if request.endpoint == 'studio.studio' %}active{% endif %}">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="{{ url_for('studio.lessons') }}" class="nav-btn {% if request.endpoint == 'studio.lessons' %}active{% endif %}">
+            <i class="fas fa-book-open"></i> Lessons
+        </a>
+        <a href="{{ url_for('studio.tests') }}" class="nav-btn {% if request.endpoint == 'studio.tests' %}active{% endif %}">
+            <i class="fas fa-question-circle"></i> Tests
+        </a>
+        <a href="{{ url_for('account.account') }}" class="nav-btn">
+            <i class="fas fa-user-cog"></i> Account
+        </a>
     </div>
+
+    <div class="content-area">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block studio_content %}
+        <div class="welcome-message">
+            <h2>Welcome, {{ user.name }}!</h2>
+            <p>Create engaging lessons and interactive tests for your students.</p>
+
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <h3><i class="fas fa-book"></i> Lessons</h3>
+                    <p>{{ lesson_count }} created</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-question"></i> Tests</h3>
+                    <p>{{ test_count }} created</p>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 {% endblock %}

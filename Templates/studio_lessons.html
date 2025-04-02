@@ -1,49 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio - Lessons</title>
-    <link rel="stylesheet" href="{{ url_for('studio.static', filename='style.css') }}">
-</head>
-<body>
-    <div class="studio-container">
-        <h1>Studio - Lessons</h1>
-        <div class="subject-switcher">
+{% extends "studio.html" %}
+
+{% block studio_content %}
+<div class="lesson-editor">
+    <h2>{% if lesson %}Edit Lesson{% else %}Create New Lesson{% endif %}</h2>
+    
+    <div class="subject-selector">
+        <select id="subject-select" class="form-control">
             {% for subj in subjects %}
-                <a href="{{ url_for('studio.lessons', subject=subj) }}" class="subject-btn {{ 'active' if subj == subject else '' }}">{{ subj }}</a>
+                <option value="{{ subj }}" {% if subj == subject %}selected{% endif %}>{{ subj }}</option>
             {% endfor %}
-        </div>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2>Add New Lesson</h2>
-        <form method="POST" class="studio-form">
-            <div class="form-group">
-                <label for="lesson_title">Lesson Title</label>
-                <input type="text" id="lesson_title" name="lesson_title" required>
-            </div>
-            <div class="form-group">
-                <label for="lesson_content">Lesson Content</label>
-                <textarea id="lesson_content" name="lesson_content" rows="10" required></textarea>
-            </div>
-            <button type="submit">Save Lesson</button>
-        </form>
-
-        <h2>Existing Lessons</h2>
-        <ul class="lesson-list">
-            {% for lesson in lessons %}
-                <li>{{ lesson }} <a href="{{ url_for('studio.edit_lesson', subject=subject, lesson=lesson) }}" class="edit-btn">Edit</a></li>
-            {% endfor %}
-        </ul>
-
-        <a href="{{ url_for('studio.tests', subject=subject) }}" class="switch-btn">Switch to Tests</a>
-        <a href="{{ url_for('landing.index') }}" class="back-btn">Back to Home</a>
+        </select>
     </div>
-</body>
-</html>
+
+    <div class="form-group">
+        <label for="lesson-title">Lesson Title</label>
+        <input type="text" id="lesson-title" class="form-control" value="{{ lesson.title if lesson else '' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Lesson Content</label>
+        <div id="editor-container">
+            {{ lesson.content if lesson else '' | safe }}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button id="save-lesson" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Lesson
+        </button>
+        <a href="{{ url_for('studio.lessons') }}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+    </div>
+</div>
+
+<script>
+    const quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image', 'video'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Write your lesson content here...'
+    });
+
+    // Load existing content if editing
+    {% if lesson %}
+    quill.root.innerHTML = `{{ lesson.content | safe }}`;
+    {% endif %}
+
+    $('#save-lesson').click(function() {
+        const title = $('#lesson-title').val();
+        const content = quill.root.innerHTML;
+        const subject = $('#subject-select').val();
+        
+        if (!title) {
+            alert('Please enter a lesson title');
+            return;
+        }
+
+        // Send data to server
+        fetch("{{ url_for('studio.lessons') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content,
+                subject: subject
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{{ url_for('studio.lessons') }}?subject=" + subject;
+            } else {
+                alert('Error saving lesson: ' + data.message);
+            }
+        });
+    });
+
+    // Initialize select2
+    $(document).ready(function() {
+        $('#subject-select').select2();
+    });
+</script>
+{% endblock %}

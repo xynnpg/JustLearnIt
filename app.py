@@ -99,7 +99,7 @@ from LoginPage.routes import login_bp
 from ChoosePage.routes import choose_bp
 from AdminPage.routes import admin_bp
 from AccountPage.routes import account_bp
-from StudioPage.routes import studio_bp
+from StudioPage import studio_bp
 
 app.register_blueprint(landing_bp)
 app.register_blueprint(login_bp)
