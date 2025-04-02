@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 import json
 from functools import wraps
-from . import studio_bp  # Import the blueprint from the package
+from . import studio_bp
 
 # Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -18,6 +18,7 @@ for subject in SUBJECTS:
     os.makedirs(os.path.join(LECTII_DIR, subject, 'profesori'), exist_ok=True)
     os.makedirs(os.path.join(TESTE_DIR, subject, 'profesori'), exist_ok=True)
 
+
 def require_professor(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -25,7 +26,9 @@ def require_professor(f):
             flash('You must be an approved professor to access this page.', 'error')
             return redirect(url_for('landing.index'))
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 @studio_bp.route('/')
 @login_required
@@ -45,9 +48,166 @@ def studio():
     except Exception as e:
         flash('Error counting lessons and tests', 'error')
 
-    return render_template('studio.html', 
-                         user=current_user,
-                         lesson_count=lesson_count,
-                         test_count=test_count)
+    return render_template('studio.html',
+                           user=current_user,
+                           lesson_count=lesson_count,
+                           test_count=test_count)
 
-# [Rest of your routes remain the same as in the previous implementation]
+
+@studio_bp.route('/lessons', methods=['GET', 'POST'])
+@login_required
+@require_professor
+def lessons():
+    subject = request.args.get('subject', 'Bio')
+    if subject not in SUBJECTS:
+        subject = 'Bio'
+        flash('Invalid subject selected. Defaulting to Biology.', 'warning')
+
+    lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
+    try:
+        lessons = []
+        if os.path.exists(lessons_dir):
+            for f in os.listdir(lessons_dir):
+                if f.endswith('.html'):
+                    lessons.append({
+                        'title': f.replace('.html', ''),
+                        'path': os.path.join(lessons_dir, f)
+                    })
+    except Exception as e:
+        flash('Error accessing lessons. Please try again.', 'error')
+        lessons = []
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            title = data.get('title')
+            content = data.get('content')
+            subject = data.get('subject', 'Bio')
+
+            if not title or not content:
+                return jsonify({'success': False, 'message': 'Title and content are required'}), 400
+
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
+            os.makedirs(lessons_dir, exist_ok=True)
+
+            file_path = os.path.join(lessons_dir, f"{safe_title}.html")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    return render_template('studio_lessons.html',
+                           user=current_user,
+                           subject=subject,
+                           subjects=SUBJECTS,
+                           lessons=lessons)
+
+
+@studio_bp.route('/lesson/<subject>/<lesson>')
+@login_required
+@require_professor
+def view_lesson(subject, lesson):
+    if subject not in SUBJECTS:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('studio.lessons'))
+
+    file_path = os.path.join(LECTII_DIR, subject, 'profesori', f"{lesson}.html")
+    if not os.path.exists(file_path):
+        flash('Lesson not found', 'error')
+        return redirect(url_for('studio.lessons'))
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    return render_template('view_lesson.html',
+                           user=current_user,
+                           subject=subject,
+                           lesson_title=lesson,
+                           content=content)
+
+
+@studio_bp.route('/tests', methods=['GET', 'POST'])
+@login_required
+@require_professor
+def tests():
+    subject = request.args.get('subject', 'Bio')
+    if subject not in SUBJECTS:
+        subject = 'Bio'
+        flash('Invalid subject selected. Defaulting to Biology.', 'warning')
+
+    tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
+    try:
+        tests = []
+        if os.path.exists(tests_dir):
+            for f in os.listdir(tests_dir):
+                if f.endswith('.json'):
+                    with open(os.path.join(tests_dir, f), 'r', encoding='utf-8') as test_file:
+                        test_data = json.load(test_file)
+                        tests.append({
+                            'title': f.replace('.json', ''),
+                            'question_count': len(test_data.get('questions', [])),
+                            'created_at': test_data.get('created_at', 'Unknown')
+                        })
+    except Exception as e:
+        flash('Error accessing tests. Please try again.', 'error')
+        tests = []
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            title = data.get('title')
+            questions = data.get('questions')
+            subject = data.get('subject', 'Bio')
+
+            if not title:
+                return jsonify({'success': False, 'message': 'Title is required'}), 400
+            if not questions or len(questions) == 0:
+                return jsonify({'success': False, 'message': 'At least one question is required'}), 400
+
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
+            os.makedirs(tests_dir, exist_ok=True)
+
+            file_path = os.path.join(tests_dir, f"{safe_title}.json")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'title': title,
+                    'subject': subject,
+                    'questions': questions,
+                    'created_by': current_user.email,
+                    'created_at': datetime.utcnow().isoformat()
+                }, f, indent=2)
+
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    return render_template('studio_tests.html',
+                           user=current_user,
+                           subject=subject,
+                           subjects=SUBJECTS,
+                           tests=tests)
+
+
+@studio_bp.route('/test/<subject>/<test>')
+@login_required
+@require_professor
+def view_test(subject, test):
+    if subject not in SUBJECTS:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('studio.tests'))
+
+    file_path = os.path.join(TESTE_DIR, subject, 'profesori', f"{test}.json")
+    if not os.path.exists(file_path):
+        flash('Test not found', 'error')
+        return redirect(url_for('studio.tests'))
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        test_data = json.load(f)
+
+    return render_template('view_test.html',
+                           user=current_user,
+                           test=test_data)

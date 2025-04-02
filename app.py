@@ -106,7 +106,7 @@ app.register_blueprint(login_bp)
 app.register_blueprint(choose_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(account_bp)
-app.register_blueprint(studio_bp, url_prefix='/studio')  # Add studio blueprint
+app.register_blueprint(studio_bp, url_prefix='/studio')
 
 from models import User
 

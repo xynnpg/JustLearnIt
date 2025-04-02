@@ -57,7 +57,7 @@
 
             <div class="actions">
                 {% if user.user_type == 'profesor' and user.is_professor_approved %}
-                    <a href="{{ url_for('studio.lessons') }}" class="studio-link">Go to Studio</a>
+                    <a href="{{ url_for('studio.studio') }}" class="studio-link">Go to Studio</a>
                 {% endif %}
                 <a href="{{ url_for('login.logout') }}" class="logout-link">Logout</a>
             </div>
