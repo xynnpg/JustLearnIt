@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio - Lessons</title>
+    <link rel="stylesheet" href="{{ url_for('studio.static', filename='style.css') }}">
+</head>
+<body>
+    <div class="studio-container">
+        <h1>Studio - Lessons</h1>
+        <div class="subject-switcher">
+            {% for subj in subjects %}
+                <a href="{{ url_for('studio.lessons', subject=subj) }}" class="subject-btn {{ 'active' if subj == subject else '' }}">{{ subj }}</a>
+            {% endfor %}
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Add New Lesson</h2>
+        <form method="POST" class="studio-form">
+            <div class="form-group">
+                <label for="lesson_title">Lesson Title</label>
+                <input type="text" id="lesson_title" name="lesson_title" required>
+            </div>
+            <div class="form-group">
+                <label for="lesson_content">Lesson Content</label>
+                <textarea id="lesson_content" name="lesson_content" rows="10" required></textarea>
+            </div>
+            <button type="submit">Save Lesson</button>
+        </form>
+
+        <h2>Existing Lessons</h2>
+        <ul class="lesson-list">
+            {% for lesson in lessons %}
+                <li>{{ lesson }} <a href="{{ url_for('studio.edit_lesson', subject=subject, lesson=lesson) }}" class="edit-btn">Edit</a></li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('studio.tests', subject=subject) }}" class="switch-btn">Switch to Tests</a>
+        <a href="{{ url_for('landing.index') }}" class="back-btn">Back to Home</a>
+    </div>
+</body>
+</html>

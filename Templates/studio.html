@@ -1,0 +1,25 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Professor Studio - JustLearnIt{% endblock %}
+
+{% block content %}
+    <h2>Welcome to Your Studio, {{ user.name or 'Professor' }}!</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="info">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Subject:</strong> {{ user.subject }}</p>
+        <p>This is your personal studio where you can manage your teaching resources and create content for your students.</p>
+    </div>
+    
+    <div class="actions">
+        <p><a href="{{ url_for('account.account') }}">Back to Account</a></p>
+        <p><a href="{{ url_for('login.logout') }}">Logout</a></p>
+    </div>
+{% endblock %}

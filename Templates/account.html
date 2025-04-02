@@ -1,0 +1,65 @@
+{% extends "account_base.html" %}
+
+{% block title %}My Account - JustLearnIt{% endblock %}
+
+{% block content %}
+    <h1>My Account Dashboard</h1>
+    <div class="account-wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="profile-section">
+            <h2>Profile Details</h2>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" value="{{ user.name or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">New Password (optional)</label>
+                    <input type="password" id="password" name="password" placeholder="Enter new password">
+                </div>
+
+                <h3>Change Role</h3>
+                <div class="radio-input">
+                    <label class="label">
+                        <input type="radio" id="elev" name="value-radio" value="elev" {% if user.user_type == 'elev' %}checked{% endif %}>
+                        <p class="text">Student</p>
+                    </label>
+                    <label class="label">
+                        <input type="radio" id="profesor" name="value-radio" value="profesor" {% if user.user_type == 'profesor' %}checked{% endif %}>
+                        <p class="text">Professor</p>
+                    </label>
+                </div>
+
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+
+        <div class="info-section">
+            <h2>Account Information</h2>
+            <p><strong>User Type:</strong> {{ user.user_type|capitalize or 'Not set' }}</p>
+            <p><strong>Subject:</strong> {{ user.subject or 'Not set' }}</p>
+            {% if user.user_type == 'profesor' %}
+                <p><strong>Approval Status:</strong>
+                    {% if user.is_professor_approved %}Approved{% else %}Pending{% endif %}
+                </p>
+            {% endif %}
+            <div class="actions">
+                {% if user.user_type == 'profesor' and user.is_professor_approved %}
+                    <a href="{{ url_for('studio.studio') }}" class="studio-link">Go to Studio</a>
+                {% endif %}
+                <a href="{{ url_for('login.logout') }}" class="logout-link">Logout</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

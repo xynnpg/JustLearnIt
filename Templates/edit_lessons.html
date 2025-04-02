@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Lesson - {{ lesson }}</title>
+    <link rel="stylesheet" href="{{ url_for('studio.static', filename='style.css') }}">
+</head>
+<body>
+    <div class="studio-container">
+        <h1>Edit Lesson - {{ lesson }}</h1>
+        <div class="subject-switcher">
+            {% for subj in subjects %}
+                <a href="{{ url_for('studio.lessons', subject=subj) }}" class="subject-btn {{ 'active' if subj == subject else '' }}">{{ subj }}</a>
+            {% endfor %}
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="studio-form">
+            <div class="form-group">
+                <label for="lesson_content">Lesson Content</label>
+                <textarea id="lesson_content" name="lesson_content" rows="10" required>{{ content }}</textarea>
+            </div>
+            <button type="submit">Update Lesson</button>
+        </form>
+
+        <a href="{{ url_for('studio.lessons', subject=subject) }}" class="back-btn">Back to Lessons</a>
+    </div>
+</body>
+</html>

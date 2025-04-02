@@ -1,0 +1,228 @@
+body {
+    background: linear-gradient(135deg, #74ebd5, #acb6e5, #ff9a8b);
+    min-height: 100vh;
+    margin: 0;
+    padding: 40px;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    font-size: 2.5em;
+    margin-bottom: 30px;
+}
+
+.account-wrapper {
+    display: flex;
+    gap: 40px;
+}
+
+.profile-section, .info-section {
+    flex: 1;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 10px;
+}
+
+h2 {
+    color: #7808d0;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #555;
+    font-size: 1.4em;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin: 20px 0;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+button {
+    background: #7808d0;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 25px;
+    font-size: 1.1em;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #5f06a8;
+}
+
+.flash-message {
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.flash-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.flash-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.info-section p {
+    margin: 15px 0;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.actions {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.actions a {
+    color: #7808d0;
+    text-decoration: none;
+    font-size: 1.1em;
+    margin: 0 20px;
+}
+
+.actions a:hover {
+    text-decoration: underline;
+}
+
+.studio-link {
+    background: #e4941b;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.studio-link:hover {
+    background: #c47a15;
+    text-decoration: none;
+}
+
+/* Radio Button Styles */
+.radio-input {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.radio-input * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+.radio-input label {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0 20px;
+    width: 220px;
+    cursor: pointer;
+    height: 50px;
+    position: relative;
+}
+
+.radio-input label::before {
+    position: absolute;
+    content: "";
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 45px;
+    z-index: -1;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border-radius: 10px;
+    border: 2px solid transparent;
+}
+
+.radio-input label:hover::before {
+    transition: all 0.2s ease;
+    background-color: #3b2400;
+}
+
+.radio-input .label:has(input:checked)::before {
+    background-color: #3b2400;
+    border-color: white;
+    height: 50px;
+}
+
+.radio-input .label .text {
+    color: #000000;
+    font-size: 1.1em;
+}
+
+.radio-input .label input[type="radio"] {
+    background-color: #202030;
+    appearance: none;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.radio-input .label input[type="radio"]:checked {
+    background-color: #e4941b;
+    animation: pulse 0.7s forwards;
+}
+
+.radio-input .label input[type="radio"]::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: all 0.1s cubic-bezier(0.165, 0.84, 0.44, 1);
+    background-color: #fff;
+    transform: scale(0);
+}
+
+.radio-input .label input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}

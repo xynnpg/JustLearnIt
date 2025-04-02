@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - JustLearnIt</title>
+    <link rel="stylesheet" href="{{ url_for('admin.static', filename='style.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Panel</h1>
+        <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">Logout</a>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2>Professors</h2>
+        <table class="user-table">
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Approved</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+            </tr>
+            {% for prof in professors %}
+            <tr>
+                <td>{{ prof.email }}</td>
+                <td>{{ prof.name or 'N/A' }}</td>
+                <td>{{ prof.subject or 'N/A' }}</td>
+                <td>{{ 'Yes' if prof.is_professor_approved else 'No' }}</td>
+                <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M:%S') if prof.last_login else 'Never' }}</td>
+                <td>
+                    {% if not prof.is_professor_approved %}
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="user_id" value="{{ prof.id }}">
+                        <button type="submit" name="action" value="approve" class="action-btn approve">Approve</button>
+                        <button type="submit" name="action" value="decline" class="action-btn decline">Decline</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Students</h2>
+        <table class="user-table">
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Last Login</th>
+            </tr>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.email }}</td>
+                <td>{{ student.name or 'N/A' }}</td>
+                <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M:%S') if student.last_login else 'Never' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

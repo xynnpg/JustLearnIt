@@ -1,0 +1,91 @@
+{% extends "landing_base.html" %}
+
+{% block title %}JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="container">
+    <details>
+        <summary>
+            <i class="fa-regular fa-circle-user fa-3x animate__animated animate__fadeInDown icon"></i>
+        </summary>
+        <nav class="menu">
+            <a href="{{ url_for('landing.index') }}">Home</a>
+            <a href="{{ url_for('account.account') }}">Account</a>
+            {% if show_studio_button %}
+                <a href="{{ url_for('studio.lessons') }}" class="studio-btn">Go to Studio</a>
+            {% endif %}
+            <a href="{{ url_for('landing.index') }}">About</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('login.logout') }}">Logout</a>
+            {% endif %}
+        </nav>
+    </details>
+</div>
+
+<!-- Rest of the content remains the same -->
+<h1 class="animate__animated animate__fadeInDown">JustLearnIt</h1>
+<center>
+    <h2 class="wow animate__animated animate__fadeInDown">JustLearnIt</h2>
+    <div class="card wow animate__animated animate__fadeInLeft">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3><span class="highlight">JustLearnIt</span> este un site dedicat invatarii usoare si interactive a <span class="highlight">geografiei</span>, <span class="highlight">biologiei</span> si <span class="highlight">istoriei</span>. Indiferent daca esti elev, profesor sau doar pasionat de cunoastere, aici vei gasi lectii bine structurate, resurse vizuale captivante si metode inovatoare pentru a face invatarea mai simpla si mai <span class="highlight">distractiva</span>.</h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127126218936320/JustLearnIt.png?ex=67e428a9&is=67e2d729&hm=e59ea707fbb45d74818b31349c26d5bf2c97d0866e13f36b0545ffcf72ffc419&" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</center>
+<center>
+    <h2 class="wow animate__animated animate__fadeInRight">Ce materii oferim?</h2>
+    <div class="card wow animate__animated animate__fadeInRight">
+        <div class="card2 wow animate__animated animate__fadeInRight">
+            <h3>🌍 Geografie – Exploreaza continentele, tarile, relieful, fenomenele naturale si schimbarile climatice prin harti interactive si explicatii clare.<br>
+            🧬 Biologie – Descopera lumea vietii, de la celule la ecosisteme, cu ilustratii detaliate si experimente virtuale.<br>
+            🏛 Istorie – Invata despre marile civilizatii, evenimentele-cheie si personalitatile care au schimbat lumea, prin povesti si cronologii interactive.</h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127127175368784/Materii.png?ex=67e428a9&is=67e2d729&hm=f0811a5b5542a414f3ac6cc50f5558c506fe69b90d2b9144af885ae8c0ab2637&" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</center>
+<center>
+    <h2 class="wow animate__animated animate__fadeInLeft">De ce ai alege JustLearnIt?</h2>
+    <div class="card wow animate__animated animate__fadeInLeft">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3>✅ Invatare usoara si interactiva – Lectii structurate clar, fara termeni complicati.<br>
+            ✅ Teste si quiz-uri – Verifica-ti cunostintele cu intrebari rapide si provocari educative.<br>
+            ✅ Harti, diagrame si animatii – Explicatii vizuale pentru o mai buna intelegere.<br>
+            ✅ Platforma accesibila – Poti invata de pe telefon, tableta sau laptop, oriunde si oricand.</h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127126646882456/Dece_MConverter.eu.png?ex=67e428a9&is=67e2d729&hm=e0daed3044b5a86f8994d08c0aadc9b5e5349194362928c9e46d0a1e9c4f873a&" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</center>
+<center>
+    <h2 class="wow animate__animated animate__fadeInRight">Incepe acum!</h2>
+    <div class="card wow animate__animated animate__fadeInRight">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3>Esti gata sa descoperi o noua modalitate de a invata? Alatura-te acum <span class="highlight">JustLearnIt</span> si transforma fiecare lectie intr-o aventura captivanta! 🚀</h3>
+        </div>
+        <div class="card-button wow animate__animated animate__fadeInRight">
+            {% if request.cookies.get('logged_in') == 'true' and current_user.is_authenticated %}
+                <a href="{{ url_for('choose.index') }}" class="button" style="--clr: #7808d0">
+            {% else %}
+                <a href="{{ url_for('login.login') }}" class="button" style="--clr: #7808d0">
+            {% endif %}
+                <span class="button__icon-wrapper">
+                    <svg viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg" width="10">
+                        <path d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z" fill="currentColor"></path>
+                    </svg>
+                    <svg viewBox="0 0 14 15" fill="none" width="10" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg button__icon-svg--copy">
+                        <path d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z" fill="currentColor"></path>
+                    </svg>
+                </span>
+                Inscrie-te acum
+            </a>
+        </div>
+    </div>
+</center>
+
+{% endblock %}
