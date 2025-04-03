@@ -11,7 +11,6 @@ choose_bp = Blueprint('choose', __name__,
 @choose_bp.route('/choose', methods=['GET', 'POST'])
 @login_required
 def index():
-    # Reload user to ensure fresh data
     user = User.query.get(current_user.id)
     if user.user_type == 'profesor' and not user.is_professor_approved:
         return render_template('pending.html')
@@ -39,7 +38,6 @@ def index():
             return render_template('pending.html')
         else:
             flash('Selections saved successfully!', 'success')
-            # Redirect to learn page for the selected subject
             return redirect(url_for('learn.subject_page', subject=subject.lower()))
 
     return render_template('choose.html', template='choose_base.html')

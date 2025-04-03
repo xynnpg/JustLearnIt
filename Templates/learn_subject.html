@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="learn-container">
-    <div class="subject-header subject-{{ subject.lower() }}">
+    <div class="subject-header subject-{{ subject_key }}">
         <h1>{{ subject }}</h1>
         <p>Explore lessons and tests for {{ subject }}</p>
     </div>
@@ -20,7 +20,7 @@
     <div class="professors-section">
         <div class="section-title">
             <i class="fas fa-chalkboard-teacher"></i>
-            <h2>Available Professors</h2>
+            <h2>Available Professors for {{ subject }}</h2>
         </div>
 
         {% if professors %}

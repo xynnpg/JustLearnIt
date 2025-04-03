@@ -91,7 +91,6 @@
 {% block extra_js %}
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Add this script at the end of the file -->
 <script>
     $(document).ready(function() {
         // Initialize Quill editor
@@ -132,8 +131,9 @@
             }
 
             // Show loading state
-            $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-            $(this).prop('disabled', true);
+            const $btn = $(this);
+            $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            $btn.prop('disabled', true);
 
             $.ajax({
                 url: "{{ url_for('studio.lessons') }}",
@@ -149,7 +149,8 @@
                         if (response.redirect) {
                             window.location.href = response.redirect;
                         } else {
-                            window.location.reload();
+                            // Redirect to view the newly created lesson
+                            window.location.href = `/studio/lesson/${subject}/${encodeURIComponent(title)}`;
                         }
                     } else {
                         alert('Error: ' + (response.message || 'Failed to save lesson'));
@@ -164,8 +165,8 @@
                     }
                 },
                 complete: function() {
-                    $('#save-lesson').html('<i class="fas fa-save"></i> Save Lesson');
-                    $('#save-lesson').prop('disabled', false);
+                    $btn.html('<i class="fas fa-save"></i> Save Lesson');
+                    $btn.prop('disabled', false);
                 }
             });
         });
@@ -174,9 +175,7 @@
         $(document).on('click', '.edit-lesson', function() {
             const title = $(this).data('title');
             const subject = $(this).data('subject');
-
-            window.location.href = "{{ url_for('studio.view_lesson', subject='') }}" +
-                                  subject + "/" + encodeURIComponent(title);
+            window.location.href = `/studio/lesson/${subject}/${encodeURIComponent(title)}`;
         });
     });
 </script>

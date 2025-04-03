@@ -59,10 +59,6 @@ def subject_page(subject):
         flash('Invalid subject selected', 'error')
         return redirect(url_for('choose.index'))
 
-    if current_user.user_type != 'elev':
-        flash('Only students can access this page', 'error')
-        return redirect(url_for('account.account'))
-
     # Get all professors for this subject
     professors = User.query.filter_by(
         user_type='profesor',
@@ -72,7 +68,11 @@ def subject_page(subject):
 
     lessons = get_lessons_for_subject(subject)
 
-    return render_template('learn_subject.html', subject=subject)
+    return render_template('learn_subject.html',
+                         subject=SUBJECTS[subject],
+                         subject_key=subject,
+                         professors=professors,
+                         lessons=lessons)
 
 
 
