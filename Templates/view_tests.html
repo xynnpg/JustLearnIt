@@ -1,0 +1,44 @@
+{% extends "studio_base.html" %}
+
+{% block title %}View Test: {{ test.title }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="studio-container">
+    <div class="studio-header">
+        <h1><i class="fas fa-question-circle"></i> Test: {{ test.title }}</h1>
+        <div class="user-info">
+            <span class="badge">{{ subject }}</span>
+            <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar">
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="test-view">
+            <h3>{{ test.title }}</h3>
+            {% if test.lesson %}
+            <p>Associated Lesson: {{ test.lesson }}</p>
+            {% endif %}
+            {% for question in test.questions %}
+            <div class="test-question">
+                <div class="question-text">{{ question.text|safe }}</div>
+                {% if question.type == 'multiple_choice' %}
+                <ul class="option-list">
+                    {% for option in question.options %}
+                    <li class="{% if loop.index0 == question.correctIndex %}correct-option{% endif %}">{{ option|safe }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div class="form-actions">
+                <a href="{{ url_for('studio.view_test', subject=subject, test=test.title) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Test
+                </a>
+                <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Tests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

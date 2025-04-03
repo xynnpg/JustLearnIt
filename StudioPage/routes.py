@@ -1,4 +1,3 @@
-# StudioPage/routes.py
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime
@@ -6,7 +5,6 @@ import os
 import json
 from functools import wraps
 from . import studio_bp
-import json
 
 # Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -29,7 +27,6 @@ def require_professor(f):
     return decorated_function
 
 def get_professor_dir(base_dir, subject):
-    """Get or create the professor-specific directory"""
     professor_dir = os.path.join(base_dir, subject, 'profesori', current_user.email)
     os.makedirs(professor_dir, exist_ok=True)
     return professor_dir
@@ -56,7 +53,6 @@ def studio():
                            lesson_count=lesson_count,
                            test_count=test_count)
 
-
 @studio_bp.route('/lessons', methods=['GET', 'POST'])
 @login_required
 @require_professor
@@ -66,23 +62,16 @@ def lessons():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    lessons_dir = get_professor_dir(LECTII_DIR, subject)
-    lessons = []
-
+    lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
     try:
+        lessons = []
         if os.path.exists(lessons_dir):
             for f in os.listdir(lessons_dir):
                 if f.endswith('.html'):
-                    # Extract creation date from file metadata
-                    file_path = os.path.join(lessons_dir, f)
-                    created = datetime.fromtimestamp(os.path.getctime(file_path))
                     lessons.append({
                         'title': f.replace('.html', ''),
-                        'path': file_path,
-                        'created': created.strftime('%Y-%m-%d')
+                        'path': os.path.join(lessons_dir, f)
                     })
-        # Sort lessons by creation date (newest first)
-        lessons.sort(key=lambda x: x['created'], reverse=True)
     except Exception as e:
         flash('Error accessing lessons. Please try again.', 'error')
         lessons = []
@@ -97,72 +86,41 @@ def lessons():
             if not title or not content:
                 return jsonify({'success': False, 'message': 'Title and content are required'}), 400
 
-            # Sanitize filename
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            safe_title = safe_title.replace(' ', '_')[:50]  # Limit length and replace spaces
-
-            lessons_dir = get_professor_dir(LECTII_DIR, subject)
+            lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
             os.makedirs(lessons_dir, exist_ok=True)
 
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
-
-            # Basic HTML template with proper structure
-            html_content = f"""<!DOCTYPE html>
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(f"""
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>{safe_title}</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #333;
-        }}
-        h1, h2, h3 {{
-            color: #5f06a8;
-        }}
-        img {{
-            max-width: 100%;
-            height: auto;
-        }}
-        .lesson-content {{
-            margin: 20px 0;
-        }}
+        body {{ padding: 20px; font-family: Arial, sans-serif; }}
+        .ql-editor {{ border: none; padding: 0; }}
     </style>
 </head>
 <body>
-    <h1>{safe_title}</h1>
-    <div class="lesson-content">
-        {content}
-    </div>
-    <div class="metadata" style="font-size: 0.8em; color: #666; margin-top: 30px;">
-        Created by: {current_user.email} | {datetime.now().strftime('%Y-%m-%d')}
-    </div>
+    <div class="ql-editor">{content}</div>
 </body>
-</html>"""
+</html>
+""")
 
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-
-            return jsonify({
-                'success': True,
-                'redirect': url_for('studio.view_lesson', subject=subject, lesson=safe_title)
-            })
+            return jsonify({'success': True})
         except Exception as e:
-            app.logger.error(f"Error saving lesson: {str(e)}")
             return jsonify({'success': False, 'message': str(e)}), 500
 
     return render_template('studio_lessons.html',
-                           user=current_user,
-                           subject=subject,
-                           subjects=SUBJECTS,
-                           lessons=lessons)
+                         user=current_user,
+                         subject=subject,
+                         subjects=SUBJECTS,
+                         lessons=lessons)
 
-
-@studio_bp.route('/lesson/<subject>/<lesson>')
+@studio_bp.route('/lesson/<subject>/<lesson>', methods=['GET', 'POST'])
 @login_required
 @require_professor
 def view_lesson(subject, lesson):
@@ -178,11 +136,52 @@ def view_lesson(subject, lesson):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
+    start_marker = '<div class="lesson-content">'
+    end_marker = '</div>'
+    start_idx = content.find(start_marker) + len(start_marker)
+    end_idx = content.find(end_marker, start_idx)
+    lesson_content = content[start_idx:end_idx] if start_idx != -1 and end_idx != -1 else content
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            new_content = data.get('content')
+            action = data.get('action')  # 'save' or 'publish'
+            if not new_content:
+                return jsonify({'success': False, 'message': 'Content is required'}), 400
+
+            html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{lesson}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; color: #333; }}
+        h1, h2, h3 {{ color: #5f06a8; }}
+        img {{ max-width: 100%; height: auto; }}
+    </style>
+</head>
+<body>
+    <h1>{lesson}</h1>
+    <div class="lesson-content">{new_content}</div>
+    <div class="metadata" style="font-size: 0.8em; color: #666; margin-top: 30px;">
+        Updated by: {current_user.email} | {datetime.now().strftime('%Y-%m-%d')} | Status: {'Published' if action == 'publish' else 'Draft'}
+    </div>
+</body>
+</html>"""
+
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
     return render_template('view_lesson.html',
                            user=current_user,
                            subject=subject,
                            lesson_title=lesson,
-                           content=content)
+                           content=lesson_content)
 
 @studio_bp.route('/tests', methods=['GET', 'POST'])
 @login_required
@@ -193,7 +192,7 @@ def tests():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    tests_dir = get_professor_dir(TESTE_DIR, subject)
+    tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
     try:
         tests = []
         if os.path.exists(tests_dir):
@@ -216,13 +215,13 @@ def tests():
             title = data.get('title')
             questions = data.get('questions')
             subject = data.get('subject', 'Bio')
-            lesson = data.get('lesson')  # New field for lesson association
 
             if not title or not questions:
                 return jsonify({'success': False, 'message': 'Title and questions are required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            tests_dir = get_professor_dir(TESTE_DIR, subject)
+            tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
+            os.makedirs(tests_dir, exist_ok=True)
 
             file_path = os.path.join(tests_dir, f"{safe_title}.json")
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -230,7 +229,6 @@ def tests():
                     'title': title,
                     'subject': subject,
                     'questions': questions,
-                    'lesson': lesson,  # Add lesson association
                     'created_by': current_user.email,
                     'created_at': datetime.utcnow().isoformat()
                 }, f, indent=2)
@@ -239,20 +237,13 @@ def tests():
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 500
 
-        # Get available lessons for association
-    lessons = []
-    lessons_dir = get_professor_dir(LECTII_DIR, subject)
-    if os.path.exists(lessons_dir):
-        lessons = [f.replace('.html', '') for f in os.listdir(lessons_dir) if f.endswith('.html')]
-
     return render_template('studio_tests.html',
-                           user=current_user,
-                           subject=subject,
-                           subjects=SUBJECTS,
-                           tests=tests,
-                           lessons=lessons)
+                         user=current_user,
+                         subject=subject,
+                         subjects=SUBJECTS,
+                         tests=tests)
 
-@studio_bp.route('/test/<subject>/<test>')
+@studio_bp.route('/test/<subject>/<test>', methods=['GET', 'POST'])
 @login_required
 @require_professor
 def view_test(subject, test):
@@ -268,6 +259,26 @@ def view_test(subject, test):
     with open(file_path, 'r', encoding='utf-8') as f:
         test_data = json.load(f)
 
-    return render_template('view_test.html',
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            test_data['questions'] = data.get('questions')
+            test_data['title'] = data.get('title', test_data['title'])
+            test_data['updated_at'] = datetime.utcnow().isoformat()
+            test_data['status'] = 'Published' if data.get('action') == 'publish' else 'Draft'
+
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(test_data, f, indent=2)
+
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    lessons = [f.replace('.html', '') for f in os.listdir(get_professor_dir(LECTII_DIR, subject)) if f.endswith('.html')]
+    return render_template('studio_tests.html',
                            user=current_user,
-                           test=test_data)
+                           subject=subject,
+                           subjects=SUBJECTS,
+                           test=test_data,
+                           lessons=lessons,
+                           edit_mode=True)

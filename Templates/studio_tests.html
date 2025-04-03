@@ -29,7 +29,7 @@
 {% block studio_content %}
 <div class="test-creator">
     <h2>Manage Tests</h2>
-    
+
     <div class="subject-selector mb-4">
         <select id="subject-select" class="form-control">
             {% for subj in subjects %}
@@ -43,7 +43,7 @@
             <label for="test-title">Test Title</label>
             <input type="text" id="test-title" class="form-control" placeholder="Enter test title">
         </div>
-        
+
         <div id="questions-container">
             <!-- Questions will be added here -->
         </div>
@@ -115,7 +115,7 @@
         $('#subject-select').select2();
         $('#add-question').click(addQuestion);
         $('#save-test').click(saveTest);
-        
+
         $('#subject-select').change(function() {
             window.location.href = "{{ url_for('studio.tests') }}?subject=" + $(this).val();
         });
@@ -144,7 +144,7 @@
             const type = template.find('.question-type').val();
             const optionsContainer = template.find('.options-container');
             optionsContainer.toggle(type === 'multiple_choice');
-            
+
             if (type === 'multiple_choice' && optionEditors.length === 0) {
                 addOption(template);
             }

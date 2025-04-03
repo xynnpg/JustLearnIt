@@ -18,8 +18,8 @@
     {% if test %}
     <div class="lesson-test">
         <h2><i class="fas fa-question-circle"></i> Lesson Test</h2>
-        <p>Test your knowledge of this lesson with these {{ test.questions|length }} questions.</p>
-        <a href="{{ url_for('learn.take_test', subject=subject.lower(), professor_email=professor_email, lesson=lesson_title, test=test.title) }}"
+        <p>Test your knowledge with {{ test.questions|length }} questions.</p>
+        <a href="{{ url_for('learn.view_lesson', subject=subject.lower(), professor_email=professor_email, lesson=lesson_title) }}"
            class="test-btn">
             <i class="fas fa-play"></i> Start Test
         </a>
