@@ -1,310 +1,223 @@
+<!-- Templates/studio_tests.html -->
 {% extends "studio.html" %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<style>
+    .question-card .ql-container {
+        height: 200px !important;
+    }
+    .test-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+    .test-item {
+        padding: 15px;
+        background: white;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+{% endblock %}
 
 {% block studio_content %}
 <div class="test-creator">
-    <div class="header-section">
-        <h2>{% if test %}Edit Test{% else %}Create New Test{% endif %}</h2>
-        <div class="subject-selector">
-            <select id="subject-select" class="form-select">
-                {% for subj in subjects %}
-                    <option value="{{ subj }}" {% if subj == subject %}selected{% endif %}>{{ subj }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <h2>Manage Tests</h2>
+    
+    <div class="subject-selector mb-4">
+        <select id="subject-select" class="form-control">
+            {% for subj in subjects %}
+                <option value="{{ subj }}" {% if subj == subject %}selected{% endif %}>{{ subj }}</option>
+            {% endfor %}
+        </select>
     </div>
 
-    <div class="test-meta">
-        <div class="form-floating mb-4">
-            <input type="text" id="test-title" class="form-control" placeholder="Test Title"
-                   value="{{ test.title if test else '' }}">
+    <div id="create-test" class="mb-4">
+        <div class="form-group">
             <label for="test-title">Test Title</label>
+            <input type="text" id="test-title" class="form-control" placeholder="Enter test title">
         </div>
-    </div>
+        
+        <div id="questions-container">
+            <!-- Questions will be added here -->
+        </div>
 
-    <div id="questions-container" class="mb-4">
-        <!-- Questions will be dynamically added here -->
-    </div>
-
-    <div class="d-flex justify-content-between mb-4">
-        <button id="add-question" class="btn btn-primary">
-            <i class="fas fa-plus-circle me-2"></i>Add Question
-        </button>
-
-        <div class="d-flex gap-2">
-            <button id="preview-test" class="btn btn-outline-secondary">
-                <i class="fas fa-eye me-2"></i>Preview
+        <div class="form-actions">
+            <button id="add-question" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Question
             </button>
-            <button id="save-test" class="btn btn-success">
-                <i class="fas fa-save me-2"></i>Save Test
+            <button id="save-test" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Test
             </button>
         </div>
     </div>
 
-    <!-- Preview Modal -->
-    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Test Preview</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="preview-content">
-                    <!-- Preview content will be inserted here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+    <h3>Existing Tests</h3>
+    {% if tests %}
+    <ul class="test-list">
+        {% for test in tests %}
+        <li class="test-item">
+            <span>{{ test.title }} ({{ test.question_count }} questions)</span>
+            <div class="lesson-actions">
+                <a href="{{ url_for('studio.view_test', subject=subject, test=test.title) }}"
+                   class="btn btn-view">
+                    <i class="fas fa-eye"></i> View
+                </a>
             </div>
-        </div>
-    </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No tests found for this subject.</p>
+    {% endif %}
 </div>
 
-<!-- Question Templates -->
-<script type="text/template" id="question-multiple-choice">
-    <div class="question-card card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <select class="question-type form-select form-select-sm" style="width: auto">
-                <option value="multiple_choice" selected>Multiple Choice</option>
-                <option value="true_false">True/False</option>
+<script type="text/template" id="question-template">
+    <div class="question-card mb-4">
+        <div class="question-header">
+            <select class="question-type form-select" style="width: auto;">
+                <option value="multiple_choice">Multiple Choice</option>
                 <option value="short_answer">Short Answer</option>
                 <option value="essay">Essay</option>
             </select>
-            <button class="remove-question-btn btn btn-sm btn-danger">
+            <button class="remove-question-btn btn btn-danger">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
         <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Question Text</label>
-                <textarea class="question-text form-control" rows="2" placeholder="Enter your question"></textarea>
+            <div class="form-group">
+                <label>Question Content</label>
+                <div class="question-editor"></div>
             </div>
-            <div class="options-container mb-3">
-                <div class="option-item input-group mb-2">
-                    <div class="input-group-text">
-                        <input class="form-check-input mt-0 correct-option" type="radio" name="correct-option" checked>
-                    </div>
-                    <input type="text" class="form-control option-text" placeholder="Option 1">
-                    <button class="remove-option-btn btn btn-outline-danger">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <div class="options-container" style="display: none;">
+                <div class="option-item mb-2">
+                    <input type="radio" name="correct-{id}" class="correct-option">
+                    <div class="option-editor"></div>
                 </div>
-                <div class="option-item input-group mb-2">
-                    <div class="input-group-text">
-                        <input class="form-check-input mt-0 correct-option" type="radio" name="correct-option">
-                    </div>
-                    <input type="text" class="form-control option-text" placeholder="Option 2">
-                    <button class="remove-option-btn btn btn-outline-danger">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+                <button class="add-option-btn btn btn-info">Add Option</button>
             </div>
-            <button class="add-option-btn btn btn-sm btn-outline-primary">
-                <i class="fas fa-plus me-1"></i>Add Option
-            </button>
         </div>
     </div>
 </script>
+{% endblock %}
 
-<script type="text/template" id="question-true-false">
-    <!-- Similar structure for true/false questions -->
-</script>
-
-<script type="text/template" id="question-short-answer">
-    <!-- Similar structure for short answer questions -->
-</script>
-
-<script type="text/template" id="question-essay">
-    <!-- Similar structure for essay questions -->
-</script>
-
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Select2 for subject selection
-    $('#subject-select').select2({
-        width: '200px',
-        minimumResultsForSearch: Infinity
+    $(document).ready(function() {
+        $('#subject-select').select2();
+        $('#add-question').click(addQuestion);
+        $('#save-test').click(saveTest);
+        
+        $('#subject-select').change(function() {
+            window.location.href = "{{ url_for('studio.tests') }}?subject=" + $(this).val();
+        });
     });
 
-    // Add question button click handler
-    $('#add-question').click(function() {
-        addQuestion('multiple_choice');
-    });
+    function addQuestion() {
+        const id = Date.now();
+        const template = $($('#question-template').html().replace('{id}', id));
+        $('#questions-container').append(template);
 
-    // Save test button click handler
-    $('#save-test').click(saveTest);
+        const questionEditor = new Quill(template.find('.question-editor')[0], {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['image', 'link'],
+                    ['clean']
+                ]
+            }
+        });
 
-    // Preview test button click handler
-    $('#preview-test').click(previewTest);
+        let optionEditors = [];
+        function updateOptionsVisibility() {
+            const type = template.find('.question-type').val();
+            const optionsContainer = template.find('.options-container');
+            optionsContainer.toggle(type === 'multiple_choice');
+            
+            if (type === 'multiple_choice' && optionEditors.length === 0) {
+                addOption(template);
+            }
+        }
 
-    // Load existing test if editing
-    {% if test %}
-    loadTest({{ test|tojson|safe }});
-    {% endif %}
-});
+        template.find('.question-type').change(updateOptionsVisibility);
+        template.find('.remove-question-btn').click(() => template.remove());
+        template.find('.add-option-btn').click(() => addOption(template));
 
-function addQuestion(type) {
-    const template = document.getElementById(`question-${type}`).innerHTML;
-    const questionElement = $(template);
-    $('#questions-container').append(questionElement);
-
-    // Set up event handlers for this question
-    questionElement.find('.question-type').change(function() {
-        changeQuestionType($(this).closest('.question-card'), $(this).val());
-    });
-
-    questionElement.find('.remove-question-btn').click(function() {
-        $(this).closest('.question-card').remove();
-    });
-
-    questionElement.find('.add-option-btn').click(function() {
-        addOption($(this).closest('.question-card'));
-    });
-
-    questionElement.find('.remove-option-btn').click(function() {
-        $(this).closest('.option-item').remove();
-    });
-}
-
-function changeQuestionType(questionCard, newType) {
-    // Implementation for changing question type
-}
-
-function addOption(questionCard) {
-    // Implementation for adding options
-}
-
-function saveTest() {
-    const title = $('#test-title').val();
-    const subject = $('#subject-select').val();
-    const questions = [];
-
-    $('.question-card').each(function() {
-        const type = $(this).find('.question-type').val();
-        const text = $(this).find('.question-text').val();
-        const question = { type, text };
-
-        if (type === 'multiple_choice') {
-            question.options = [];
-            $(this).find('.option-item').each(function(index) {
-                const optionText = $(this).find('.option-text').val();
-                question.options.push(optionText);
-
-                if ($(this).find('.correct-option').is(':checked')) {
-                    question.correctIndex = index;
+        function addOption(container) {
+            const optionItem = container.find('.option-item').first().clone();
+            const optionEditor = new Quill(optionItem.find('.option-editor')[0], {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['image', 'link']
+                    ]
                 }
             });
+            optionEditors.push(optionEditor);
+            container.find('.options-container').append(optionItem);
         }
-        // Handle other question types...
 
-        questions.push(question);
-    });
+        updateOptionsVisibility();
+    }
 
-    // Send data to server
-    fetch("{{ url_for('studio.tests') }}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            title: title,
-            questions: questions,
-            subject: subject
+    function saveTest() {
+        const title = $('#test-title').val();
+        const subject = $('#subject-select').val();
+        const questions = [];
+
+        $('.question-card').each(function() {
+            const type = $(this).find('.question-type').val();
+            const questionContent = $(this).find('.question-editor .ql-editor').html();
+            const question = { type, text: questionContent };
+
+            if (type === 'multiple_choice') {
+                question.options = [];
+                let correctIndex = -1;
+                $(this).find('.option-item').each(function(index) {
+                    const optionContent = $(this).find('.option-editor .ql-editor').html();
+                    question.options.push(optionContent);
+                    if ($(this).find('.correct-option').is(':checked')) {
+                        correctIndex = index;
+                    }
+                });
+                question.correctIndex = correctIndex;
+            }
+
+            questions.push(question);
+        });
+
+        fetch("{{ url_for('studio.tests') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                questions: questions,
+                subject: subject
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Test saved successfully!', 'success');
-            window.location.href = "{{ url_for('studio.tests') }}?subject=" + subject;
-        } else {
-            showToast('Error saving test: ' + data.message, 'error');
-        }
-    });
-}
-
-function previewTest() {
-    // Generate preview content
-    const previewContent = generatePreviewContent();
-    $('#preview-content').html(previewContent);
-
-    // Show modal
-    const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
-    previewModal.show();
-}
-
-function generatePreviewContent() {
-    // Implementation to generate preview HTML
-    return '<h4>Test Preview</h4><p>Preview content will be shown here</p>';
-}
-
-function showToast(message, type) {
-    // Implementation for toast notifications
-    const toast = `<div class="toast align-items-center text-white bg-${type} border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>`;
-    $('.toast-container').append(toast);
-    $('.toast').toast('show');
-}
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error saving test: ' + data.message);
+            }
+        });
+    }
 </script>
-
-<style>
-.test-creator {
-    background: white;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-}
-
-.header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.question-card {
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.question-card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-}
-
-.option-item {
-    transition: all 0.2s ease;
-}
-
-.option-item:hover {
-    background-color: #f8f9fa;
-}
-
-.form-floating label {
-    color: #6c757d;
-}
-
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1100;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .header-section {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .subject-selector {
-        margin-top: 1rem;
-        width: 100%;
-    }
-}
-</style>
+{% endblock %}
