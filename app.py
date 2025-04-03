@@ -100,6 +100,7 @@ from ChoosePage.routes import choose_bp
 from AdminPage.routes import admin_bp
 from AccountPage.routes import account_bp
 from StudioPage import studio_bp
+from LearnPage.routes import learn_bp
 
 app.register_blueprint(landing_bp)
 app.register_blueprint(login_bp)
@@ -107,6 +108,7 @@ app.register_blueprint(choose_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(account_bp)
 app.register_blueprint(studio_bp, url_prefix='/studio')
+app.register_blueprint(learn_bp)
 
 from models import User
 

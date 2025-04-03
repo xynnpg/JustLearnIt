@@ -57,13 +57,14 @@
             </div>
         </div>
 
-        <button type="submit">Save Selections</button>
+        <button type="submit" class="submit-btn">Save Selections</button>
     </form>
 </div>
 
 <script>
     const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
     const subjectRadios = document.querySelectorAll('input[name="subject"]');
+    const submitBtn = document.querySelector('.submit-btn');
 
     userTypeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -71,11 +72,26 @@
                 subjectRadios.forEach(subject => {
                     subject.disabled = false;
                 });
+
+                // Add animation to submit button
+                submitBtn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    submitBtn.style.transform = 'scale(1)';
+                }, 300);
+            }
+        });
+    });
+
+    subjectRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                // Add animation to submit button
+                submitBtn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    submitBtn.style.transform = 'scale(1)';
+                }, 300);
             }
         });
     });
 </script>
-
-
-
 {% endblock %}

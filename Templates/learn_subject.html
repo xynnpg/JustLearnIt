@@ -1,0 +1,85 @@
+{% extends "learn_base.html" %}
+
+{% block title %}Learn {{ subject }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="subject-header subject-{{ subject.lower() }}">
+        <h1>{{ subject }}</h1>
+        <p>Explore lessons and tests for {{ subject }}</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="professors-section">
+        <div class="section-title">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <h2>Available Professors</h2>
+        </div>
+
+        {% if professors %}
+        <div class="professors-grid">
+            {% for professor in professors %}
+            <div class="professor-card">
+                <div class="professor-avatar">
+                    <img src="https://ui-avatars.com/api/?name={{ professor.name|urlencode }}&background=7808d0&color=fff">
+                </div>
+                <div class="professor-info">
+                    <h3>{{ professor.name }}</h3>
+                    <p>{{ professor.email }}</p>
+                    <a href="{{ url_for('learn.professor_lessons', subject=subject.lower(), professor_email=professor.email) }}"
+                       class="btn btn-primary">
+                        <i class="fas fa-book-open"></i> View Lessons
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-graduate"></i>
+            <p>No professors available for {{ subject }} yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="lessons-section">
+        <div class="section-title">
+            <i class="fas fa-book"></i>
+            <h2>All Available Lessons</h2>
+        </div>
+
+        {% if lessons %}
+        <div class="lessons-list">
+            {% for lesson in lessons %}
+            <div class="lesson-card">
+                <h2>{{ lesson.title }}</h2>
+                <p>By: {{ lesson.professor }}</p>
+                <a href="{{ url_for('learn.view_lesson', subject=subject.lower(), professor_email=lesson.professor, lesson=lesson.title) }}"
+                   class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View Lesson
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-book"></i>
+            <p>No lessons available for {{ subject }} yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="navigation-buttons">
+        <a href="{{ url_for('account.account') }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Account
+        </a>
+    </div>
+</div>
+{% endblock %}

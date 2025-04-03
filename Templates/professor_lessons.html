@@ -1,0 +1,27 @@
+{% extends "learn_base.html" %}
+
+{% block title %}{{ professor.name }}'s Lessons - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <h1>{{ professor.name }}'s {{ subject }} Lessons</h1>
+    
+    <div class="lessons-list">
+        {% for lesson in lessons %}
+        <div class="lesson-card">
+            <h2>{{ lesson.title }}</h2>
+            <a href="{{ url_for('learn.view_lesson', subject=subject.lower(), professor_email=professor.email, lesson=lesson.title) }}"
+               class="btn btn-primary">
+                View Lesson
+            </a>
+        </div>
+        {% else %}
+        <p>This professor hasn't uploaded any lessons yet.</p>
+        {% endfor %}
+    </div>
+    
+    <a href="{{ url_for('learn.subject_page', subject=subject.lower()) }}" class="btn btn-back">
+        Back to {{ subject }} Professors
+    </a>
+</div>
+{% endblock %}

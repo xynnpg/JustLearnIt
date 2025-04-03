@@ -39,6 +39,7 @@ def index():
             return render_template('pending.html')
         else:
             flash('Selections saved successfully!', 'success')
-            return redirect(url_for('choose.index'))
+            # Redirect to learn page for the selected subject
+            return redirect(url_for('learn.subject_page', subject=subject.lower()))
 
     return render_template('choose.html', template='choose_base.html')

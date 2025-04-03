@@ -6,6 +6,7 @@ import os
 import json
 from functools import wraps
 from . import studio_bp
+import json
 
 # Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -176,6 +177,7 @@ def tests():
             title = data.get('title')
             questions = data.get('questions')
             subject = data.get('subject', 'Bio')
+            lesson = data.get('lesson')  # New field for lesson association
 
             if not title or not questions:
                 return jsonify({'success': False, 'message': 'Title and questions are required'}), 400
@@ -189,6 +191,7 @@ def tests():
                     'title': title,
                     'subject': subject,
                     'questions': questions,
+                    'lesson': lesson,  # Add lesson association
                     'created_by': current_user.email,
                     'created_at': datetime.utcnow().isoformat()
                 }, f, indent=2)
@@ -197,11 +200,18 @@ def tests():
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 500
 
+        # Get available lessons for association
+    lessons = []
+    lessons_dir = get_professor_dir(LECTII_DIR, subject)
+    if os.path.exists(lessons_dir):
+        lessons = [f.replace('.html', '') for f in os.listdir(lessons_dir) if f.endswith('.html')]
+
     return render_template('studio_tests.html',
-                         user=current_user,
-                         subject=subject,
-                         subjects=SUBJECTS,
-                         tests=tests)
+                           user=current_user,
+                           subject=subject,
+                           subjects=SUBJECTS,
+                           tests=tests,
+                           lessons=lessons)
 
 @studio_bp.route('/test/<subject>/<test>')
 @login_required

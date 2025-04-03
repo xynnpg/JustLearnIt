@@ -1,0 +1,309 @@
+:root {
+    --primary: #7808d0;
+    --primary-light: #9c42e6;
+    --secondary: #5f06a8;
+    --light: #f8f9fa;
+    --dark: #2c3e50;
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --bio-color: #4CAF50;
+    --isto-color: #FF5722;
+    --geogra-color: #2196F3;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: var(--dark);
+}
+
+.learn-nav {
+    background-color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    color: var(--primary);
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-brand i {
+    font-size: 1.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-back {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-back:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+.learn-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.subject-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.subject-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+.subject-bio h1 {
+    background: linear-gradient(to right, var(--bio-color), #81C784);
+}
+
+.subject-isto h1 {
+    background: linear-gradient(to right, var(--isto-color), #FF8A65);
+}
+
+.subject-geogra h1 {
+    background: linear-gradient(to right, var(--geogra-color), #64B5F6);
+}
+
+.subject-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.professors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.professor-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    transition: all 0.3s ease;
+    border-top: 4px solid var(--primary);
+}
+
+.professor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.professor-avatar img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary);
+    padding: 3px;
+}
+
+.professor-info {
+    flex: 1;
+}
+
+.professor-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark);
+}
+
+.professor-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.lessons-section {
+    margin: 3rem 0;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: var(--dark);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    color: var(--primary);
+}
+
+.lessons-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.lesson-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary);
+}
+
+.lesson-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.lesson-card h2 {
+    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+    color: var(--dark);
+}
+
+.lesson-card .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+}
+
+.flash-message {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    text-align: center;
+    animation: slideIn 0.5s ease-out;
+}
+
+.flash-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #ddd;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.navigation-buttons {
+    display: flex;
+    gap: 1rem;
+    margin: 3rem 0;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .professors-grid, .lessons-list {
+        grid-template-columns: 1fr;
+    }
+
+    .professor-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .navigation-buttons {
+        flex-direction: column;
+    }
+}

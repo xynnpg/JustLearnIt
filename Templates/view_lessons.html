@@ -1,0 +1,36 @@
+{% extends "learn_base.html" %}
+
+{% block title %}{{ lesson_title }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <h1>{{ lesson_title }}</h1>
+    <p class="professor-info">By: {{ professor_email }}</p>
+    
+    <div class="lesson-content">
+        {{ content|safe }}
+    </div>
+    
+    {% if test %}
+    <div class="lesson-test">
+        <h2>Lesson Test</h2>
+        <p>Complete this test to check your understanding of the lesson.</p>
+        <a href="{{ url_for('learn.take_test', subject=subject.lower(), professor_email=professor_email, lesson=lesson_title, test=test.title) }}"
+           class="btn btn-primary">
+            Take Test
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="navigation-buttons">
+        <a href="{{ url_for('learn.professor_lessons', subject=subject.lower(), professor_email=professor_email) }}"
+           class="btn btn-back">
+            Back to Lessons
+        </a>
+        <a href="{{ url_for('learn.subject_page', subject=subject.lower()) }}"
+           class="btn btn-back">
+            Back to {{ subject }} Professors
+        </a>
+    </div>
+</div>
+{% endblock %}
