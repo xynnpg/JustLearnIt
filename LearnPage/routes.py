@@ -6,7 +6,7 @@ import os
 
 learn_bp = Blueprint('learn', __name__,
                      template_folder='../Templates',
-                     static_folder='../static/learn')
+                     static_folder='../static')
 
 SUBJECTS = ['bio', 'isto', 'geogra']
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -72,10 +72,8 @@ def subject_page(subject):
 
     lessons = get_lessons_for_subject(subject)
 
-    return render_template('learn_subject.html',
-                           subject=subject.capitalize(),
-                           professors=professors,
-                           lessons=lessons)
+    return render_template('learn_subject.html', subject=subject)
+
 
 
 @learn_bp.route('/learn/<subject>/<professor_email>')

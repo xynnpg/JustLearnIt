@@ -1,5 +1,5 @@
 import os
-from flask import Flask, url_for, make_response, session
+from flask import Flask, url_for, make_response, session, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, current_user
@@ -11,6 +11,7 @@ import time
 from datetime import datetime, timedelta
 from threading import Thread
 import atexit
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -143,3 +144,5 @@ def test_email():
     except Exception as e:
         logger.error(f"Failed to send test email: {str(e)}")
         return f"Error sending test email: {str(e)}"
+
+
