@@ -89,9 +89,12 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Add jQuery first -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    // Initialize Quill editor
     const quill = new Quill('#editor-container', {
         theme: 'snow',
         modules: {
@@ -110,11 +113,17 @@
     });
 
     $(document).ready(function() {
+        // Initialize Select2
         $('#subject-select').select2();
 
-        $('#save-lesson').click(saveLesson);
+        // Handle save lesson button click
+        $('#save-lesson').on('click', function(e) {
+            e.preventDefault();
+            saveLesson();
+        });
 
-        $('.edit-lesson').click(function() {
+        // Handle edit lesson button clicks
+        $(document).on('click', '.edit-lesson', function() {
             const title = $(this).data('title');
             const subject = $(this).data('subject');
 
@@ -126,10 +135,15 @@
                     const content = doc.querySelector('.view-lesson-content').innerHTML;
                     quill.root.innerHTML = content;
                     $('#lesson-title').val(title);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load lesson for editing');
                 });
         });
 
-        $('#subject-select').change(function() {
+        // Handle subject change
+        $('#subject-select').on('change', function() {
             window.location.href = "{{ url_for('studio.lessons') }}?subject=" + $(this).val();
         });
     });
@@ -144,6 +158,11 @@
             return;
         }
 
+        // Show loading state
+        const saveBtn = $('#save-lesson');
+        saveBtn.prop('disabled', true);
+        saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
         fetch("{{ url_for('studio.lessons') }}", {
             method: 'POST',
             headers: {
@@ -155,13 +174,26 @@
                 subject: subject
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 window.location.reload();
             } else {
-                alert('Error saving lesson: ' + data.message);
+                throw new Error(data.message || 'Unknown error');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving lesson: ' + error.message);
+        })
+        .finally(() => {
+            saveBtn.prop('disabled', false);
+            saveBtn.html('<i class="fas fa-save"></i> Save Lesson');
         });
     }
 </script>

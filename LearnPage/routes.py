@@ -17,7 +17,7 @@ TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
 
 def get_lessons_for_subject(subject):
     lessons = []
-    subject_dir = os.path.join(LECTII_DIR, subject)
+    subject_dir = os.path.join(LECTII_DIR, subject)  # subject va fi 'biologie', 'istorie' sau 'geografie'
     if os.path.exists(subject_dir):
         for prof_dir in os.listdir(subject_dir):
             prof_path = os.path.join(subject_dir, prof_dir)
@@ -52,27 +52,30 @@ def get_tests_for_lesson(lesson_title, subject):
     return tests
 
 
-@learn_bp.route('/learn/<subject>')
 @login_required
 def subject_page(subject):
+    # Verifică dacă subject este în cheile dicționarului
     if subject not in SUBJECTS:
         flash('Invalid subject selected', 'error')
         return redirect(url_for('choose.index'))
+
+    # Folosește valoarea din dicționar
+    subject_name = SUBJECTS[subject]
 
     # Get all professors for this subject
     professors = User.query.filter_by(
         user_type='profesor',
         is_professor_approved=True,
-        subject=subject
+        subject=subject_name  # Folosește numele complet (Biologie/Istorie/Geografie)
     ).all()
 
     lessons = get_lessons_for_subject(subject)
 
     return render_template('learn_subject.html',
-                         subject=SUBJECTS[subject],
-                         subject_key=subject,
-                         professors=professors,
-                         lessons=lessons)
+                           subject=subject_name,
+                           subject_key=subject,
+                           professors=professors,
+                           lessons=lessons)
 
 
 

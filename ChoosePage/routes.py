@@ -28,7 +28,8 @@ def index():
             return redirect(url_for('choose.index'))
 
         user.user_type = user_type
-        user.subject = subject
+        user.subject = subject  # Aici se salvează valoarea completă (Biologie/Istorie/Geografie)
+
         if user_type == 'profesor':
             user.is_professor_approved = False
         db.session.commit()
@@ -38,6 +39,6 @@ def index():
             return render_template('pending.html')
         else:
             flash('Selections saved successfully!', 'success')
-            return redirect(url_for('learn.subject_page', subject=subject.lower()))
+            return redirect(url_for('learn.subject_page', subject=subject.lower()))  # Trimite cheia scurtă
 
     return render_template('choose.html', template='choose_base.html')

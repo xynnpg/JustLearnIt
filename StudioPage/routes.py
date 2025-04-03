@@ -186,7 +186,7 @@ def view_lesson(subject, lesson):
 @studio_bp.route('/tests', methods=['GET', 'POST'])
 @login_required
 @require_professor
-def tests():
+def     tests():
     subject = request.args.get('subject', 'Bio')
     if subject not in SUBJECTS:
         subject = 'Bio'
