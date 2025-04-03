@@ -91,78 +91,93 @@
 {% block extra_js %}
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Add this script at the end of the file -->
 <script>
-    const quill = new Quill('#editor-container', {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link', 'image'],
-                [{ 'align': [] }],
-                ['blockquote', 'code-block'],
-                ['clean']
-            ]
-        },
-        placeholder: 'Write your lesson content here...'
-    });
-
     $(document).ready(function() {
-        $('#subject-select').select2();
-
-        $('#save-lesson').click(saveLesson);
-
-        $('.edit-lesson').click(function() {
-            const title = $(this).data('title');
-            const subject = $(this).data('subject');
-
-            fetch(`/studio/lesson/${subject}/${title}`)
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const content = doc.querySelector('.view-lesson-content').innerHTML;
-                    quill.root.innerHTML = content;
-                    $('#lesson-title').val(title);
-                });
+        // Initialize Quill editor
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image', 'video'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Write your lesson content here...'
         });
 
+        // Handle subject change
         $('#subject-select').change(function() {
             window.location.href = "{{ url_for('studio.lessons') }}?subject=" + $(this).val();
         });
-    });
 
-    function saveLesson() {
-        const title = $('#lesson-title').val();
-        const content = quill.root.innerHTML;
-        const subject = $('#subject-select').val();
+        // Save lesson handler
+        $('#save-lesson').click(function() {
+            const title = $('#lesson-title').val().trim();
+            const content = quill.root.innerHTML;
+            const subject = $('#subject-select').val();
 
-        if (!title) {
-            alert('Please enter a lesson title');
-            return;
-        }
-
-        fetch("{{ url_for('studio.lessons') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: title,
-                content: content,
-                subject: subject
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Error saving lesson: ' + data.message);
+            if (!title) {
+                alert('Please enter a lesson title');
+                return;
             }
+
+            if (quill.getText().trim().length < 10) {
+                alert('Please add more content to your lesson');
+                return;
+            }
+
+            // Show loading state
+            $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            $(this).prop('disabled', true);
+
+            $.ajax({
+                url: "{{ url_for('studio.lessons') }}",
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    title: title,
+                    content: content,
+                    subject: subject
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            window.location.reload();
+                        }
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to save lesson'));
+                    }
+                },
+                error: function(xhr) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        alert('Error: ' + (response.message || 'Failed to save lesson'));
+                    } catch {
+                        alert('An unexpected error occurred');
+                    }
+                },
+                complete: function() {
+                    $('#save-lesson').html('<i class="fas fa-save"></i> Save Lesson');
+                    $('#save-lesson').prop('disabled', false);
+                }
+            });
         });
-    }
+
+        // Edit lesson handler
+        $(document).on('click', '.edit-lesson', function() {
+            const title = $(this).data('title');
+            const subject = $(this).data('subject');
+
+            window.location.href = "{{ url_for('studio.view_lesson', subject='') }}" +
+                                  subject + "/" + encodeURIComponent(title);
+        });
+    });
 </script>
 {% endblock %}

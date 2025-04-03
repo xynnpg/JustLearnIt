@@ -56,6 +56,7 @@ def studio():
                            lesson_count=lesson_count,
                            test_count=test_count)
 
+
 @studio_bp.route('/lessons', methods=['GET', 'POST'])
 @login_required
 @require_professor
@@ -66,15 +67,22 @@ def lessons():
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
     lessons_dir = get_professor_dir(LECTII_DIR, subject)
+    lessons = []
+
     try:
-        lessons = []
         if os.path.exists(lessons_dir):
             for f in os.listdir(lessons_dir):
                 if f.endswith('.html'):
+                    # Extract creation date from file metadata
+                    file_path = os.path.join(lessons_dir, f)
+                    created = datetime.fromtimestamp(os.path.getctime(file_path))
                     lessons.append({
                         'title': f.replace('.html', ''),
-                        'path': os.path.join(lessons_dir, f)
+                        'path': file_path,
+                        'created': created.strftime('%Y-%m-%d')
                     })
+        # Sort lessons by creation date (newest first)
+        lessons.sort(key=lambda x: x['created'], reverse=True)
     except Exception as e:
         flash('Error accessing lessons. Please try again.', 'error')
         lessons = []
@@ -89,39 +97,70 @@ def lessons():
             if not title or not content:
                 return jsonify({'success': False, 'message': 'Title and content are required'}), 400
 
+            # Sanitize filename
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            safe_title = safe_title.replace(' ', '_')[:50]  # Limit length and replace spaces
+
             lessons_dir = get_professor_dir(LECTII_DIR, subject)
+            os.makedirs(lessons_dir, exist_ok=True)
 
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(f"""
-<!DOCTYPE html>
+
+            # Basic HTML template with proper structure
+            html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>{safe_title}</title>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
-        body {{ padding: 20px; font-family: Arial, sans-serif; }}
-        .ql-editor {{ border: none; padding: 0; }}
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }}
+        h1, h2, h3 {{
+            color: #5f06a8;
+        }}
+        img {{
+            max-width: 100%;
+            height: auto;
+        }}
+        .lesson-content {{
+            margin: 20px 0;
+        }}
     </style>
 </head>
 <body>
-    <div class="ql-editor">{content}</div>
-    <div class="metadata">Created by: {current_user.email}</div>
+    <h1>{safe_title}</h1>
+    <div class="lesson-content">
+        {content}
+    </div>
+    <div class="metadata" style="font-size: 0.8em; color: #666; margin-top: 30px;">
+        Created by: {current_user.email} | {datetime.now().strftime('%Y-%m-%d')}
+    </div>
 </body>
-</html>
-""")
+</html>"""
 
-            return jsonify({'success': True})
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+
+            return jsonify({
+                'success': True,
+                'redirect': url_for('studio.view_lesson', subject=subject, lesson=safe_title)
+            })
         except Exception as e:
+            app.logger.error(f"Error saving lesson: {str(e)}")
             return jsonify({'success': False, 'message': str(e)}), 500
 
     return render_template('studio_lessons.html',
-                         user=current_user,
-                         subject=subject,
-                         subjects=SUBJECTS,
-                         lessons=lessons)
+                           user=current_user,
+                           subject=subject,
+                           subjects=SUBJECTS,
+                           lessons=lessons)
+
 
 @studio_bp.route('/lesson/<subject>/<lesson>')
 @login_required

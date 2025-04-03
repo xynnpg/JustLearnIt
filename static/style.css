@@ -307,3 +307,94 @@ body {
         flex-direction: column;
     }
 }
+
+/* Enhanced Learn Page Styles */
+.lesson-content-container {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 2rem 0;
+}
+
+.lesson-content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+.lesson-content h1,
+.lesson-content h2,
+.lesson-content h3 {
+    color: var(--primary);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.lesson-content p {
+    margin-bottom: 1.2rem;
+}
+
+.lesson-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.lesson-content ul,
+.lesson-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.lesson-content li {
+    margin-bottom: 0.5rem;
+}
+
+.lesson-test {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 2rem 0;
+    border-top: 4px solid var(--primary);
+}
+
+.professor-info {
+    text-align: center;
+    color: #666;
+    margin-bottom: 2rem;
+    font-style: italic;
+}
+
+.test-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin-top: 1rem;
+}
+
+.test-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .lesson-content-container,
+    .lesson-test {
+        padding: 20px;
+    }
+
+    .lesson-content {
+        font-size: 1rem;
+    }
+}
