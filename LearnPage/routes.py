@@ -261,25 +261,28 @@ def view_lesson(subject_key, professor_email, lesson_title):
     test = None
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
     
-    # First try to find a test with the lesson title
-    test_file = None
-    if os.path.exists(test_dir):
-        # Look for a test file that matches the lesson title
-        for file in os.listdir(test_dir):
-            if file.endswith('.json'):
-                with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
-                    test_data = json.load(f)
-                    if test_data.get('lesson') == lesson_title:
-                        test_file = os.path.join(test_dir, file)
-                        test = test_data
-                        break
-    
-    # If no test found with lesson title, try the old naming pattern
-    if not test_file:
-        test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
-        if os.path.exists(test_file):
-            with open(test_file, 'r', encoding='utf-8') as f:
-                test = json.load(f)
+    # First try to find a test with the exact filename
+    test_file = os.path.join(test_dir, f"{lesson_title}.json")
+    if os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test = json.load(f)
+    else:
+        # Then try to find a test with the lesson title in its data
+        if os.path.exists(test_dir):
+            for file in os.listdir(test_dir):
+                if file.endswith('.json'):
+                    with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
+                        test_data = json.load(f)
+                        if test_data.get('lesson') == lesson_title:
+                            test = test_data
+                            break
+        
+        # If no test found, try the old naming pattern
+        if not test:
+            test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
+            if os.path.exists(test_file):
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    test = json.load(f)
 
     # Check if current user is the professor
     is_professor = current_user.email == professor_email
@@ -315,40 +318,56 @@ def take_test(subject_key, professor_email, lesson_title):
     # Get the test content
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
     
-    # First try to find a test with the lesson title
-    test_file = None
+    # First try to find a test with the exact filename
+    test_file = os.path.join(test_dir, f"{lesson_title}.json")
+    if os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test = json.load(f)
+            return render_template('take_test.html',
+                                 subject=subject_data['name'],
+                                 subject_key=subject_key,
+                                 subject_color=subject_data['color'],
+                                 subject_icon=subject_data['icon'],
+                                 lesson_title=lesson_title,
+                                 professor_email=professor_email,
+                                 test=test)
+    
+    # Then try to find a test with the lesson title in its data
     if os.path.exists(test_dir):
-        # Look for a test file that matches the lesson title
         for file in os.listdir(test_dir):
             if file.endswith('.json'):
                 with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
                     test_data = json.load(f)
                     if test_data.get('lesson') == lesson_title:
                         test_file = os.path.join(test_dir, file)
-                        break
+                        return render_template('take_test.html',
+                                             subject=subject_data['name'],
+                                             subject_key=subject_key,
+                                             subject_color=subject_data['color'],
+                                             subject_icon=subject_data['icon'],
+                                             lesson_title=lesson_title,
+                                             professor_email=professor_email,
+                                             test=test_data)
     
-    # If no test found with lesson title, try the old naming pattern
-    if not test_file:
-        test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
+    # If no test found, try the old naming pattern
+    test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
+    if os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test = json.load(f)
+            return render_template('take_test.html',
+                                 subject=subject_data['name'],
+                                 subject_key=subject_key,
+                                 subject_color=subject_data['color'],
+                                 subject_icon=subject_data['icon'],
+                                 lesson_title=lesson_title,
+                                 professor_email=professor_email,
+                                 test=test)
     
-    if not os.path.exists(test_file):
-        flash('Test not found', 'error')
-        return redirect(url_for('learn.view_lesson', 
-                              subject_key=subject_key, 
-                              professor_email=professor_email, 
-                              lesson_title=lesson_title))
-
-    with open(test_file, 'r', encoding='utf-8') as f:
-        test = json.load(f)
-
-    return render_template('take_test.html',
-                         subject=subject_data['name'],
-                         subject_key=subject_key,
-                         subject_color=subject_data['color'],
-                         subject_icon=subject_data['icon'],
-                         lesson_title=lesson_title,
-                         professor_email=professor_email,
-                         test=test)
+    flash('Test not found', 'error')
+    return redirect(url_for('learn.view_lesson', 
+                          subject_key=subject_key, 
+                          professor_email=professor_email, 
+                          lesson_title=lesson_title))
 
 
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/test/submit', methods=['POST'])
@@ -370,31 +389,36 @@ def submit_test(subject_key, professor_email, lesson_title):
     # Get the test content
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
     
-    # First try to find a test with the lesson title
-    test_file = None
-    if os.path.exists(test_dir):
-        # Look for a test file that matches the lesson title
-        for file in os.listdir(test_dir):
-            if file.endswith('.json'):
-                with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
-                    test_data = json.load(f)
-                    if test_data.get('lesson') == lesson_title:
-                        test_file = os.path.join(test_dir, file)
-                        break
+    # First try to find a test with the exact filename
+    test_file = os.path.join(test_dir, f"{lesson_title}.json")
+    if os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test = json.load(f)
+    else:
+        # Then try to find a test with the lesson title in its data
+        test = None
+        if os.path.exists(test_dir):
+            for file in os.listdir(test_dir):
+                if file.endswith('.json'):
+                    with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
+                        test_data = json.load(f)
+                        if test_data.get('lesson') == lesson_title:
+                            test_file = os.path.join(test_dir, file)
+                            test = test_data
+                            break
+        
+        # If no test found, try the old naming pattern
+        if not test:
+            test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
+            if os.path.exists(test_file):
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    test = json.load(f)
     
-    # If no test found with lesson title, try the old naming pattern
-    if not test_file:
-        test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
-    
-    if not os.path.exists(test_file):
+    if not test:
         flash('Test not found', 'error')
-        return redirect(url_for('learn.view_lesson', 
+        return redirect(url_for('learn.professor_lessons', 
                               subject_key=subject_key, 
-                              professor_email=professor_email, 
-                              lesson_title=lesson_title))
-
-    with open(test_file, 'r', encoding='utf-8') as f:
-        test = json.load(f)
+                              professor_email=professor_email))
 
     # Get answers from form
     answers = {}
@@ -430,7 +454,146 @@ def submit_test(subject_key, professor_email, lesson_title):
         json.dump(result, f, indent=2)
 
     flash(f'Test submitted! Your score: {score}/{total}', 'success')
-    return redirect(url_for('learn.view_lesson', 
+    return redirect(url_for('learn.professor_lessons', 
                           subject_key=subject_key, 
-                          professor_email=professor_email, 
-                          lesson_title=lesson_title))
+                          professor_email=professor_email))
+
+
+@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/test-results')
+@login_required
+def view_test_results(subject_key, professor_email):
+    """View test results for professors and admins"""
+    # Find the correct subject key (case-insensitive)
+    subject_data = None
+    for key, data in SUBJECTS.items():
+        if key.lower() == subject_key.lower():
+            subject_data = data
+            subject_key = key  # Use the correct case
+            break
+            
+    if not subject_data:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('account.account'))
+
+    # Check if user is admin or the professor
+    if not current_user.is_admin and current_user.email != professor_email:
+        flash('You do not have permission to view these results', 'error')
+        return redirect(url_for('learn.subject_page', subject_key=subject_key))
+
+    # Get all test results
+    test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
+    results = []
+    
+    if os.path.exists(test_dir):
+        results_dir = os.path.join(test_dir, 'results')
+        if os.path.exists(results_dir):
+            for result_file in os.listdir(results_dir):
+                if result_file.endswith('.json'):
+                    with open(os.path.join(results_dir, result_file), 'r', encoding='utf-8') as f:
+                        result_data = json.load(f)
+                        # Get student name from database
+                        student = User.query.filter_by(email=result_data['student_email']).first()
+                        student_name = student.name if student else result_data['student_email']
+                        
+                        results.append({
+                            'student_name': student_name,
+                            'student_email': result_data['student_email'],
+                            'lesson_title': result_data['lesson_title'],
+                            'score': result_data['score'],
+                            'total': result_data['total'],
+                            'timestamp': result_data['timestamp']
+                        })
+
+    # Sort results by timestamp (newest first)
+    results.sort(key=lambda x: x['timestamp'], reverse=True)
+
+    return render_template('test_results.html',
+                         subject=subject_data['name'],
+                         subject_key=subject_key,
+                         subject_color=subject_data['color'],
+                         subject_icon=subject_data['icon'],
+                         professor_email=professor_email,
+                         results=results)
+
+
+@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/student/<student_email>/result')
+@login_required
+def view_test_result(subject_key, professor_email, lesson_title, student_email):
+    """View detailed test result for a specific student"""
+    # Find the correct subject key (case-insensitive)
+    subject_data = None
+    for key, data in SUBJECTS.items():
+        if key.lower() == subject_key.lower():
+            subject_data = data
+            subject_key = key  # Use the correct case
+            break
+            
+    if not subject_data:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('account.account'))
+
+    # Check if user is admin or the professor
+    if not current_user.is_admin and current_user.email != professor_email:
+        flash('You do not have permission to view these results', 'error')
+        return redirect(url_for('learn.subject_page', subject_key=subject_key))
+
+    # Get the test result
+    test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
+    results_dir = os.path.join(test_dir, 'results')
+    result_file = os.path.join(results_dir, f"{lesson_title}_{student_email}.json")
+    
+    if not os.path.exists(result_file):
+        flash('Test result not found', 'error')
+        return redirect(url_for('learn.view_test_results', 
+                              subject_key=subject_key, 
+                              professor_email=professor_email))
+
+    # Load the test result
+    with open(result_file, 'r', encoding='utf-8') as f:
+        result = json.load(f)
+
+    # Get the original test to compare answers
+    test_file = os.path.join(test_dir, f"{lesson_title}.json")
+    if not os.path.exists(test_file):
+        # Try to find test with lesson title in data
+        test = None
+        if os.path.exists(test_dir):
+            for file in os.listdir(test_dir):
+                if file.endswith('.json'):
+                    with open(os.path.join(test_dir, file), 'r', encoding='utf-8') as f:
+                        test_data = json.load(f)
+                        if test_data.get('lesson') == lesson_title:
+                            test = test_data
+                            break
+        
+        # If still not found, try old naming pattern
+        if not test:
+            test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
+            if os.path.exists(test_file):
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    test = json.load(f)
+    else:
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test = json.load(f)
+
+    if not test:
+        flash('Original test not found', 'error')
+        return redirect(url_for('learn.view_test_results', 
+                              subject_key=subject_key, 
+                              professor_email=professor_email))
+
+    # Get student name
+    student = User.query.filter_by(email=student_email).first()
+    student_name = student.name if student else student_email
+
+    return render_template('test_result_detail.html',
+                         subject=subject_data['name'],
+                         subject_key=subject_key,
+                         subject_color=subject_data['color'],
+                         subject_icon=subject_data['icon'],
+                         professor_email=professor_email,
+                         lesson_title=lesson_title,
+                         student_name=student_name,
+                         student_email=student_email,
+                         test=test,
+                         result=result)

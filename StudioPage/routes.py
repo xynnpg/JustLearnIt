@@ -5,6 +5,8 @@ import os
 import json
 from functools import wraps
 from . import studio_bp
+from flask_login import current_user
+from flask_sqlalchemy import SQLAlchemy
 
 # Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -313,3 +315,75 @@ def view_test(subject, test):
                          user=current_user,
                          subject=subject,
                          test=test_data)
+
+@studio_bp.route('/test-results/<subject>')
+@login_required
+def view_test_results(subject):
+    # Check if subject exists
+    subject_key = subject.lower()
+    if subject_key not in SUBJECTS:
+        flash('Invalid subject.', 'error')
+        return redirect(url_for('studio.dashboard'))
+    
+    # Get test results from the directory
+    results_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, 'results')
+    if not os.path.exists(results_dir):
+        flash('No test results found.', 'info')
+        return redirect(url_for('studio.dashboard'))
+    
+    # Get all result files
+    results = []
+    for filename in os.listdir(results_dir):
+        if filename.endswith('.json'):
+            with open(os.path.join(results_dir, filename), 'r') as f:
+                result = json.load(f)
+                # Get student name from email
+                student = User.query.filter_by(email=result['student_email']).first()
+                result['student_name'] = student.name if student else result['student_email']
+                results.append(result)
+    
+    # Sort results by timestamp
+    results.sort(key=lambda x: x['timestamp'], reverse=True)
+    
+    return render_template('studio_test_results.html', 
+                         subject=SUBJECTS[subject_key],
+                         results=results)
+
+@studio_bp.route('/test-result/<subject>/<lesson_title>/<student_email>')
+@login_required
+def view_test_result(subject, lesson_title, student_email):
+    # Check if subject exists
+    subject_key = subject.lower()
+    if subject_key not in SUBJECTS:
+        flash('Invalid subject.', 'error')
+        return redirect(url_for('studio.dashboard'))
+    
+    # Get test result
+    result_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, 'results', f'{lesson_title}_{student_email}.json')
+    if not os.path.exists(result_path):
+        flash('Test result not found.', 'error')
+        return redirect(url_for('studio.view_test_results', subject=subject_key))
+    
+    # Load test result
+    with open(result_path, 'r') as f:
+        result = json.load(f)
+    
+    # Get original test
+    test_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, f'{lesson_title}.json')
+    if not os.path.exists(test_path):
+        flash('Original test not found.', 'error')
+        return redirect(url_for('studio.view_test_results', subject=subject_key))
+    
+    # Load original test
+    with open(test_path, 'r') as f:
+        test = json.load(f)
+    
+    # Get student name
+    student = User.query.filter_by(email=student_email).first()
+    student_name = student.name if student else student_email
+    
+    return render_template('studio_test_result_detail.html',
+                         subject=SUBJECTS[subject_key],
+                         test=test,
+                         result=result,
+                         student_name=student_name)

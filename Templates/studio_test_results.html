@@ -1,0 +1,110 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Test Results - {{ subject.name }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="studio-container">
+    <div class="page-header">
+        <h1><i class="{{ subject.icon }}"></i> Test Results - {{ subject.name }}</h1>
+    </div>
+
+    <div class="results-container">
+        {% if results %}
+        <div class="results-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Lesson</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result.student_name }}</td>
+                        <td>{{ result.lesson_title }}</td>
+                        <td>{{ result.score }}/{{ result.total }}</td>
+                        <td>{{ result.timestamp }}</td>
+                        <td>
+                            <a href="{{ url_for('studio.view_test_result', subject=subject.key, lesson_title=result.lesson_title, student_email=result.student_email) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-chart-bar"></i>
+            <p>No test results found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.results-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.results-table {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-size: 0.9em;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %} 

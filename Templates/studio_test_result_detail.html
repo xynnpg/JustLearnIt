@@ -1,0 +1,194 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Test Result - {{ test.title }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="studio-container">
+    <div class="page-header">
+        <h1><i class="{{ subject.icon }}"></i> Test Result - {{ test.title }}</h1>
+        <p class="student-info">Student: {{ student_name }}</p>
+    </div>
+
+    <div class="result-summary">
+        <div class="score-card" style="background-color: {{ subject.color }}">
+            <div class="score">{{ result.score }}/{{ result.total }}</div>
+            <div class="score-label">Score</div>
+        </div>
+        <div class="result-details">
+            <div class="detail-item">
+                <i class="fas fa-user"></i>
+                <span>{{ student_name }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-book"></i>
+                <span>{{ test.title }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ result.timestamp }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="questions-review">
+        <h2>Questions Review</h2>
+        {% for question in test.questions %}
+        <div class="question-card {% if result.answers[loop.index0] == question.correct_answer %}correct{% else %}incorrect{% endif %}">
+            <div class="question-header">
+                <span class="question-number">Question {{ loop.index }}</span>
+                <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
+            </div>
+            <div class="question-text">{{ question.text }}</div>
+            {% if question.type == 'multiple_choice' %}
+            <div class="options">
+                {% for option in question.options %}
+                <div class="option {% if loop.index0 == question.correct_answer %}correct{% elif loop.index0 == result.answers[loop.index0] %}incorrect{% endif %}">
+                    {{ option }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="answer-status">
+                {% if result.answers[loop.index0] == question.correct_answer %}
+                <i class="fas fa-check"></i> Correct
+                {% else %}
+                <i class="fas fa-times"></i> Incorrect
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.student-info {
+    color: #666;
+    margin-top: 10px;
+}
+
+.result-summary {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+    align-items: center;
+}
+
+.score-card {
+    padding: 20px;
+    border-radius: 8px;
+    color: white;
+    text-align: center;
+    min-width: 150px;
+}
+
+.score {
+    font-size: 2.5em;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.score-label {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.result-details {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+}
+
+.detail-item i {
+    color: #333;
+}
+
+.questions-review {
+    margin-top: 30px;
+}
+
+.questions-review h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.question-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.question-card.correct {
+    border-left: 4px solid #28a745;
+}
+
+.question-card.incorrect {
+    border-left: 4px solid #dc3545;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.question-number {
+    font-weight: 600;
+    color: #333;
+}
+
+.question-type {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.question-text {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option {
+    padding: 10px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+.option.correct {
+    background: #d4edda;
+    color: #155724;
+}
+
+.option.incorrect {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.answer-status {
+    margin-top: 15px;
+    font-weight: 500;
+}
+
+.answer-status.correct {
+    color: #28a745;
+}
+
+.answer-status.incorrect {
+    color: #dc3545;
+}
+</style>
+{% endblock %} 
