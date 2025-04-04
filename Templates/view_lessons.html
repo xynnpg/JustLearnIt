@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="learn-container">
-    <div class="subject-header subject-{{ subject.lower() }}">
-        <h1>{{ lesson_title }}</h1>
+    <div class="subject-header" style="border-bottom: 3px solid {{ subject_color }};">
+        <h1><i class="{{ subject_icon }}"></i> {{ lesson_title }}</h1>
         <p class="professor-info">Created by: {{ professor_email }}</p>
     </div>
 
@@ -16,24 +16,23 @@
     </div>
 
     {% if test %}
-    <div class="lesson-test">
+    <div class="lesson-test" style="border-top: 4px solid {{ subject_color }};">
         <h2><i class="fas fa-question-circle"></i> Lesson Test</h2>
         <p>Test your knowledge with {{ test.questions|length }} questions.</p>
-        <a href="{{ url_for('learn.view_lesson', subject=subject.lower(), professor_email=professor_email, lesson=lesson_title) }}"
-           class="test-btn">
+        <a href="#" class="test-btn" style="background-color: {{ subject_color }};">
             <i class="fas fa-play"></i> Start Test
         </a>
     </div>
     {% endif %}
 
     <div class="navigation-buttons">
-        <a href="{{ url_for('learn.professor_lessons', subject=subject.lower(), professor_email=professor_email) }}"
+        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email) }}"
            class="btn btn-back">
             <i class="fas fa-arrow-left"></i> Back to Lessons
         </a>
-        <a href="{{ url_for('learn.subject_page', subject=subject.lower()) }}"
+        <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}"
            class="btn btn-back">
-            <i class="fas fa-book"></i> Back to {{ subject }} Professors
+            <i class="fas fa-book"></i> Back to {{ subject }}
         </a>
     </div>
 </div>
