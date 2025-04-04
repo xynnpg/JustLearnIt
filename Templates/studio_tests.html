@@ -23,6 +23,21 @@
         justify-content: space-between;
         align-items: center;
     }
+    .test-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-view {
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+    .btn-view:hover {
+        background-color: #0056b3;
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -64,7 +79,7 @@
         {% for test in tests %}
         <li class="test-item">
             <span>{{ test.title }} ({{ test.question_count }} questions)</span>
-            <div class="lesson-actions">
+            <div class="test-actions">
                 <a href="{{ url_for('studio.view_test', subject=subject, test=test.title) }}"
                    class="btn btn-view">
                     <i class="fas fa-eye"></i> View

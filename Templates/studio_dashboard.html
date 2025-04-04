@@ -18,7 +18,7 @@
             <div class="card-content">
                 {% if subjects %}
                 <div class="subjects-list">
-                    {% for subject in subjects %}
+                    {% for subject_key, subject in subjects.items() %}
                     <div class="subject-item" style="border-left: 4px solid {{ subject.color }}">
                         <div class="subject-info">
                             <i class="{{ subject.icon }}"></i>

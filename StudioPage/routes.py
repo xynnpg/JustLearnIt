@@ -13,7 +13,26 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
 LECTII_DIR = os.path.join(INSTANCE_DIR, 'lectii')
 TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
-SUBJECTS = ['Bio', 'Isto', 'Geogra']
+SUBJECTS = {
+    'Bio': {
+        'name': 'Biology',
+        'key': 'Bio',
+        'color': '#28a745',
+        'icon': 'fas fa-dna'
+    },
+    'Isto': {
+        'name': 'History',
+        'key': 'Isto',
+        'color': '#dc3545',
+        'icon': 'fas fa-landmark'
+    },
+    'Geogra': {
+        'name': 'Geography',
+        'key': 'Geogra',
+        'color': '#17a2b8',
+        'icon': 'fas fa-globe-americas'
+    }
+}
 
 # Create base directories if they don't exist
 os.makedirs(LECTII_DIR, exist_ok=True)
@@ -44,10 +63,11 @@ def get_professor_dir(base_dir, subject):
 def studio():
     lesson_count = 0
     test_count = 0
+    student_count = 0
     try:
-        for subject in SUBJECTS:
-            lesson_dir = get_professor_dir(LECTII_DIR, subject)
-            test_dir = get_professor_dir(TESTE_DIR, subject)
+        for subject_key in SUBJECTS:
+            lesson_dir = get_professor_dir(LECTII_DIR, subject_key)
+            test_dir = get_professor_dir(TESTE_DIR, subject_key)
             if os.path.exists(lesson_dir):
                 lesson_count += len([f for f in os.listdir(lesson_dir) if f.endswith('.html')])
             if os.path.exists(test_dir):
@@ -55,10 +75,12 @@ def studio():
     except Exception as e:
         flash('Error counting lessons and tests', 'error')
 
-    return render_template('studio.html',
-                           user=current_user,
-                           lesson_count=lesson_count,
-                           test_count=test_count)
+    return render_template('studio_dashboard.html',
+                         user=current_user,
+                         subjects=SUBJECTS,
+                         total_lessons=lesson_count,
+                         total_tests=test_count,
+                         total_students=student_count)
 
 @studio_bp.route('/lessons', methods=['GET', 'POST'])
 @login_required
@@ -124,7 +146,7 @@ def lessons():
 
     return render_template('studio_lessons.html',
                          user=current_user,
-                         subject=subject,
+                         subject=SUBJECTS[subject],
                          subjects=SUBJECTS,
                          lessons=lessons)
 
@@ -144,7 +166,7 @@ def view_lesson(subject, lesson):
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    start_marker = '<div class="lesson-content">'
+    start_marker = '<div class="ql-editor">'
     end_marker = '</div>'
     start_idx = content.find(start_marker) + len(start_marker)
     end_idx = content.find(end_marker, start_idx)
@@ -171,7 +193,7 @@ def view_lesson(subject, lesson):
 </head>
 <body>
     <h1>{lesson}</h1>
-    <div class="lesson-content">{new_content}</div>
+    <div class="ql-editor">{new_content}</div>
     <div class="metadata" style="font-size: 0.8em; color: #666; margin-top: 30px;">
         Updated by: {current_user.email} | {datetime.now().strftime('%Y-%m-%d')} | Status: {'Published' if action == 'publish' else 'Draft'}
     </div>
@@ -201,8 +223,7 @@ def tests():
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
     # Get professor's test directory
-    tests_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
-    os.makedirs(tests_dir, exist_ok=True)
+    tests_dir = get_professor_dir(TESTE_DIR, subject)
     
     try:
         tests = []
@@ -233,8 +254,7 @@ def tests():
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
             
             # Get professor's test directory
-            tests_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
-            os.makedirs(tests_dir, exist_ok=True)
+            tests_dir = get_professor_dir(TESTE_DIR, subject)
 
             # Create test data structure
             test_data = {
@@ -271,8 +291,7 @@ def view_test(subject, test):
         return redirect(url_for('studio.tests'))
 
     # Get professor's test directory
-    test_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
-    os.makedirs(test_dir, exist_ok=True)
+    test_dir = get_professor_dir(TESTE_DIR, subject)
     
     test_file = os.path.join(test_dir, f"{test}.json")
     if os.path.exists(test_file):
@@ -318,9 +337,10 @@ def view_test(subject, test):
 
 @studio_bp.route('/test-results/<subject>')
 @login_required
+@require_professor
 def view_test_results(subject):
     # Check if subject exists
-    subject_key = subject.lower()
+    subject_key = subject
     if subject_key not in SUBJECTS:
         flash('Invalid subject.', 'error')
         return redirect(url_for('studio.dashboard'))
@@ -351,9 +371,10 @@ def view_test_results(subject):
 
 @studio_bp.route('/test-result/<subject>/<lesson_title>/<student_email>')
 @login_required
+@require_professor
 def view_test_result(subject, lesson_title, student_email):
     # Check if subject exists
-    subject_key = subject.lower()
+    subject_key = subject
     if subject_key not in SUBJECTS:
         flash('Invalid subject.', 'error')
         return redirect(url_for('studio.dashboard'))
