@@ -27,6 +27,11 @@ def require_professor(f):
     return decorated_function
 
 def get_professor_dir(base_dir, subject):
+    """Get professor-specific directory for a subject"""
+    if not current_user.is_authenticated:
+        return None
+        
+    # Create the full path: base_dir/subject/profesori/professor_email
     professor_dir = os.path.join(base_dir, subject, 'profesori', current_user.email)
     os.makedirs(professor_dir, exist_ok=True)
     return professor_dir
@@ -187,13 +192,16 @@ def view_lesson(subject, lesson):
 @studio_bp.route('/tests', methods=['GET', 'POST'])
 @login_required
 @require_professor
-def     tests():
+def tests():
     subject = request.args.get('subject', 'Bio')
     if subject not in SUBJECTS:
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
+    # Get professor's test directory
+    tests_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
+    os.makedirs(tests_dir, exist_ok=True)
+    
     try:
         tests = []
         if os.path.exists(tests_dir):
@@ -221,18 +229,26 @@ def     tests():
                 return jsonify({'success': False, 'message': 'Title and questions are required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            tests_dir = os.path.join(TESTE_DIR, subject, 'profesori')
+            
+            # Get professor's test directory
+            tests_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
             os.makedirs(tests_dir, exist_ok=True)
 
+            # Create test data structure
+            test_data = {
+                'title': title,
+                'subject': subject,
+                'questions': questions,
+                'created_by': current_user.email,
+                'created_at': datetime.utcnow().isoformat(),
+                'updated_at': datetime.utcnow().isoformat(),
+                'status': 'Draft'
+            }
+
+            # Save test file
             file_path = os.path.join(tests_dir, f"{safe_title}.json")
             with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'title': title,
-                    'subject': subject,
-                    'questions': questions,
-                    'created_by': current_user.email,
-                    'created_at': datetime.utcnow().isoformat()
-                }, f, indent=2)
+                json.dump(test_data, f, indent=2)
 
             return jsonify({'success': True})
         except Exception as e:
@@ -252,34 +268,48 @@ def view_test(subject, test):
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
 
-    file_path = os.path.join(get_professor_dir(TESTE_DIR, subject), f"{test}.json")
-    if not os.path.exists(file_path):
-        flash('Test not found', 'error')
-        return redirect(url_for('studio.tests'))
-
-    with open(file_path, 'r', encoding='utf-8') as f:
-        test_data = json.load(f)
+    # Get professor's test directory
+    test_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
+    os.makedirs(test_dir, exist_ok=True)
+    
+    test_file = os.path.join(test_dir, f"{test}.json")
+    if os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as f:
+            test_data = json.load(f)
+    else:
+        test_data = {
+            'title': test,
+            'subject': subject,
+            'questions': [],
+            'created_by': current_user.email,
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat(),
+            'status': 'Draft'
+        }
 
     if request.method == 'POST':
         try:
             data = request.get_json()
-            test_data['questions'] = data.get('questions')
-            test_data['title'] = data.get('title', test_data['title'])
-            test_data['updated_at'] = datetime.utcnow().isoformat()
-            test_data['status'] = 'Published' if data.get('action') == 'publish' else 'Draft'
+            questions = data.get('questions')
+            action = data.get('action')  # 'save' or 'publish'
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            if not questions:
+                return jsonify({'success': False, 'message': 'Questions are required'}), 400
+
+            # Update test data
+            test_data['questions'] = questions
+            test_data['updated_at'] = datetime.utcnow().isoformat()
+            test_data['status'] = 'Published' if action == 'publish' else 'Draft'
+
+            # Save updated test data
+            with open(test_file, 'w', encoding='utf-8') as f:
                 json.dump(test_data, f, indent=2)
 
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 500
 
-    lessons = [f.replace('.html', '') for f in os.listdir(get_professor_dir(LECTII_DIR, subject)) if f.endswith('.html')]
-    return render_template('studio_tests.html',
-                           user=current_user,
-                           subject=subject,
-                           subjects=SUBJECTS,
-                           test=test_data,
-                           lessons=lessons,
-                           edit_mode=True)
+    return render_template('view_test.html',
+                         user=current_user,
+                         subject=subject,
+                         test=test_data)

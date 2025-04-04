@@ -17,5 +17,26 @@
 <body>
 
 {% block content %}{% endblock %}
+
+<script>
+    // Ensure the menu works properly across all browsers
+    document.addEventListener('DOMContentLoaded', function() {
+        const details = document.querySelector('details');
+        if (details) {
+            // Close the menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!details.contains(event.target)) {
+                    details.removeAttribute('open');
+                }
+            });
+            
+            // Prevent the menu from closing when clicking inside it
+            details.querySelector('.menu').addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

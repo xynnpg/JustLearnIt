@@ -9,9 +9,9 @@ choose_bp = Blueprint('choose', __name__,
 
 # Subject mapping (aligned with LearnPage/routes.py)
 SUBJECTS = {
-    'biologie': 'bio',
-    'istorie': 'isto',
-    'geografie': 'geogra'
+    'biologie': 'Bio',
+    'istorie': 'Isto',
+    'geografie': 'Geogra'
 }
 
 FULL_SUBJECTS = {

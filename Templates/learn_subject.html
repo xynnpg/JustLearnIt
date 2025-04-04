@@ -1,38 +1,294 @@
 {% extends "learn_base.html" %}
 
-{% block title %}Learn {{ subject }} - JustLearnIt{% endblock %}
+{% block title %}{{ subject }} - Learn{% endblock %}
 
 {% block content %}
+<style>
+    .learn-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .subject-header {
+        background: linear-gradient(135deg, {{ subject_color }}, {{ subject_color }}dd);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .subject-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .subject-title i {
+        font-size: 2rem;
+    }
+
+    .subject-title h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+
+    .subject-description {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section-header i {
+        font-size: 1.5rem;
+        color: {{ subject_color }};
+    }
+
+    .section-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #f0f0f0;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .professor-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .professor-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: {{ subject_color }};
+    }
+
+    .professor-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .professor-info {
+        flex: 1;
+    }
+
+    .professor-info h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .professor-email {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .lesson-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .lesson-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: {{ subject_color }};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .lesson-info h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .lesson-professor {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .test-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .test-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: {{ subject_color }};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .test-info h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .test-professor {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .test-stats {
+        display: flex;
+        gap: 1rem;
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .test-stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .test-stats i {
+        color: {{ subject_color }};
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: {{ subject_color }};
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: {{ subject_color }}dd;
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .learn-container {
+            padding: 1rem;
+        }
+
+        .subject-header {
+            padding: 1.5rem;
+        }
+
+        .subject-title h1 {
+            font-size: 2rem;
+        }
+
+        .section {
+            padding: 1.5rem;
+        }
+
+        .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="learn-container">
-    <div class="subject-header" style="border-bottom: 3px solid {{ subject_color }};">
-        <h1><i class="{{ subject_icon }}"></i> {{ subject }}</h1>
-        <p>Explore lessons and tests for {{ subject }}</p>
+    <div class="subject-header">
+        <div class="subject-title">
+            <i class="{{ subject_icon }}"></i>
+            <h1>{{ subject }}</h1>
+        </div>
+        <p class="subject-description">Explore lessons and learn from our expert professors</p>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="professors-section">
-        <div class="section-title">
+    <div class="section">
+        <div class="section-header">
             <i class="fas fa-chalkboard-teacher"></i>
             <h2>Available Professors</h2>
         </div>
-
         {% if professors %}
-        <div class="professors-grid">
+        <div class="grid">
             {% for professor in professors %}
-            <div class="professor-card">
+            <div class="card professor-card">
                 <div class="professor-avatar">
                     <img src="https://ui-avatars.com/api/?name={{ professor.name|urlencode }}&background={{ subject_color|replace('#','') }}&color=fff">
                 </div>
                 <div class="professor-info">
                     <h3>{{ professor.name }}</h3>
-                    <p>{{ professor.email }}</p>
+                    <p class="professor-email">{{ professor.email }}</p>
                     <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor.email) }}"
                        class="btn btn-primary">
                         <i class="fas fa-book-open"></i> View Lessons
@@ -49,22 +305,26 @@
         {% endif %}
     </div>
 
-    <div class="lessons-section">
-        <div class="section-title">
+    <div class="section">
+        <div class="section-header">
             <i class="fas fa-book"></i>
-            <h2>All Available Lessons</h2>
+            <h2>Available Lessons</h2>
         </div>
-
         {% if lessons %}
-        <div class="lessons-list">
+        <div class="grid">
             {% for lesson in lessons %}
-            <div class="lesson-card" style="border-left: 4px solid {{ subject_color }};">
-                <h2>{{ lesson.title }}</h2>
-                <p>By: {{ lesson.professor }}</p>
-                <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=lesson.professor, lesson_title=lesson.title) }}"
-                   class="btn btn-primary">
-                    <i class="fas fa-eye"></i> View Lesson
-                </a>
+            <div class="card lesson-card">
+                <div class="lesson-icon">
+                    <i class="{{ subject_icon }}"></i>
+                </div>
+                <div class="lesson-info">
+                    <h3>{{ lesson.title }}</h3>
+                    <p class="lesson-professor">By: {{ lesson.professor }}</p>
+                    <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=lesson.professor_email, lesson_title=lesson.title) }}"
+                       class="btn btn-primary">
+                        <i class="fas fa-book-reader"></i> View Lesson
+                    </a>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -76,10 +336,39 @@
         {% endif %}
     </div>
 
-    <div class="navigation-buttons">
-        <a href="{{ url_for('account.account') }}" class="btn btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Account
-        </a>
+    <div class="section">
+        <div class="section-header">
+            <i class="fas fa-question-circle"></i>
+            <h2>Available Tests</h2>
+        </div>
+        {% if tests %}
+        <div class="grid">
+            {% for test in tests %}
+            <div class="card test-card">
+                <div class="test-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="test-info">
+                    <h3>{{ test.title }}</h3>
+                    <p class="test-professor">By: {{ test.professor }}</p>
+                    <p class="test-stats">
+                        <span><i class="fas fa-list-ol"></i> {{ test.question_count }} questions</span>
+                        <span><i class="fas fa-clock"></i> {{ test.created_at }}</span>
+                    </p>
+                    <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=test.professor_email, lesson_title=test.lesson_title) }}"
+                       class="btn btn-primary">
+                        <i class="fas fa-play"></i> Take Test
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-check"></i>
+            <p>No tests available for {{ subject }} yet.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

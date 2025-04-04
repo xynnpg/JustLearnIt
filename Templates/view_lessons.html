@@ -19,13 +19,30 @@
     <div class="lesson-test" style="border-top: 4px solid {{ subject_color }};">
         <h2><i class="fas fa-question-circle"></i> Lesson Test</h2>
         <p>Test your knowledge with {{ test.questions|length }} questions.</p>
-        <a href="#" class="test-btn" style="background-color: {{ subject_color }};">
+        {% if is_professor %}
+        <div class="test-actions">
+            <a href="{{ url_for('studio.view_test', subject=subject_key, test=lesson_title) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Test
+            </a>
+            <a href="{{ url_for('studio.tests', subject=subject_key) }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> View All Tests
+            </a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson_title) }}" 
+           class="test-btn" style="background-color: {{ subject_color }};">
             <i class="fas fa-play"></i> Start Test
         </a>
+        {% endif %}
     </div>
     {% endif %}
 
     <div class="navigation-buttons">
+        {% if is_professor %}
+        <a href="{{ url_for('studio.lessons', subject=subject_key) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Lesson
+        </a>
+        {% endif %}
         <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email) }}"
            class="btn btn-back">
             <i class="fas fa-arrow-left"></i> Back to Lessons
