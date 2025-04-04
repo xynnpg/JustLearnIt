@@ -17,7 +17,7 @@ TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
 
 def get_lessons_for_subject(subject):
     lessons = []
-    subject_dir = os.path.join(LECTII_DIR, subject)  # subject va fi 'biologie', 'istorie' sau 'geografie'
+    subject_dir = os.path.join(LECTII_DIR, subject)  # subject va fi 'bio', 'isto' sau 'geogra'
     if os.path.exists(subject_dir):
         for prof_dir in os.listdir(subject_dir):
             prof_path = os.path.join(subject_dir, prof_dir)
