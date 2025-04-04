@@ -26,7 +26,7 @@ def get_user_activity_stats():
     active_users = User.query.filter(User.last_login > (datetime.utcnow() - timedelta(days=7)) \
                                      .group_by(func.date(User.last_login)) \
                                      .with_entities(func.date(User.last_login), func.count()) \
-                                     .all()
+                                     .all())
 
     user_types = User.query.group_by(User.user_type) \
         .with_entities(User.user_type, func.count()) \
