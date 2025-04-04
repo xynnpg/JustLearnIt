@@ -1,3 +1,5 @@
+<!-- File: /Templates/admin.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,11 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - JustLearnIt</title>
     <link rel="stylesheet" href="{{ url_for('admin.static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="admin-container">
-        <h1>Admin Panel</h1>
-        <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">Logout</a>
+        <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+        <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -18,14 +25,87 @@
             {% endif %}
         {% endwith %}
 
-        <h2>Professors</h2>
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-value">{{ stats.total_users }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="stat-value">{{ stats.total_professors }}</div>
+                <div class="stat-label">Professors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="stat-value">{{ stats.total_students }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-value">{{ stats.unapproved_professors }}</div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <canvas id="userActivityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="userTypeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Pending Approvals Section -->
+        <h2><i class="fas fa-user-clock"></i> Pending Professor Approvals</h2>
+        {% if unapproved %}
         <table class="user-table">
             <tr>
                 <th>Email</th>
                 <th>Name</th>
                 <th>Subject</th>
-                <th>Approved</th>
+                <th>Applied On</th>
+                <th>IP Country</th>
+                <th>Actions</th>
+            </tr>
+            {% for prof in unapproved %}
+            <tr>
+                <td>{{ prof.email }}</td>
+                <td>{{ prof.name or 'N/A' }}</td>
+                <td>{{ prof.subject or 'N/A' }}</td>
+                <td>{{ prof.last_login.strftime('%Y-%m-%d') if prof.last_login else 'N/A' }}</td>
+                <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
+                <td>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="user_id" value="{{ prof.id }}">
+                        <button type="submit" name="action" value="approve" class="action-btn approve">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button type="submit" name="action" value="decline" class="action-btn decline">
+                            <i class="fas fa-times"></i> Decline
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p class="no-data">No pending professor approvals.</p>
+        {% endif %}
+
+        <!-- Professors Section -->
+        <h2><i class="fas fa-chalkboard-teacher"></i> Professors</h2>
+        <table class="user-table">
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Status</th>
                 <th>Last Login</th>
+                <th>IP Country</th>
                 <th>Actions</th>
             </tr>
             {% for prof in professors %}
@@ -33,14 +113,16 @@
                 <td>{{ prof.email }}</td>
                 <td>{{ prof.name or 'N/A' }}</td>
                 <td>{{ prof.subject or 'N/A' }}</td>
-                <td>{{ 'Yes' if prof.is_professor_approved else 'No' }}</td>
-                <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M:%S') if prof.last_login else 'Never' }}</td>
+                <td>{{ 'Approved' if prof.is_professor_approved else 'Pending' }}</td>
+                <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M') if prof.last_login else 'Never' }}</td>
+                <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
                 <td>
                     {% if not prof.is_professor_approved %}
                     <form method="POST" style="display:inline;">
                         <input type="hidden" name="user_id" value="{{ prof.id }}">
-                        <button type="submit" name="action" value="approve" class="action-btn approve">Approve</button>
-                        <button type="submit" name="action" value="decline" class="action-btn decline">Decline</button>
+                        <button type="submit" name="action" value="approve" class="action-btn approve">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
                     </form>
                     {% endif %}
                 </td>
@@ -48,21 +130,95 @@
             {% endfor %}
         </table>
 
-        <h2>Students</h2>
+        <!-- Students Section -->
+        <h2><i class="fas fa-user-graduate"></i> Students</h2>
         <table class="user-table">
             <tr>
                 <th>Email</th>
                 <th>Name</th>
+                <th>Subject</th>
                 <th>Last Login</th>
+                <th>IP Country</th>
+                <th>Activity</th>
             </tr>
             {% for student in students %}
             <tr>
                 <td>{{ student.email }}</td>
                 <td>{{ student.name or 'N/A' }}</td>
-                <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M:%S') if student.last_login else 'Never' }}</td>
+                <td>{{ student.subject or 'N/A' }}</td>
+                <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M') if student.last_login else 'Never' }}</td>
+                <td>{{ ip_countries.get(student.id, 'Unknown') }}</td>
+                <td>
+                    {% if student.last_login %}
+                        {{ ((datetime.utcnow() - student.last_login).days }} days ago
+                    {% else %}
+                        Never
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>
     </div>
+
+    <script>
+        // User Activity Chart
+        const activityCtx = document.getElementById('userActivityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: Object.keys({{ stats.activity.active_users|tojson|safe }}),
+                datasets: [{
+                    label: 'Active Users (Last 7 Days)',
+                    data: Object.values({{ stats.activity.active_users|tojson|safe }}),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'User Activity'
+                    }
+                }
+            }
+        });
+
+        // User Type Chart
+        const typeCtx = document.getElementById('userTypeChart').getContext('2d');
+        const typeChart = new Chart(typeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys({{ stats.activity.user_types|tojson|safe }}),
+                datasets: [{
+                    data: Object.values({{ stats.activity.user_types|tojson|safe }}),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'User Types'
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
