@@ -52,6 +52,7 @@ def get_tests_for_lesson(lesson_title, subject):
     return tests
 
 
+@learn_bp.route('/learn/<subject>')
 @login_required
 def subject_page(subject):
     # Verifică dacă subject este în cheile dicționarului
@@ -72,10 +73,10 @@ def subject_page(subject):
     lessons = get_lessons_for_subject(subject)
 
     return render_template('learn_subject.html',
-                           subject=subject_name,
-                           subject_key=subject,
-                           professors=professors,
-                           lessons=lessons)
+                         subject=subject_name,
+                         subject_key=subject,
+                         professors=professors,
+                         lessons=lessons)
 
 
 

@@ -39,6 +39,6 @@ def index():
             return render_template('pending.html')
         else:
             flash('Selections saved successfully!', 'success')
-            return redirect(url_for('learn.subject_page', subject=subject.lower()))  # Trimite cheia scurtă
+            return redirect(url_for('learn.subject_page', subject=subject.lower()))  # Trimite cheia scurtă (bio/isto/geogra)
 
     return render_template('choose.html', template='choose_base.html')
