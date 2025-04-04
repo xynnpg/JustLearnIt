@@ -62,7 +62,8 @@ def lessons():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
+    lessons_dir = get_professor_dir(LECTII_DIR, subject)
+
     try:
         lessons = []
         if os.path.exists(lessons_dir):
@@ -87,28 +88,28 @@ def lessons():
                 return jsonify({'success': False, 'message': 'Title and content are required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            lessons_dir = os.path.join(LECTII_DIR, subject, 'profesori')
+            lessons_dir = get_professor_dir(LECTII_DIR, subject)  # ✅ professor-specific directory
             os.makedirs(lessons_dir, exist_ok=True)
 
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{safe_title}</title>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <style>
-        body {{ padding: 20px; font-family: Arial, sans-serif; }}
-        .ql-editor {{ border: none; padding: 0; }}
-    </style>
-</head>
-<body>
-    <div class="ql-editor">{content}</div>
-</body>
-</html>
-""")
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{safe_title}</title>
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+        <style>
+            body {{ padding: 20px; font-family: Arial, sans-serif; }}
+            .ql-editor {{ border: none; padding: 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="ql-editor">{content}</div>
+    </body>
+    </html>
+    """)
 
             return jsonify({'success': True})
         except Exception as e:
