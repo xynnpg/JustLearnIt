@@ -7,6 +7,18 @@ choose_bp = Blueprint('choose', __name__,
                       template_folder='../Templates',
                       static_folder='../static/choose')
 
+# Subject mapping (aligned with LearnPage/routes.py)
+SUBJECTS = {
+    'biologie': 'bio',
+    'istorie': 'isto',
+    'geografie': 'geogra'
+}
+
+FULL_SUBJECTS = {
+    'biologie': 'Biologie',
+    'istorie': 'Istorie',
+    'geografie': 'Geografie'
+}
 
 @choose_bp.route('/choose', methods=['GET', 'POST'])
 @login_required
@@ -17,18 +29,20 @@ def index():
 
     if request.method == 'POST':
         user_type = request.form.get('user_type')
-        subject = request.form.get('subject')
+        subject_form = request.form.get('subject')  # e.g., 'biologie', 'istorie', 'geografie'
 
         if not user_type:
             flash('Please select if you are a student or teacher first!', 'error')
             return redirect(url_for('choose.index'))
 
-        if not subject:
-            flash('Please select a subject!', 'error')
+        if not subject_form or subject_form not in SUBJECTS:
+            flash('Please select a valid subject!', 'error')
             return redirect(url_for('choose.index'))
 
+        # Map the form subject to the full name and short key
         user.user_type = user_type
-        user.subject = subject  # Aici se salvează valoarea completă (Biologie/Istorie/Geografie)
+        user.subject = FULL_SUBJECTS[subject_form]  # Store full name (e.g., "Biologie")
+        subject_key = SUBJECTS[subject_form]  # Get short key (e.g., "bio")
 
         if user_type == 'profesor':
             user.is_professor_approved = False
@@ -39,6 +53,6 @@ def index():
             return render_template('pending.html')
         else:
             flash('Selections saved successfully!', 'success')
-            return redirect(url_for('learn.subject_page', subject=subject.lower()))  # Trimite cheia scurtă (bio/isto/geogra)
+            return redirect(url_for('learn.subject_page', subject_key=subject_key))  # Use short key
 
     return render_template('choose.html', template='choose_base.html')
