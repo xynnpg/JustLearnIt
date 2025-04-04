@@ -150,11 +150,12 @@
                 <td>{{ ip_countries.get(student.id, 'Unknown') }}</td>
                 <td>
                     {% if student.last_login %}
-                        {{ ((datetime.utcnow() - student.last_login).days }} days ago
+                        {{ (datetime.utcnow() - student.last_login).days }} days ago
                     {% else %}
                         Never
                     {% endif %}
                 </td>
+
             </tr>
             {% endfor %}
         </table>

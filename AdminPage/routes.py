@@ -9,6 +9,7 @@ import os
 import json
 import requests
 from sqlalchemy import func
+from datetime import datetime, timedelta
 
 admin_bp = Blueprint('admin', __name__,
                      template_folder='../Templates',
@@ -22,19 +23,34 @@ def is_admin_logged_in():
 
 
 def get_user_activity_stats():
-    # Get user activity statistics
-    active_users = User.query.filter(User.last_login > (datetime.utcnow() - timedelta(days=7)) \
-                                     .group_by(func.date(User.last_login)) \
-                                     .with_entities(func.date(User.last_login), func.count()) \
-                                     .all())
+    """Get user activity statistics"""
+    # Get active users count per day
+    active_users = db.session.query(
+        func.date(User.last_login).label('date'),
+        func.count(User.id).label('count')
+    ).filter(
+        User.last_login > (datetime.utcnow() - timedelta(days=7))
+    ).group_by(
+        func.date(User.last_login)
+    ).all()
 
-    user_types = User.query.group_by(User.user_type) \
-        .with_entities(User.user_type, func.count()) \
-        .all()
+    # Convert to dictionary format
+    active_users_dict = {str(date): count for date, count in active_users}
+
+    # Get user types count
+    user_types = db.session.query(
+        User.user_type,
+        func.count(User.id)
+    ).group_by(
+        User.user_type
+    ).all()
+
+    # Convert to dictionary format
+    user_types_dict = dict(user_types)
 
     return {
-        'active_users': dict(active_users),
-        'user_types': dict(user_types)
+        'active_users': active_users_dict,
+        'user_types': user_types_dict
     }
 
 
@@ -134,7 +150,8 @@ def admin_panel():
                            students=students,
                            unapproved=unapproved,
                            stats=stats,
-                           ip_countries=ip_countries)
+                           ip_countries=ip_countries,
+                           datetime=datetime)
 
 
 @admin_bp.route('/logout')
