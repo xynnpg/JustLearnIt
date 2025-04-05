@@ -431,10 +431,12 @@ def submit_test(subject_key, professor_email, lesson_title):
     # Calculate score
     score = 0
     total = len(test['questions'])
+    graded_questions = 0
     for i, question in enumerate(test['questions']):
         if question['type'] == 'multiple_choice':
-            if str(answers.get(str(i))) == str(question['correctIndex']):
+            if str(answers.get(str(i))) == str(question.get('correctIndex')):
                 score += 1
+            graded_questions += 1
 
     # Save test results
     results_dir = os.path.join(test_dir, 'results')
@@ -445,15 +447,20 @@ def submit_test(subject_key, professor_email, lesson_title):
         'lesson_title': lesson_title,
         'score': score,
         'total': total,
+        'graded_questions': graded_questions,
         'answers': answers,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'status': 'pending' if graded_questions < total else 'graded'
     }
     
     result_file = os.path.join(results_dir, f"{lesson_title}_{current_user.email}.json")
     with open(result_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2)
 
-    flash(f'Test submitted! Your score: {score}/{total}', 'success')
+    if graded_questions < total:
+        flash('Test submitted! Some questions require professor grading.', 'success')
+    else:
+        flash(f'Test submitted! Your score: {score}/{total}', 'success')
     return redirect(url_for('learn.professor_lessons', 
                           subject_key=subject_key, 
                           professor_email=professor_email))

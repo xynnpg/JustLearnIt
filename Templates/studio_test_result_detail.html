@@ -38,27 +38,116 @@
                 <span class="question-number">Question {{ loop.index }}</span>
                 <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
             </div>
-            <div class="question-text">{{ question.text }}</div>
+            <div class="question-text">{{ question.text|safe }}</div>
             {% if question.type == 'multiple_choice' %}
             <div class="options">
                 {% for option in question.options %}
-                <div class="option {% if loop.index0 == question.correct_answer %}correct{% elif loop.index0 == result.answers[loop.index0] %}incorrect{% endif %}">
-                    {{ option }}
+                <div class="option {% if loop.index0 == question.correctIndex %}correct{% elif loop.index0|string == result.answers[loop.index0|string] %}incorrect{% endif %}">
+                    {{ option|safe }}
                 </div>
                 {% endfor %}
             </div>
+            {% elif question.type in ['short_answer', 'essay'] %}
+            <div class="student-answer">
+                <h4>Student's Answer:</h4>
+                <div class="answer-text">
+                    {% if result.answers and loop.index0|string in result.answers %}
+                        {{ result.answers[loop.index0|string]|safe }}
+                    {% else %}
+                        <em>No answer provided</em>
+                    {% endif %}
+                </div>
+                <div class="grading-section">
+                    <label for="grade_{{ loop.index0 }}">Grade (0-10):</label>
+                    <input type="number" 
+                           id="grade_{{ loop.index0 }}" 
+                           name="grade_{{ loop.index0 }}" 
+                           min="0" 
+                           max="10" 
+                           step="0.1"
+                           value="{{ result.grades[loop.index0|string] if result.grades and loop.index0|string in result.grades else '' }}"
+                           class="grade-input">
+                    <button class="btn btn-primary save-grade" 
+                            data-question="{{ loop.index0 }}"
+                            {% if result.grades and loop.index0|string in result.grades %}disabled{% endif %}>
+                        {% if result.grades and loop.index0|string in result.grades %}Graded{% else %}Save Grade{% endif %}
+                    </button>
+                </div>
+            </div>
             {% endif %}
             <div class="answer-status">
-                {% if result.answers[loop.index0] == question.correct_answer %}
-                <i class="fas fa-check"></i> Correct
-                {% else %}
-                <i class="fas fa-times"></i> Incorrect
+                {% if question.type == 'multiple_choice' %}
+                    {% if result.answers[loop.index0|string] == question.correctIndex|string %}
+                    <i class="fas fa-check"></i> Correct
+                    {% else %}
+                    <i class="fas fa-times"></i> Incorrect
+                    {% endif %}
+                {% elif question.type in ['short_answer', 'essay'] %}
+                    {% if result.grades and loop.index0|string in result.grades %}
+                    <i class="fas fa-check"></i> Graded ({{ result.grades[loop.index0|string] }}/10)
+                    {% else %}
+                    <i class="fas fa-clock"></i> Pending Grade
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveGradeButtons = document.querySelectorAll('.save-grade');
+    
+    saveGradeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const questionIndex = this.dataset.question;
+            const gradeInput = document.getElementById(`grade_${questionIndex}`);
+            const grade = gradeInput.value;
+            
+            if (grade === '' || grade < 0 || grade > 10) {
+                alert('Please enter a valid grade between 0 and 10');
+                return;
+            }
+            
+            fetch("{{ url_for('studio.grade_question', subject=subject.key, test=test.title, student_email=result.student_email) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question_index: questionIndex,
+                    grade: parseFloat(grade)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.disabled = true;
+                    this.textContent = 'Graded';
+                    const statusElement = this.closest('.question-card').querySelector('.answer-status');
+                    statusElement.innerHTML = `<i class="fas fa-check"></i> Graded (${grade}/10)`;
+                    
+                    // Update total score if all questions are graded
+                    if (data.all_graded) {
+                        const scoreCard = document.querySelector('.score');
+                        if (scoreCard) {
+                            scoreCard.textContent = data.total_score.toFixed(1);
+                        }
+                        location.reload();
+                    }
+                } else {
+                    alert('Error saving grade: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving grade. Please try again.');
+            });
+        });
+    });
+});
+</script>
 
 <style>
 .student-info {
@@ -190,6 +279,62 @@
 
 .answer-status .fa-times {
     color: #dc3545;
+}
+
+.student-answer {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.answer-text {
+    margin: 10px 0;
+    padding: 15px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    min-height: 50px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #000000;
+}
+
+.grading-section {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.grade-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.save-grade {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    background-color: {{ subject.color }};
+    border: none;
+    color: white;
+}
+
+.save-grade:hover {
+    opacity: 0.9;
+}
+
+.save-grade:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 </style>
 {% endblock %} 

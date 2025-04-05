@@ -397,11 +397,8 @@ def view_test_result(subject, lesson_title, student_email):
     with open(result_path, 'r') as f:
         result = json.load(f)
     
-    # Convert score to 1-10 scale
-    if 'score' in result and 'total' in result and result['total'] > 0:
-        result['grade'] = round((result['score'] / result['total']) * 10, 1)
-    else:
-        result['grade'] = 0
+    # Debug: Print result data
+    print(f"Test result data: {result}")
     
     # Get original test
     test_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, f'{lesson_title}.json')
@@ -413,12 +410,84 @@ def view_test_result(subject, lesson_title, student_email):
     with open(test_path, 'r') as f:
         test = json.load(f)
     
+    # Debug: Print test data
+    print(f"Test data: {test}")
+    
     # Get student name
     student = User.query.filter_by(email=student_email).first()
     student_name = student.name if student else student_email
+    
+    # Calculate total score including graded questions
+    total_score = result.get('score', 0)
+    if 'grades' in result:
+        graded_score = sum(result['grades'].values())
+        total_score += graded_score
+    
+    result['total_score'] = total_score
+    
+    # Debug: Print final result data
+    print(f"Final result data: {result}")
     
     return render_template('studio_test_result_detail.html',
                          subject=SUBJECTS[subject_key],
                          test=test,
                          result=result,
                          student_name=student_name)
+
+@studio_bp.route('/grade-question/<subject>/<test>/<student_email>', methods=['POST'])
+@login_required
+@require_professor
+def grade_question(subject, test, student_email):
+    try:
+        data = request.get_json()
+        question_index = int(data.get('question_index'))
+        grade = float(data.get('grade'))
+        
+        if grade < 0 or grade > 10:
+            return jsonify({'success': False, 'message': 'Grade must be between 0 and 10'})
+        
+        # Get test result file path
+        result_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, 'results', f'{test}_{student_email}.json')
+        
+        if not os.path.exists(result_path):
+            return jsonify({'success': False, 'message': 'Test result not found'})
+        
+        # Load current result
+        with open(result_path, 'r') as f:
+            result = json.load(f)
+        
+        # Initialize grades dictionary if it doesn't exist
+        if 'grades' not in result:
+            result['grades'] = {}
+        
+        # Add or update grade
+        result['grades'][str(question_index)] = grade
+        
+        # Check if all questions are now graded
+        test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f'{test}.json')
+        with open(test_path, 'r') as f:
+            test_data = json.load(f)
+        
+        total_questions = len(test_data['questions'])
+        graded_questions = len(result['grades']) + result.get('graded_questions', 0)
+        
+        # Calculate total score
+        total_score = result.get('score', 0)
+        graded_score = sum(result['grades'].values())
+        result['total_score'] = total_score + graded_score
+        
+        if graded_questions == total_questions:
+            result['status'] = 'graded'
+        
+        # Save updated result
+        with open(result_path, 'w') as f:
+            json.dump(result, f, indent=2)
+        
+        return jsonify({
+            'success': True,
+            'all_graded': graded_questions == total_questions,
+            'total_score': result['total_score']
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})

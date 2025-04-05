@@ -2,7 +2,7 @@
 
 {% block title %}Test Results - {{ subject.name }} - JustLearnIt{% endblock %}
 
-{% block studio_content %}
+{% block content %}
 <div class="studio-container">
     <div class="page-header">
         <h1><i class="{{ subject.icon }}"></i> Test Results - {{ subject.name }}</h1>
@@ -48,39 +48,12 @@
 </div>
 
 <style>
-.studio-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.page-header h1 {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0;
-    color: var(--light-text);
-}
-
-.page-header h1 i {
-    color: var(--primary-color);
-}
-
 .results-container {
-    background-color: var(--card-bg);
-    border-radius: var(--radius-md);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    width: 100%;
-    box-sizing: border-box;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin: 20px 0;
 }
 
 .results-table {
@@ -95,43 +68,44 @@ table {
 th, td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #eee;
 }
 
 th {
-    background-color: var(--darker-bg);
+    background: #f8f9fa;
     font-weight: 600;
-    color: var(--light-text);
+    color: #333;
 }
 
 tr:hover {
-    background-color: var(--hover-bg);
+    background: #f8f9fa;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-size: 0.9em;
+}
+
+.btn:hover {
+    opacity: 0.9;
 }
 
 .empty-state {
     text-align: center;
     padding: 40px;
-    color: var(--muted-text);
+    color: #666;
 }
 
 .empty-state i {
     font-size: 3em;
     margin-bottom: 20px;
     opacity: 0.5;
-}
-
-@media (max-width: 768px) {
-    .results-container {
-        padding: 1rem;
-    }
-    
-    table {
-        font-size: 0.9rem;
-    }
-    
-    th, td {
-        padding: 8px;
-    }
 }
 </style>
 {% endblock %} 
