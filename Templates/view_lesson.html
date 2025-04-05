@@ -1,29 +1,24 @@
 {% extends "studio_base.html" %}
 
-{% block title %}View Lesson: {{ lesson_title }} - JustLearnIt{% endblock %}
+{% block title %}{{ lesson_title }} - JustLearnIt{% endblock %}
 
-{% block content %}
-<div class="lesson-container">
-    <div class="lesson-header">
-        <div class="header-content">
-            <h1 class="lesson-title">
-                <i class="fas fa-book"></i>
-                {{ lesson_title }}
-            </h1>
-            <div class="user-info">
-                <span class="badge badge-primary">{{ subject }}</span>
-                <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar" alt="Profile">
-            </div>
+{% block studio_content %}
+<div class="studio-container">
+    <div class="page-header">
+        <h1><i class="{{ subject.icon }}"></i> {{ lesson_title }}</h1>
+        <div class="user-info">
+            <span class="badge badge-primary">{{ current_user.name }}</span>
+            <img src="{{ current_user.avatar_url or url_for('static', filename='images/default-avatar.png') }}" alt="Avatar" class="avatar">
         </div>
     </div>
 
-    <div class="lesson-content card">
-        <div class="content-wrapper">
+    <div class="content-area">
+        <div class="view-lesson-content">
             {{ content|safe }}
         </div>
-
-        <div class="action-buttons">
-            <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-primary">
+        
+        <div class="form-actions">
+            <a href="{{ url_for('studio.edit_lesson', subject=subject, lesson=lesson_title) }}" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Edit Lesson
             </a>
             <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-secondary">
@@ -34,166 +29,63 @@
 </div>
 
 <style>
-.lesson-container {
-    max-width: 1000px;
+.studio-container {
+    max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.lesson-header {
-    margin-bottom: 2rem;
-}
-
-.header-content {
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    margin-bottom: 2rem;
 }
 
-.lesson-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--light-text);
+.page-header h1 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    margin: 0;
+    color: var(--light-text);
 }
 
-.lesson-title i {
+.page-header h1 i {
     color: var(--primary-color);
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.lesson-content {
+.content-area {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
     padding: 2rem;
     margin-bottom: 2rem;
-}
-
-.content-wrapper {
-    margin-bottom: 2rem;
-    line-height: 1.8;
-    color: var(--light-text);
-}
-
-.content-wrapper h1,
-.content-wrapper h2,
-.content-wrapper h3,
-.content-wrapper h4,
-.content-wrapper h5,
-.content-wrapper h6 {
-    color: var(--light-text);
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.content-wrapper p {
-    margin-bottom: 1.5rem;
-}
-
-.content-wrapper ul,
-.content-wrapper ol {
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
-
-.content-wrapper li {
-    margin-bottom: 0.5rem;
-}
-
-.content-wrapper code {
-    background-color: var(--darker-bg);
-    padding: 0.2rem 0.4rem;
-    border-radius: var(--radius-sm);
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
-}
-
-.content-wrapper pre {
-    background-color: var(--darker-bg);
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    overflow-x: auto;
-    margin-bottom: 1.5rem;
-}
-
-.content-wrapper blockquote {
-    border-left: 4px solid var(--primary-color);
-    padding-left: 1rem;
-    margin-left: 0;
-    margin-bottom: 1.5rem;
-    color: var(--muted-text);
-}
-
-.content-wrapper img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius-md);
-    margin: 1.5rem 0;
-}
-
-.content-wrapper table {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1.5rem;
+    box-sizing: border-box;
 }
 
-.content-wrapper th,
-.content-wrapper td {
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
+.view-lesson-content {
+    margin-bottom: 2rem;
+    overflow-x: auto;
 }
 
-.content-wrapper th {
-    background-color: var(--darker-bg);
-    font-weight: 600;
-}
-
-.action-buttons {
+.form-actions {
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
     flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
-    .lesson-container {
+    .content-area {
         padding: 1rem;
     }
-
-    .lesson-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .header-content {
+    
+    .form-actions {
         flex-direction: column;
-        align-items: flex-start;
     }
-
-    .lesson-title {
-        font-size: 1.5rem;
-    }
-
-    .lesson-content {
-        padding: 1.5rem;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
+    
     .btn {
         width: 100%;
-        justify-content: center;
     }
 }
 </style>

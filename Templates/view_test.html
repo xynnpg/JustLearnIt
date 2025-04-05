@@ -1,79 +1,69 @@
 {% extends "studio_base.html" %}
 
-{% block title %}View Test: {{ test.title }} - JustLearnIt{% endblock %}
+{% block title %}{{ test.title }} - JustLearnIt{% endblock %}
 
-{% block content %}
-<div class="test-container">
-    <div class="test-header">
-        <div class="header-content">
-            <h1 class="test-title">
-                <i class="fas fa-question-circle"></i>
-                {{ test.title }}
-            </h1>
-            <div class="user-info">
-                <span class="badge badge-primary">{{ subject }}</span>
-                <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar" alt="Profile">
-            </div>
+{% block studio_content %}
+<div class="studio-container">
+    <div class="page-header">
+        <h1><i class="{{ subject.icon }}"></i> {{ test.title }}</h1>
+        <div class="user-info">
+            <span class="badge badge-primary">{{ current_user.name }}</span>
+            <img src="{{ current_user.avatar_url or url_for('static', filename='images/default-avatar.png') }}" alt="Avatar" class="avatar">
         </div>
     </div>
 
-    <div class="test-content card">
+    <div class="content-area">
         <div class="test-info">
-            <h3 class="test-subtitle">{{ test.title }}</h3>
-            {% if test.lesson %}
-            <p class="lesson-link">
-                <i class="fas fa-book"></i>
-                Associated Lesson: {{ test.lesson }}
-            </p>
-            {% endif %}
+            <h2>Test Information</h2>
+            <div class="info-item">
+                <span class="info-label">Subject:</span>
+                <span class="info-value">{{ subject.name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Created:</span>
+                <span class="info-value">{{ test.created_at }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value badge {% if test.status == 'Published' %}badge-success{% else %}badge-warning{% endif %}">
+                    {{ test.status }}
+                </span>
+            </div>
         </div>
-        
-        <div id="questions-container">
-            {% for question in test.questions %}
-            <div class="question-card card">
-                <div class="question-header">
-                    <select class="question-type form-select">
-                        <option value="multiple_choice" {% if question.type == 'multiple_choice' %}selected{% endif %}>Multiple Choice</option>
-                        <option value="short_answer" {% if question.type == 'short_answer' %}selected{% endif %}>Short Answer</option>
-                        <option value="essay" {% if question.type == 'essay' %}selected{% endif %}>Essay</option>
-                    </select>
-                    <button class="btn btn-danger remove-question-btn">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                <div class="question-body">
-                    <div class="form-group">
-                        <label>Question Content</label>
-                        <div class="question-editor">{{ question.text|safe }}</div>
+
+        <div class="test-questions">
+            <h2>Questions</h2>
+            {% if test.questions %}
+                {% for question in test.questions %}
+                <div class="question-card">
+                    <div class="question-header">
+                        <span class="question-number">Question {{ loop.index }}</span>
+                        <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
                     </div>
+                    <div class="question-text">{{ question.text }}</div>
                     {% if question.type == 'multiple_choice' %}
-                    <div class="options-container">
+                    <div class="options">
                         {% for option in question.options %}
-                        <div class="option-item">
-                            <input type="radio" name="correct-{{ loop.index0 }}" class="correct-option" {% if loop.index0 == question.correctIndex %}checked{% endif %}>
-                            <div class="option-editor">{{ option|safe }}</div>
+                        <div class="option {% if loop.index0 == question.correct_answer %}correct{% endif %}">
+                            {{ option }}
                         </div>
                         {% endfor %}
-                        <button class="btn btn-info add-option-btn">
-                            <i class="fas fa-plus"></i> Add Option
-                        </button>
                     </div>
                     {% endif %}
                 </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-question-circle"></i>
+                    <p>No questions added yet.</p>
+                </div>
+            {% endif %}
         </div>
-        
-        <div class="action-buttons">
-            <button id="add-question" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Question
-            </button>
-            <button id="save-test" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Test
-            </button>
-            <button id="publish-test" class="btn btn-success">
-                <i class="fas fa-check"></i> Publish Test
-            </button>
+
+        <div class="form-actions">
+            <a href="{{ url_for('studio.edit_test', subject=subject, test=test.title) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Test
+            </a>
             <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Tests
             </a>
@@ -81,405 +71,155 @@
     </div>
 </div>
 
-<script type="text/template" id="question-template">
-    <div class="question-card card">
-        <div class="question-header">
-            <select class="question-type form-select">
-                <option value="multiple_choice">Multiple Choice</option>
-                <option value="short_answer">Short Answer</option>
-                <option value="essay">Essay</option>
-            </select>
-            <button class="btn btn-danger remove-question-btn">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <div class="question-body">
-            <div class="form-group">
-                <label>Question Content</label>
-                <div class="question-editor"></div>
-            </div>
-            <div class="options-container" style="display: none;">
-                <div class="option-item">
-                    <input type="radio" name="correct-{id}" class="correct-option">
-                    <div class="option-editor"></div>
-                </div>
-                <button class="btn btn-info add-option-btn">
-                    <i class="fas fa-plus"></i> Add Option
-                </button>
-            </div>
-        </div>
-    </div>
-</script>
-
 <style>
-.test-container {
-    max-width: 1000px;
+.studio-container {
+    max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.test-header {
-    margin-bottom: 2rem;
-}
-
-.header-content {
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    margin-bottom: 2rem;
 }
 
-.test-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--light-text);
+.page-header h1 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    margin: 0;
+    color: var(--light-text);
 }
 
-.test-title i {
+.page-header h1 i {
     color: var(--primary-color);
 }
 
-.test-content {
+.content-area {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
     padding: 2rem;
     margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .test-info {
     margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
 }
 
-.test-subtitle {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0 0 1rem;
+.test-info h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
     color: var(--light-text);
 }
 
-.lesson-link {
+.info-item {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--muted-text);
-    margin: 0;
+    margin-bottom: 0.5rem;
 }
 
-.lesson-link i {
-    color: var(--primary-color);
+.info-label {
+    font-weight: 600;
+    width: 100px;
+    color: var(--muted-text);
+}
+
+.info-value {
+    color: var(--light-text);
+}
+
+.test-questions h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--light-text);
 }
 
 .question-card {
-    margin-bottom: 1.5rem;
+    background-color: var(--darker-bg);
+    border-radius: var(--radius-md);
     padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--primary-color);
 }
 
 .question-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.form-select {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    color: var(--light-text);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
-    transition: var(--transition);
-    min-width: 200px;
-}
-
-.form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(120, 8, 208, 0.25);
-}
-
-.question-body {
-    padding: 1rem 0;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-weight: 500;
-    color: var(--light-text);
-}
-
-.options-container {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background-color: var(--darker-bg);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.option-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
     margin-bottom: 1rem;
+    color: var(--muted-text);
+    font-size: 0.9rem;
 }
 
-.correct-option {
-    margin-top: 0.5rem;
+.question-text {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--light-text);
 }
 
-.action-buttons {
+.options {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.option {
+    padding: 0.75rem;
+    background-color: var(--card-bg);
+    border-radius: var(--radius-sm);
+    color: var(--light-text);
+}
+
+.option.correct {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-left: 3px solid var(--success-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted-text);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.form-actions {
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
     flex-wrap: wrap;
 }
 
-.btn-info {
-    background-color: var(--info-color);
-    color: white;
+.badge-success {
+    background-color: var(--success-color);
+}
+
+.badge-warning {
+    background-color: var(--warning-color);
+    color: #212529;
 }
 
 @media (max-width: 768px) {
-    .test-container {
+    .content-area {
         padding: 1rem;
     }
-
-    .test-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .header-content {
+    
+    .form-actions {
         flex-direction: column;
-        align-items: flex-start;
     }
-
-    .test-title {
-        font-size: 1.5rem;
-    }
-
-    .test-content {
-        padding: 1.5rem;
-    }
-
-    .question-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .form-select {
-        width: 100%;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
+    
     .btn {
         width: 100%;
-        justify-content: center;
     }
 }
 </style>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<script>
-    $(document).ready(function() {
-        // Initialize Quill editors for existing questions
-        $('.question-editor').each(function() {
-            new Quill(this, {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                        ['bold', 'italic', 'underline'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['image', 'link'],
-                        ['clean']
-                    ]
-                }
-            });
-        });
-
-        // Initialize Quill editors for existing options
-        $('.option-editor').each(function() {
-            new Quill(this, {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['clean']
-                    ]
-                }
-            });
-        });
-
-        // Handle add question button
-        $('#add-question').on('click', function(e) {
-            e.preventDefault();
-            addQuestion();
-        });
-
-        // Handle save test button
-        $('#save-test').on('click', function(e) {
-            e.preventDefault();
-            saveTest('save');
-        });
-
-        // Handle publish test button
-        $('#publish-test').on('click', function(e) {
-            e.preventDefault();
-            saveTest('publish');
-        });
-
-        // Handle question type change
-        $(document).on('change', '.question-type', function() {
-            const $question = $(this).closest('.question-card');
-            const $optionsContainer = $question.find('.options-container');
-            
-            if ($(this).val() === 'multiple_choice') {
-                $optionsContainer.show();
-            } else {
-                $optionsContainer.hide();
-            }
-        });
-
-        // Handle add option button
-        $(document).on('click', '.add-option-btn', function() {
-            const $optionsContainer = $(this).closest('.options-container');
-            const optionId = Date.now();
-            
-            const $optionItem = $('<div class="option-item">' +
-                '<input type="radio" name="correct-' + optionId + '" class="correct-option">' +
-                '<div class="option-editor"></div>' +
-                '</div>');
-            
-            $optionsContainer.prepend($optionItem);
-            
-            // Initialize Quill editor for the new option
-            new Quill($optionItem.find('.option-editor')[0], {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['clean']
-                    ]
-                }
-            });
-        });
-
-        // Handle remove question button
-        $(document).on('click', '.remove-question-btn', function() {
-            $(this).closest('.question-card').remove();
-        });
-    });
-
-    function addQuestion() {
-        const id = Date.now();
-        const template = $('#question-template').html().replace(/{id}/g, id);
-        const $template = $(template);
-        $('#questions-container').append($template);
-
-        // Initialize Quill editor for question
-        const questionEditor = new Quill($template.find('.question-editor')[0], {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['image', 'link'],
-                    ['clean']
-                ]
-            },
-            placeholder: 'Enter your question here...'
-        });
-
-        // Initialize Quill editor for option
-        const optionEditor = new Quill($template.find('.option-editor')[0], {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['clean']
-                ]
-            },
-            placeholder: 'Enter option text here...'
-        });
-    }
-
-    function saveTest(action) {
-        const questions = [];
-
-        // Collect questions data
-        $('.question-card').each(function() {
-            const $question = $(this);
-            const type = $question.find('.question-type').val();
-            const questionContent = $question.find('.question-editor .ql-editor').html();
-            const question = { type, text: questionContent };
-
-            if (type === 'multiple_choice') {
-                question.options = [];
-                let correctIndex = -1;
-
-                $question.find('.option-item').each(function(index) {
-                    const optionContent = $(this).find('.option-editor .ql-editor').html();
-                    question.options.push(optionContent);
-
-                    if ($(this).find('.correct-option').is(':checked')) {
-                        correctIndex = index;
-                    }
-                });
-
-                question.correctIndex = correctIndex;
-            }
-
-            questions.push(question);
-        });
-
-        // Save test data
-        fetch("{{ url_for('studio.view_test', subject=subject, test=test.title) }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                questions: questions,
-                action: action
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                throw new Error(data.message || 'Unknown error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error saving test: ' + error.message);
-        });
-    }
-</script>
 {% endblock %} 
