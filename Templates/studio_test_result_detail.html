@@ -11,8 +11,8 @@
 
     <div class="result-summary">
         <div class="score-card" style="background-color: {{ subject.color }}">
-            <div class="score">{{ result.score }}/{{ result.total }}</div>
-            <div class="score-label">Score</div>
+            <div class="score">{{ result.grade }}</div>
+            <div class="score-label">Grade</div>
         </div>
         <div class="result-details">
             <div class="detail-item">
@@ -103,11 +103,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #666;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
 }
 
 .detail-item i {
-    color: #333;
+    color: {{ subject.color }};
+    font-size: 1.2em;
 }
 
 .questions-review {
@@ -122,44 +125,38 @@
 .question-card {
     background: white;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #ddd;
 }
 
 .question-card.correct {
-    border-left: 4px solid #28a745;
+    border-left-color: #28a745;
 }
 
 .question-card.incorrect {
-    border-left: 4px solid #dc3545;
+    border-left-color: #dc3545;
 }
 
 .question-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
-}
-
-.question-number {
-    font-weight: 600;
-    color: #333;
-}
-
-.question-type {
     color: #666;
     font-size: 0.9em;
 }
 
 .question-text {
+    font-size: 1.1em;
     margin-bottom: 15px;
     color: #333;
 }
 
 .options {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 10px;
+    margin: 15px 0;
 }
 
 .option {
@@ -183,11 +180,15 @@
     font-weight: 500;
 }
 
-.answer-status.correct {
+.answer-status i {
+    margin-right: 5px;
+}
+
+.answer-status .fa-check {
     color: #28a745;
 }
 
-.answer-status.incorrect {
+.answer-status .fa-times {
     color: #dc3545;
 }
 </style>

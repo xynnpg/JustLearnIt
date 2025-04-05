@@ -7,6 +7,7 @@ from functools import wraps
 from . import studio_bp
 from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
+from models import User
 
 # Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -360,6 +361,13 @@ def view_test_results(subject):
                 # Get student name from email
                 student = User.query.filter_by(email=result['student_email']).first()
                 result['student_name'] = student.name if student else result['student_email']
+                
+                # Convert score to 1-10 scale
+                if 'score' in result and 'total' in result and result['total'] > 0:
+                    result['grade'] = round((result['score'] / result['total']) * 10, 1)
+                else:
+                    result['grade'] = 0
+                
                 results.append(result)
     
     # Sort results by timestamp
@@ -388,6 +396,12 @@ def view_test_result(subject, lesson_title, student_email):
     # Load test result
     with open(result_path, 'r') as f:
         result = json.load(f)
+    
+    # Convert score to 1-10 scale
+    if 'score' in result and 'total' in result and result['total'] > 0:
+        result['grade'] = round((result['score'] / result['total']) * 10, 1)
+    else:
+        result['grade'] = 0
     
     # Get original test
     test_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, f'{lesson_title}.json')

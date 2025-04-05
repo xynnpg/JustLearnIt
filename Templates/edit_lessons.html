@@ -109,12 +109,17 @@ body {
     background-color: var(--dark-bg);
     color: var(--light-text);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .editor-container {
     display: flex;
     height: calc(100vh - 60px);
     overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Sidebar */
@@ -125,6 +130,8 @@ body {
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .user-info {
@@ -178,6 +185,7 @@ body {
 .subject-nav {
     padding: 1.5rem 0;
     flex-grow: 1;
+    overflow-y: auto;
 }
 
 .subject-nav h4 {
@@ -225,6 +233,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: calc(100% - 300px);
+    box-sizing: border-box;
 }
 
 .editor-header {
@@ -249,6 +259,9 @@ body {
 
 .form-group {
     margin-bottom: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .form-group label {
@@ -270,6 +283,7 @@ textarea {
     font-size: 1rem;
     line-height: 1.6;
     resize: none;
+    box-sizing: border-box;
 }
 
 textarea:focus {
@@ -289,6 +303,7 @@ textarea:focus {
     gap: 0.5rem;
     transition: all 0.2s ease;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .btn-primary {
@@ -401,6 +416,32 @@ textarea:focus {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .editor-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .editor-sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+    }
+    
+    .editor-main {
+        width: 100%;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 

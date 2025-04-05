@@ -16,7 +16,7 @@
                     <tr>
                         <th>Student</th>
                         <th>Lesson</th>
-                        <th>Score</th>
+                        <th>Grade</th>
                         <th>Date</th>
                         <th>Actions</th>
                     </tr>
@@ -26,7 +26,7 @@
                     <tr>
                         <td>{{ result.student_name }}</td>
                         <td>{{ result.lesson_title }}</td>
-                        <td>{{ result.score }}/{{ result.total }}</td>
+                        <td>{{ result.grade }}</td>
                         <td>{{ result.timestamp }}</td>
                         <td>
                             <a href="{{ url_for('studio.view_test_result', subject=subject.key, lesson_title=result.lesson_title, student_email=result.student_email) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
@@ -98,13 +98,14 @@ tr:hover {
 
 .empty-state {
     text-align: center;
-    padding: 40px 20px;
-    color: #6c757d;
+    padding: 40px;
+    color: #666;
 }
 
 .empty-state i {
     font-size: 3em;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    opacity: 0.5;
 }
 </style>
 {% endblock %} 

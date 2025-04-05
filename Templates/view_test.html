@@ -3,101 +3,294 @@
 {% block title %}View Test: {{ test.title }} - JustLearnIt{% endblock %}
 
 {% block content %}
-<div class="studio-container">
-    <div class="studio-header">
-        <h1><i class="fas fa-question-circle"></i> Test: {{ test.title }}</h1>
-        <div class="user-info">
-            <span class="badge">{{ subject }}</span>
-            <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar">
+<div class="test-container">
+    <div class="test-header">
+        <div class="header-content">
+            <h1 class="test-title">
+                <i class="fas fa-question-circle"></i>
+                {{ test.title }}
+            </h1>
+            <div class="user-info">
+                <span class="badge badge-primary">{{ subject }}</span>
+                <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar" alt="Profile">
+            </div>
         </div>
     </div>
 
-    <div class="content-area">
-        <div class="test-view">
-            <h3>{{ test.title }}</h3>
+    <div class="test-content card">
+        <div class="test-info">
+            <h3 class="test-subtitle">{{ test.title }}</h3>
             {% if test.lesson %}
-            <p>Associated Lesson: {{ test.lesson }}</p>
+            <p class="lesson-link">
+                <i class="fas fa-book"></i>
+                Associated Lesson: {{ test.lesson }}
+            </p>
             {% endif %}
-            
-            <div id="questions-container">
-                {% for question in test.questions %}
-                <div class="question-card mb-4">
-                    <div class="question-header">
-                        <select class="question-type form-select" style="width: auto;">
-                            <option value="multiple_choice" {% if question.type == 'multiple_choice' %}selected{% endif %}>Multiple Choice</option>
-                            <option value="short_answer" {% if question.type == 'short_answer' %}selected{% endif %}>Short Answer</option>
-                            <option value="essay" {% if question.type == 'essay' %}selected{% endif %}>Essay</option>
-                        </select>
-                        <button class="remove-question-btn btn btn-danger">
-                            <i class="fas fa-trash"></i>
+        </div>
+        
+        <div id="questions-container">
+            {% for question in test.questions %}
+            <div class="question-card card">
+                <div class="question-header">
+                    <select class="question-type form-select">
+                        <option value="multiple_choice" {% if question.type == 'multiple_choice' %}selected{% endif %}>Multiple Choice</option>
+                        <option value="short_answer" {% if question.type == 'short_answer' %}selected{% endif %}>Short Answer</option>
+                        <option value="essay" {% if question.type == 'essay' %}selected{% endif %}>Essay</option>
+                    </select>
+                    <button class="btn btn-danger remove-question-btn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="question-body">
+                    <div class="form-group">
+                        <label>Question Content</label>
+                        <div class="question-editor">{{ question.text|safe }}</div>
+                    </div>
+                    {% if question.type == 'multiple_choice' %}
+                    <div class="options-container">
+                        {% for option in question.options %}
+                        <div class="option-item">
+                            <input type="radio" name="correct-{{ loop.index0 }}" class="correct-option" {% if loop.index0 == question.correctIndex %}checked{% endif %}>
+                            <div class="option-editor">{{ option|safe }}</div>
+                        </div>
+                        {% endfor %}
+                        <button class="btn btn-info add-option-btn">
+                            <i class="fas fa-plus"></i> Add Option
                         </button>
                     </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>Question Content</label>
-                            <div class="question-editor">{{ question.text|safe }}</div>
-                        </div>
-                        {% if question.type == 'multiple_choice' %}
-                        <div class="options-container">
-                            {% for option in question.options %}
-                            <div class="option-item mb-2">
-                                <input type="radio" name="correct-{{ loop.index0 }}" class="correct-option" {% if loop.index0 == question.correctIndex %}checked{% endif %}>
-                                <div class="option-editor">{{ option|safe }}</div>
-                            </div>
-                            {% endfor %}
-                            <button class="add-option-btn btn btn-info">Add Option</button>
-                        </div>
-                        {% endif %}
-                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            
-            <div class="form-actions">
-                <button id="add-question" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Question
-                </button>
-                <button id="save-test" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Test
-                </button>
-                <button id="publish-test" class="btn btn-success">
-                    <i class="fas fa-check"></i> Publish Test
-                </button>
-                <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Tests
-                </a>
-            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="action-buttons">
+            <button id="add-question" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Question
+            </button>
+            <button id="save-test" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Test
+            </button>
+            <button id="publish-test" class="btn btn-success">
+                <i class="fas fa-check"></i> Publish Test
+            </button>
+            <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tests
+            </a>
         </div>
     </div>
 </div>
 
 <script type="text/template" id="question-template">
-    <div class="question-card mb-4">
+    <div class="question-card card">
         <div class="question-header">
-            <select class="question-type form-select" style="width: auto;">
+            <select class="question-type form-select">
                 <option value="multiple_choice">Multiple Choice</option>
                 <option value="short_answer">Short Answer</option>
                 <option value="essay">Essay</option>
             </select>
-            <button class="remove-question-btn btn btn-danger">
+            <button class="btn btn-danger remove-question-btn">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
-        <div class="card-body">
+        <div class="question-body">
             <div class="form-group">
                 <label>Question Content</label>
                 <div class="question-editor"></div>
             </div>
             <div class="options-container" style="display: none;">
-                <div class="option-item mb-2">
+                <div class="option-item">
                     <input type="radio" name="correct-{id}" class="correct-option">
                     <div class="option-editor"></div>
                 </div>
-                <button class="add-option-btn btn btn-info">Add Option</button>
+                <button class="btn btn-info add-option-btn">
+                    <i class="fas fa-plus"></i> Add Option
+                </button>
             </div>
         </div>
     </div>
 </script>
+
+<style>
+.test-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.test-header {
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.test-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--light-text);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.test-title i {
+    color: var(--primary-color);
+}
+
+.test-content {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.test-info {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.test-subtitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: var(--light-text);
+}
+
+.lesson-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted-text);
+    margin: 0;
+}
+
+.lesson-link i {
+    color: var(--primary-color);
+}
+
+.question-card {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-select {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--light-text);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+    min-width: 200px;
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(120, 8, 208, 0.25);
+}
+
+.question-body {
+    padding: 1rem 0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: var(--light-text);
+}
+
+.options-container {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: var(--darker-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.correct-option {
+    margin-top: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.btn-info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .test-container {
+        padding: 1rem;
+    }
+
+    .test-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .test-title {
+        font-size: 1.5rem;
+    }
+
+    .test-content {
+        padding: 1.5rem;
+    }
+
+    .question-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-select {
+        width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -169,7 +362,7 @@
             const $optionsContainer = $(this).closest('.options-container');
             const optionId = Date.now();
             
-            const $optionItem = $('<div class="option-item mb-2">' +
+            const $optionItem = $('<div class="option-item">' +
                 '<input type="radio" name="correct-' + optionId + '" class="correct-option">' +
                 '<div class="option-editor"></div>' +
                 '</div>');
@@ -259,21 +452,7 @@
             questions.push(question);
         });
 
-        // Validate at least one question
-        if (questions.length === 0) {
-            alert('Please add at least one question');
-            return;
-        }
-
-        // Show loading state
-        const saveBtn = $('#save-test');
-        const publishBtn = $('#publish-test');
-        saveBtn.prop('disabled', true);
-        publishBtn.prop('disabled', true);
-        saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-        publishBtn.html('<i class="fas fa-spinner fa-spin"></i> Publishing...');
-
-        // Send data to server
+        // Save test data
         fetch("{{ url_for('studio.view_test', subject=subject, test=test.title) }}", {
             method: 'POST',
             headers: {
@@ -292,7 +471,7 @@
         })
         .then(data => {
             if (data.success) {
-                window.location.href = "{{ url_for('studio.tests', subject=subject) }}";
+                window.location.reload();
             } else {
                 throw new Error(data.message || 'Unknown error');
             }
@@ -300,12 +479,6 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Error saving test: ' + error.message);
-        })
-        .finally(() => {
-            saveBtn.prop('disabled', false);
-            publishBtn.prop('disabled', false);
-            saveBtn.html('<i class="fas fa-save"></i> Save Test');
-            publishBtn.html('<i class="fas fa-check"></i> Publish Test');
         });
     }
 </script>
