@@ -4,6 +4,8 @@ from app import db, bcrypt, mail
 from models import User
 from flask_mail import Message
 import requests
+import uuid
+from datetime import datetime
 
 login_bp = Blueprint('login', __name__,
                      template_folder='../Templates',
@@ -26,25 +28,38 @@ def verify_email_address(email):
 
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('choose.choose'))
+    
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        
         user = User.query.filter_by(email=email).first()
-
+        
         if user and bcrypt.check_password_hash(user.password, password):
-            if user.is_verified:
+            # Check if user has been forced logged out
+            if user.session_id is None:
+                # Generate new session ID
+                session_id = str(uuid.uuid4())
+                user.session_id = session_id
+                db.session.commit()
+                
                 login_user(user)
                 session['user_id'] = user.id
-                session['email'] = email
-                session.permanent = True
-                flash('Autentificare reușită!', 'success')
-                return redirect(url_for('choose.index'))
+                session['session_id'] = session_id
+                
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                return redirect(url_for('choose.choose'))
             else:
-                flash('Te rugăm să verifici adresa de e-mail mai întâi.', 'error')
+                flash('Your session has been terminated. Please log in again.', 'error')
+                return redirect(url_for('login.login'))
         else:
-            flash('Autentificare eșuată. Verifică e-mailul și parola.', 'error')
-
-    return render_template('login.html', template='base_login.html')
+            flash('Invalid email or password', 'error')
+    
+    return render_template('login.html')
 
 @login_bp.route('/signup', methods=['POST'])
 def signup():
@@ -93,11 +108,12 @@ def verify_email(token):
 @login_bp.route('/logout')
 @login_required
 def logout():
+    if current_user.is_authenticated:
+        current_user.session_id = None
+        db.session.commit()
     logout_user()
-    session.pop('user_id', None)
-    session.pop('email', None)
-    flash('Ai fost deconectat.', 'success')
-    return redirect(url_for('login.login'))
+    session.clear()
+    return redirect(url_for('landing.landing'))
 
 def send_verification_email(user):
     token = user.verification_token

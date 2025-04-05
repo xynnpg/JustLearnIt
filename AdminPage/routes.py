@@ -2,7 +2,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import current_user
-from app import db, logger, bcrypt, regenerate_credentials, load_credentials
+from app import db, logger, bcrypt, regenerate_credentials, load_credentials, send_login_notification
 from models import User, Lesson, Test, Grade
 from datetime import datetime, timedelta
 import os

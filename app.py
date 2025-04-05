@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, current_user
 from flask_mail import Mail, Message
+from flask_migrate import Migrate
 import logging
 import random
 import string
@@ -33,6 +34,7 @@ app.config['MAIL_DEBUG'] = True
 app.config['MAIL_SUPPRESS_SEND'] = False
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login.login'
@@ -42,6 +44,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 CREDENTIALS_FILE = os.path.join(INSTANCE_DIR, 'admin_credentials.txt')
+ADMIN_EMAIL = "darius.doana@cnvgarad.ro"  # New admin email address
 
 def generate_random_credentials():
     letters = string.ascii_letters + string.digits
@@ -66,18 +69,41 @@ def load_credentials():
 def send_credentials_email(username, password):
     try:
         msg = Message("New Admin Credentials",
-                     recipients=["doanadarius543@gmail.com"])
-        msg.body = f"Your new admin credentials:\nUsername: {username}\nPassword: {password}\nValid until: {datetime.fromtimestamp(time.time() + 86400).strftime('%Y-%m-%d %H:%M:%S')}"
+                     recipients=[ADMIN_EMAIL])
+        msg.body = f"Your new admin credentials:\nUsername: {username}\nPassword: {password}\nValid until: {datetime.fromtimestamp(time.time() + 7*86400).strftime('%Y-%m-%d %H:%M:%S')}"
         mail.send(msg)
-        logger.info(f"Admin credentials sent to doanadarius543@gmail.com: {username}/{password}")
+        logger.info(f"Admin credentials sent to {ADMIN_EMAIL}: {username}/{password}")
     except Exception as e:
         logger.error(f"Failed to send admin credentials email: {str(e)}")
+
+def send_login_notification(username, ip_address):
+    try:
+        msg = Message("Admin Login Notification",
+                     recipients=[ADMIN_EMAIL])
+        msg.body = f"Admin login detected:\nUsername: {username}\nIP Address: {ip_address}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        mail.send(msg)
+        logger.info(f"Admin login notification sent to {ADMIN_EMAIL}")
+    except Exception as e:
+        logger.error(f"Failed to send admin login notification: {str(e)}")
+
+def clear_all_sessions():
+    """Clear all user sessions from the database"""
+    try:
+        from models import User
+        users = User.query.all()
+        for user in users:
+            user.session_id = None
+        db.session.commit()
+        logger.info("All user sessions cleared successfully")
+    except Exception as e:
+        logger.error(f"Failed to clear user sessions: {str(e)}")
 
 def regenerate_credentials():
     username, password = generate_random_credentials()
     timestamp = time.time()
     save_credentials(username, password, timestamp)
     send_credentials_email(username, password)
+    clear_all_sessions()  # Clear all sessions when admin credentials change
     return username, password, timestamp
 
 if not os.path.exists(CREDENTIALS_FILE):
@@ -86,10 +112,11 @@ if not os.path.exists(CREDENTIALS_FILE):
 def check_and_regenerate():
     while True:
         _, _, last_timestamp = load_credentials()
-        if time.time() - last_timestamp >= 86400:
-            logger.debug("Regenerating admin credentials (24 hours passed)")
+        # Change password weekly (7 days) instead of daily
+        if time.time() - last_timestamp >= 7*86400:
+            logger.debug("Regenerating admin credentials (7 days passed)")
             regenerate_credentials()
-        time.sleep(3600)
+        time.sleep(3600)  # Check every hour
 
 thread = Thread(target=check_and_regenerate, daemon=True)
 thread.start()
@@ -136,13 +163,25 @@ def add_header(response):
 def test_email():
     try:
         msg = Message("Test Email from JustLearnIt",
-                     recipients=["doanadarius543@gmail.com"])
+                     recipients=[ADMIN_EMAIL])
         msg.body = "This is a test email to verify SMTP settings."
         mail.send(msg)
-        logger.info("Test email sent successfully to doanadarius543@gmail.com")
-        return "Test email sent! Check doanadarius543@gmail.com."
+        logger.info(f"Test email sent successfully to {ADMIN_EMAIL}")
+        return f"Test email sent! Check {ADMIN_EMAIL}."
     except Exception as e:
         logger.error(f"Failed to send test email: {str(e)}")
         return f"Error sending test email: {str(e)}"
+
+@app.route('/force-password-change')
+def force_password_change():
+    """Force a password change and send the new credentials via email"""
+    username, password, timestamp = regenerate_credentials()
+    return f"Password changed successfully! New credentials sent to {ADMIN_EMAIL}. Username: {username}, Password: {password}"
+
+@app.route('/force-logout-all')
+def force_logout_all():
+    """Force logout all users"""
+    clear_all_sessions()
+    return "All users have been logged out successfully"
 
 

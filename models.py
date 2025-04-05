@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     verification_token = db.Column(db.String(36), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime, nullable=True)
+    session_id = db.Column(db.String(100))  # Track active session
     
     # Relationships
     lessons = db.relationship('Lesson', backref='author', lazy=True)
