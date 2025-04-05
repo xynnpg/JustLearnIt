@@ -7,15 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - JustLearnIt</title>
     <link rel="stylesheet" href="{{ url_for('admin.static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="admin-container">
-        <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
-        <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
+        <header class="admin-header">
+            <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+            <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </header>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -25,140 +27,381 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-value">{{ stats.total_users }}</div>
-                <div class="stat-label">Total Users</div>
+        <div class="dashboard-grid">
+            <!-- Left Sidebar - Navigation -->
+            <div class="sidebar">
+                <div class="nav-section">
+                    <h3>Navigation</h3>
+                    <ul class="nav-menu">
+                        <li><a href="#overview" class="active"><i class="fas fa-chart-line"></i> Overview</a></li>
+                        <li><a href="#users"><i class="fas fa-users"></i> Users</a></li>
+                        <li><a href="#lessons"><i class="fas fa-book"></i> Lessons</a></li>
+                        <li><a href="#tests"><i class="fas fa-tasks"></i> Tests</a></li>
+                        <li><a href="#grades"><i class="fas fa-star"></i> Grades</a></li>
+                        <li><a href="#reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                <div class="stat-value">{{ stats.total_professors }}</div>
-                <div class="stat-label">Professors</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
-                <div class="stat-value">{{ stats.total_students }}</div>
-                <div class="stat-label">Students</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="stat-value">{{ stats.unapproved_professors }}</div>
-                <div class="stat-label">Pending Approvals</div>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Overview Section -->
+                <section id="overview" class="dashboard-section">
+                    <h2><i class="fas fa-chart-line"></i> Overview</h2>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-value">{{ stats.total_users }}</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                            <div class="stat-value">{{ stats.total_professors }}</div>
+                            <div class="stat-label">Professors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                            <div class="stat-value">{{ stats.total_students }}</div>
+                            <div class="stat-label">Students</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-value">{{ stats.unapproved_professors }}</div>
+                            <div class="stat-label">Pending Approvals</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <canvas id="userActivityChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="userTypeChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section id="users" class="dashboard-section">
+                    <h2><i class="fas fa-users"></i> Users</h2>
+                    
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="professors">Professors</button>
+                            <button class="tab-btn" data-tab="students">Students</button>
+                            <button class="tab-btn" data-tab="pending">Pending Approvals</button>
+                        </div>
+                        
+                        <!-- Professors Tab -->
+                        <div class="tab-content active" id="professors-tab">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Name</th>
+                                            <th>Subject</th>
+                                            <th>Status</th>
+                                            <th>Last Login</th>
+                                            <th>IP Country</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prof in professors %}
+                                        <tr>
+                                            <td>{{ prof.email }}</td>
+                                            <td>{{ prof.name or 'N/A' }}</td>
+                                            <td>{{ prof.subject or 'N/A' }}</td>
+                                            <td>
+                                                <span class="status-badge {% if prof.is_professor_approved %}status-approved{% else %}status-pending{% endif %}">
+                                                    {{ 'Approved' if prof.is_professor_approved else 'Pending' }}
+                                                </span>
+                                            </td>
+                                            <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M') if prof.last_login else 'Never' }}</td>
+                                            <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
+                                            <td>
+                                                {% if not prof.is_professor_approved %}
+                                                <form method="POST" style="display:inline;">
+                                                    <input type="hidden" name="user_id" value="{{ prof.id }}">
+                                                    <button type="submit" name="action" value="approve" class="action-btn approve">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                <button class="action-btn view" onclick="viewUserDetails('{{ prof.id }}')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Students Tab -->
+                        <div class="tab-content" id="students-tab">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Name</th>
+                                            <th>Last Login</th>
+                                            <th>IP Country</th>
+                                            <th>Lessons Completed</th>
+                                            <th>Tests Taken</th>
+                                            <th>Average Grade</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                        <tr>
+                                            <td>{{ student.email }}</td>
+                                            <td>{{ student.name or 'N/A' }}</td>
+                                            <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M') if student.last_login else 'Never' }}</td>
+                                            <td>{{ ip_countries.get(student.id, 'Unknown') }}</td>
+                                            <td>{{ student.lessons_completed|default(0) }}</td>
+                                            <td>{{ student.tests_taken|default(0) }}</td>
+                                            <td>{{ student.average_grade|default('N/A') }}</td>
+                                            <td>
+                                                <button class="action-btn view" onclick="viewUserDetails('{{ student.id }}')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Pending Approvals Tab -->
+                        <div class="tab-content" id="pending-tab">
+                            {% if unapproved %}
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Name</th>
+                                            <th>Subject</th>
+                                            <th>Applied On</th>
+                                            <th>IP Country</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prof in unapproved %}
+                                        <tr>
+                                            <td>{{ prof.email }}</td>
+                                            <td>{{ prof.name or 'N/A' }}</td>
+                                            <td>{{ prof.subject or 'N/A' }}</td>
+                                            <td>{{ prof.last_login.strftime('%Y-%m-%d') if prof.last_login else 'N/A' }}</td>
+                                            <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
+                                            <td>
+                                                <form method="POST" style="display:inline;">
+                                                    <input type="hidden" name="user_id" value="{{ prof.id }}">
+                                                    <button type="submit" name="action" value="approve" class="action-btn approve">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                    <button type="submit" name="action" value="decline" class="action-btn decline">
+                                                        <i class="fas fa-times"></i> Decline
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="no-data">No pending professor approvals.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lessons Section -->
+                <section id="lessons" class="dashboard-section">
+                    <h2><i class="fas fa-book"></i> Lessons</h2>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Subject</th>
+                                    <th>Author</th>
+                                    <th>Created</th>
+                                    <th>Views</th>
+                                    <th>Completions</th>
+                                    <th>Rating</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lesson in lessons %}
+                                <tr>
+                                    <td>{{ lesson.title }}</td>
+                                    <td>{{ lesson.subject }}</td>
+                                    <td>{{ lesson.author.name or lesson.author.email }}</td>
+                                    <td>{{ lesson.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ lesson.views|default(0) }}</td>
+                                    <td>{{ lesson.completions|default(0) }}</td>
+                                    <td>
+                                        <div class="rating">
+                                            <i class="fas fa-star"></i>
+                                            <span>{{ lesson.rating|default('N/A') }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn view" onclick="viewLesson('{{ lesson.id }}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <button class="action-btn edit" onclick="editLesson('{{ lesson.id }}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Tests Section -->
+                <section id="tests" class="dashboard-section">
+                    <h2><i class="fas fa-tasks"></i> Tests</h2>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Subject</th>
+                                    <th>Author</th>
+                                    <th>Created</th>
+                                    <th>Attempts</th>
+                                    <th>Avg. Score</th>
+                                    <th>Pass Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in tests %}
+                                <tr>
+                                    <td>{{ test.title }}</td>
+                                    <td>{{ test.subject }}</td>
+                                    <td>{{ test.author.name or test.author.email }}</td>
+                                    <td>{{ test.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ test.attempts|default(0) }}</td>
+                                    <td>{{ test.avg_score|default('N/A') }}%</td>
+                                    <td>{{ test.pass_rate|default('N/A') }}%</td>
+                                    <td>
+                                        <button class="action-btn view" onclick="viewTest('{{ test.id }}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <button class="action-btn edit" onclick="editTest('{{ test.id }}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Grades Section -->
+                <section id="grades" class="dashboard-section">
+                    <h2><i class="fas fa-star"></i> Grades</h2>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Test/Lesson</th>
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                    <th>Time Spent</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade in grades %}
+                                <tr>
+                                    <td>{{ grade.student.name or grade.student.email }}</td>
+                                    <td>{{ grade.item_title }}</td>
+                                    <td>{{ grade.subject }}</td>
+                                    <td>{{ grade.score }}%</td>
+                                    <td>{{ grade.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ grade.time_spent }} min</td>
+                                    <td>
+                                        <span class="status-badge {% if grade.score >= 70 %}status-approved{% else %}status-pending{% endif %}">
+                                            {{ 'Pass' if grade.score >= 70 else 'Fail' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn view" onclick="viewGradeDetails('{{ grade.id }}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Reports Section -->
+                <section id="reports" class="dashboard-section">
+                    <h2><i class="fas fa-file-alt"></i> Reports</h2>
+                    
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h3>User Activity Report</h3>
+                            <p>Generate a report of user activity over a specified time period.</p>
+                            <button class="action-btn" onclick="generateReport('user_activity')">
+                                <i class="fas fa-download"></i> Generate
+                            </button>
+                        </div>
+                        
+                        <div class="report-card">
+                            <h3>Test Performance Report</h3>
+                            <p>Analyze test performance across subjects and user groups.</p>
+                            <button class="action-btn" onclick="generateReport('test_performance')">
+                                <i class="fas fa-download"></i> Generate
+                            </button>
+                        </div>
+                        
+                        <div class="report-card">
+                            <h3>Lesson Engagement Report</h3>
+                            <p>Track lesson completion rates and user engagement.</p>
+                            <button class="action-btn" onclick="generateReport('lesson_engagement')">
+                                <i class="fas fa-download"></i> Generate
+                            </button>
+                        </div>
+                        
+                        <div class="report-card">
+                            <h3>User Growth Report</h3>
+                            <p>Monitor user registration and growth trends.</p>
+                            <button class="action-btn" onclick="generateReport('user_growth')">
+                                <i class="fas fa-download"></i> Generate
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
-
-        <!-- Charts Section -->
-        <div class="charts-section">
-            <div class="chart-container">
-                <canvas id="userActivityChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="userTypeChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Pending Approvals Section -->
-        <h2><i class="fas fa-user-clock"></i> Pending Professor Approvals</h2>
-        {% if unapproved %}
-        <table class="user-table">
-            <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Applied On</th>
-                <th>IP Country</th>
-                <th>Actions</th>
-            </tr>
-            {% for prof in unapproved %}
-            <tr>
-                <td>{{ prof.email }}</td>
-                <td>{{ prof.name or 'N/A' }}</td>
-                <td>{{ prof.subject or 'N/A' }}</td>
-                <td>{{ prof.last_login.strftime('%Y-%m-%d') if prof.last_login else 'N/A' }}</td>
-                <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
-                <td>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="user_id" value="{{ prof.id }}">
-                        <button type="submit" name="action" value="approve" class="action-btn approve">
-                            <i class="fas fa-check"></i> Approve
-                        </button>
-                        <button type="submit" name="action" value="decline" class="action-btn decline">
-                            <i class="fas fa-times"></i> Decline
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-        {% else %}
-        <p class="no-data">No pending professor approvals.</p>
-        {% endif %}
-
-        <!-- Professors Section -->
-        <h2><i class="fas fa-chalkboard-teacher"></i> Professors</h2>
-        <table class="user-table">
-            <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th>Last Login</th>
-                <th>IP Country</th>
-                <th>Actions</th>
-            </tr>
-            {% for prof in professors %}
-            <tr>
-                <td>{{ prof.email }}</td>
-                <td>{{ prof.name or 'N/A' }}</td>
-                <td>{{ prof.subject or 'N/A' }}</td>
-                <td>{{ 'Approved' if prof.is_professor_approved else 'Pending' }}</td>
-                <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M') if prof.last_login else 'Never' }}</td>
-                <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
-                <td>
-                    {% if not prof.is_professor_approved %}
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="user_id" value="{{ prof.id }}">
-                        <button type="submit" name="action" value="approve" class="action-btn approve">
-                            <i class="fas fa-check"></i> Approve
-                        </button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <!-- Students Section -->
-        <h2><i class="fas fa-user-graduate"></i> Students</h2>
-        <table class="user-table">
-            <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Last Login</th>
-                <th>IP Country</th>
-                <th>Activity</th>
-            </tr>
-            {% for student in students %}
-            <tr>
-                <td>{{ student.email }}</td>
-                <td>{{ student.name or 'N/A' }}</td>
-                <td>{{ student.subject or 'N/A' }}</td>
-                <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M') if student.last_login else 'Never' }}</td>
-                <td>{{ ip_countries.get(student.id, 'Unknown') }}</td>
-                <td>
-                    {% if student.last_login %}
-                        {{ (datetime.utcnow() - student.last_login).days }} days ago
-                    {% else %}
-                        Never
-                    {% endif %}
-                </td>
-
-            </tr>
-            {% endfor %}
-        </table>
     </div>
 
     <script>
@@ -220,6 +463,63 @@
                 }
             }
         });
+
+        // Tab Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = button.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+
+        // Placeholder functions for actions
+        function viewUserDetails(userId) {
+            alert('View user details for ID: ' + userId);
+            // Implement user details view
+        }
+        
+        function viewLesson(lessonId) {
+            alert('View lesson for ID: ' + lessonId);
+            // Implement lesson view
+        }
+        
+        function editLesson(lessonId) {
+            alert('Edit lesson for ID: ' + lessonId);
+            // Implement lesson edit
+        }
+        
+        function viewTest(testId) {
+            alert('View test for ID: ' + testId);
+            // Implement test view
+        }
+        
+        function editTest(testId) {
+            alert('Edit test for ID: ' + testId);
+            // Implement test edit
+        }
+        
+        function viewGradeDetails(gradeId) {
+            alert('View grade details for ID: ' + gradeId);
+            // Implement grade details view
+        }
+        
+        function generateReport(reportType) {
+            alert('Generate ' + reportType + ' report');
+            // Implement report generation
+        }
     </script>
 </body>
 </html>

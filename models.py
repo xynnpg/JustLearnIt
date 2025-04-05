@@ -15,6 +15,11 @@ class User(db.Model, UserMixin):
     verification_token = db.Column(db.String(36), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    lessons = db.relationship('Lesson', backref='author', lazy=True)
+    tests = db.relationship('Test', backref='author', lazy=True)
+    grades = db.relationship('Grade', backref='student', lazy=True)
 
     def generate_verification_token(self):
         """Generate a verification token for the user."""
@@ -42,3 +47,71 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"User('{self.email}', '{self.user_type}', '{self.is_admin}')"
+
+
+class Lesson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    subject = db.Column(db.String(120), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    views = db.Column(db.Integer, default=0)
+    completions = db.Column(db.Integer, default=0)
+    rating = db.Column(db.Float, default=0.0)
+    
+    # Relationships
+    grades = db.relationship('Grade', backref='lesson', lazy=True)
+
+    def __repr__(self):
+        return f"Lesson('{self.title}', '{self.subject}')"
+
+
+class Test(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    subject = db.Column(db.String(120), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    attempts = db.Column(db.Integer, default=0)
+    avg_score = db.Column(db.Float, default=0.0)
+    pass_rate = db.Column(db.Float, default=0.0)
+    
+    # Relationships
+    grades = db.relationship('Grade', backref='test', lazy=True)
+
+    def __repr__(self):
+        return f"Test('{self.title}', '{self.subject}')"
+
+
+class Grade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=True)
+    score = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    time_spent = db.Column(db.Integer, default=0)  # in minutes
+    
+    @property
+    def item_title(self):
+        """Return the title of the lesson or test this grade is for"""
+        if self.lesson:
+            return self.lesson.title
+        elif self.test:
+            return self.test.title
+        return "Unknown"
+    
+    @property
+    def subject(self):
+        """Return the subject of the lesson or test this grade is for"""
+        if self.lesson:
+            return self.lesson.subject
+        elif self.test:
+            return self.test.subject
+        return "Unknown"
+
+    def __repr__(self):
+        return f"Grade('{self.student_id}', '{self.score}')"

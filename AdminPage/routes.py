@@ -3,12 +3,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import current_user
 from app import db, logger, bcrypt, regenerate_credentials, load_credentials
-from models import User
+from models import User, Lesson, Test, Grade
 from datetime import datetime, timedelta
 import os
 import json
 import requests
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 
 admin_bp = Blueprint('admin', __name__,
@@ -130,6 +130,15 @@ def admin_panel():
     students = User.query.filter_by(user_type='elev').all()
     unapproved = User.query.filter(User.user_type == 'profesor', User.is_professor_approved == False).all()
 
+    # Get lessons with author information
+    lessons = db.session.query(Lesson).join(User, Lesson.author_id == User.id).order_by(desc(Lesson.created_at)).all()
+    
+    # Get tests with author information
+    tests = db.session.query(Test).join(User, Test.author_id == User.id).order_by(desc(Test.created_at)).all()
+    
+    # Get grades with student and item information
+    grades = db.session.query(Grade).join(User, Grade.student_id == User.id).order_by(desc(Grade.date)).all()
+
     # Get statistics
     stats = {
         'total_users': User.query.count(),
@@ -149,6 +158,9 @@ def admin_panel():
                            professors=professors,
                            students=students,
                            unapproved=unapproved,
+                           lessons=lessons,
+                           tests=tests,
+                           grades=grades,
                            stats=stats,
                            ip_countries=ip_countries,
                            datetime=datetime)
