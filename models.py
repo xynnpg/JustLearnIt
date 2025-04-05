@@ -15,9 +15,9 @@ class User(db.Model, UserMixin):
     verification_token = db.Column(db.String(36), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime, nullable=True)
-    session_id = db.Column(db.String(100))  # Track active session
-    
-    # Relationships
+    session_id = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     lessons = db.relationship('Lesson', backref='author', lazy=True)
     tests = db.relationship('Test', backref='author', lazy=True)
     grades = db.relationship('Grade', backref='student', lazy=True)
@@ -49,7 +49,6 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.email}', '{self.user_type}', '{self.is_admin}')"
 
-
 class Lesson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -61,13 +60,11 @@ class Lesson(db.Model):
     views = db.Column(db.Integer, default=0)
     completions = db.Column(db.Integer, default=0)
     rating = db.Column(db.Float, default=0.0)
-    
-    # Relationships
+
     grades = db.relationship('Grade', backref='lesson', lazy=True)
 
     def __repr__(self):
         return f"Lesson('{self.title}', '{self.subject}')"
-
 
 class Test(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,13 +76,11 @@ class Test(db.Model):
     attempts = db.Column(db.Integer, default=0)
     avg_score = db.Column(db.Float, default=0.0)
     pass_rate = db.Column(db.Float, default=0.0)
-    
-    # Relationships
+
     grades = db.relationship('Grade', backref='test', lazy=True)
 
     def __repr__(self):
         return f"Test('{self.title}', '{self.subject}')"
-
 
 class Grade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -94,8 +89,8 @@ class Grade(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'), nullable=True)
     score = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    time_spent = db.Column(db.Integer, default=0)  # in minutes
-    
+    time_spent = db.Column(db.Integer, default=0)
+
     @property
     def item_title(self):
         """Return the title of the lesson or test this grade is for"""
@@ -104,7 +99,7 @@ class Grade(db.Model):
         elif self.test:
             return self.test.title
         return "Unknown"
-    
+
     @property
     def subject(self):
         """Return the subject of the lesson or test this grade is for"""

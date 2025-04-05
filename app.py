@@ -44,7 +44,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 CREDENTIALS_FILE = os.path.join(INSTANCE_DIR, 'admin_credentials.txt')
-ADMIN_EMAIL = "darius.doana@cnvgarad.ro"  # New admin email address
+ADMIN_EMAIL = "darius.doana@cnvgarad.ro"
 
 def generate_random_credentials():
     letters = string.ascii_letters + string.digits
@@ -87,7 +87,6 @@ def send_login_notification(username, ip_address):
         logger.error(f"Failed to send admin login notification: {str(e)}")
 
 def clear_all_sessions():
-    """Clear all user sessions from the database"""
     try:
         from models import User
         users = User.query.all()
@@ -103,7 +102,7 @@ def regenerate_credentials():
     timestamp = time.time()
     save_credentials(username, password, timestamp)
     send_credentials_email(username, password)
-    clear_all_sessions()  # Clear all sessions when admin credentials change
+    clear_all_sessions()
     return username, password, timestamp
 
 if not os.path.exists(CREDENTIALS_FILE):
@@ -112,11 +111,11 @@ if not os.path.exists(CREDENTIALS_FILE):
 def check_and_regenerate():
     while True:
         _, _, last_timestamp = load_credentials()
-        # Change password weekly (7 days) instead of daily
+
         if time.time() - last_timestamp >= 7*86400:
             logger.debug("Regenerating admin credentials (7 days passed)")
             regenerate_credentials()
-        time.sleep(3600)  # Check every hour
+        time.sleep(3600)
 
 thread = Thread(target=check_and_regenerate, daemon=True)
 thread.start()
@@ -183,5 +182,3 @@ def force_logout_all():
     """Force logout all users"""
     clear_all_sessions()
     return "All users have been logged out successfully"
-
-

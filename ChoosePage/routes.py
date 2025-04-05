@@ -39,10 +39,10 @@ def index():
             flash('Please select a valid subject!', 'error')
             return redirect(url_for('choose.index'))
 
-        # Map the form subject to the full name and short key
+
         user.user_type = user_type
-        user.subject = FULL_SUBJECTS[subject_form]  # Store full name (e.g., "Biologie")
-        subject_key = SUBJECTS[subject_form]  # Get short key (e.g., "bio")
+        user.subject = FULL_SUBJECTS[subject_form]
+        subject_key = SUBJECTS[subject_form]
 
         if user_type == 'profesor':
             user.is_professor_approved = False

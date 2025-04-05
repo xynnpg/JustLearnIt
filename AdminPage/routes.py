@@ -1,5 +1,3 @@
-# File: /AdminPage/routes.py
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import current_user
 from app import db, logger, bcrypt, regenerate_credentials, load_credentials, send_login_notification
@@ -24,7 +22,7 @@ def is_admin_logged_in():
 
 def get_user_activity_stats():
     """Get user activity statistics"""
-    # Get active users count per day
+
     active_users = db.session.query(
         func.date(User.last_login).label('date'),
         func.count(User.id).label('count')
@@ -34,10 +32,10 @@ def get_user_activity_stats():
         func.date(User.last_login)
     ).all()
 
-    # Convert to dictionary format
+
     active_users_dict = {str(date): count for date, count in active_users}
 
-    # Get user types count
+
     user_types = db.session.query(
         User.user_type,
         func.count(User.id)
@@ -45,7 +43,7 @@ def get_user_activity_stats():
         User.user_type
     ).all()
 
-    # Convert to dictionary format
+
     user_types_dict = dict(user_types)
 
     return {
@@ -125,21 +123,21 @@ def admin_panel():
         else:
             flash('User not found or not a professor.', 'error')
 
-    # Get all users with additional info
+
     professors = User.query.filter_by(user_type='profesor').all()
     students = User.query.filter_by(user_type='elev').all()
     unapproved = User.query.filter(User.user_type == 'profesor', User.is_professor_approved == False).all()
 
-    # Get lessons with author information
+
     lessons = db.session.query(Lesson).join(User, Lesson.author_id == User.id).order_by(desc(Lesson.created_at)).all()
     
-    # Get tests with author information
+
     tests = db.session.query(Test).join(User, Test.author_id == User.id).order_by(desc(Test.created_at)).all()
     
-    # Get grades with student and item information
+
     grades = db.session.query(Grade).join(User, Grade.student_id == User.id).order_by(desc(Grade.date)).all()
 
-    # Get statistics
+
     stats = {
         'total_users': User.query.count(),
         'total_professors': len(professors),
@@ -148,10 +146,10 @@ def admin_panel():
         'activity': get_user_activity_stats(),
     }
 
-    # Get IP country information (simplified example)
+
     ip_countries = {}
     for user in User.query.filter(User.last_login.isnot(None)).all():
-        # In a real app, you'd store the IP when users log in
+
         ip_countries[user.id] = get_country_from_ip(request.remote_addr)
 
     return render_template('admin.html',

@@ -9,7 +9,6 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from models import User
 
-# Constants
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
 LECTII_DIR = os.path.join(INSTANCE_DIR, 'lectii')
@@ -35,7 +34,6 @@ SUBJECTS = {
     }
 }
 
-# Create base directories if they don't exist
 os.makedirs(LECTII_DIR, exist_ok=True)
 os.makedirs(TESTE_DIR, exist_ok=True)
 
@@ -52,8 +50,7 @@ def get_professor_dir(base_dir, subject):
     """Get professor-specific directory for a subject"""
     if not current_user.is_authenticated:
         return None
-        
-    # Create the full path: base_dir/subject/profesori/professor_email
+
     professor_dir = os.path.join(base_dir, subject, 'profesori', current_user.email)
     os.makedirs(professor_dir, exist_ok=True)
     return professor_dir
@@ -118,7 +115,7 @@ def lessons():
                 return jsonify({'success': False, 'message': 'Title and content are required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            lessons_dir = get_professor_dir(LECTII_DIR, subject)  # ✅ professor-specific directory
+            lessons_dir = get_professor_dir(LECTII_DIR, subject)
             os.makedirs(lessons_dir, exist_ok=True)
 
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
@@ -177,7 +174,7 @@ def view_lesson(subject, lesson):
         try:
             data = request.get_json()
             new_content = data.get('content')
-            action = data.get('action')  # 'save' or 'publish'
+            action = data.get('action')
             if not new_content:
                 return jsonify({'success': False, 'message': 'Content is required'}), 400
 
@@ -187,8 +184,8 @@ def view_lesson(subject, lesson):
     <meta charset="UTF-8">
     <title>{lesson}</title>
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; color: #333; }}
-        h1, h2, h3 {{ color: #5f06a8; }}
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; color: 
+        h1, h2, h3 {{ color: 
         img {{ max-width: 100%; height: auto; }}
     </style>
 </head>
@@ -223,9 +220,8 @@ def tests():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    # Get professor's test directory
     tests_dir = get_professor_dir(TESTE_DIR, subject)
-    
+
     try:
         tests = []
         if os.path.exists(tests_dir):
@@ -253,11 +249,9 @@ def tests():
                 return jsonify({'success': False, 'message': 'Title and questions are required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            
-            # Get professor's test directory
+
             tests_dir = get_professor_dir(TESTE_DIR, subject)
 
-            # Create test data structure
             test_data = {
                 'title': title,
                 'subject': subject,
@@ -268,7 +262,6 @@ def tests():
                 'status': 'Draft'
             }
 
-            # Save test file
             file_path = os.path.join(tests_dir, f"{safe_title}.json")
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(test_data, f, indent=2)
@@ -291,9 +284,8 @@ def view_test(subject, test):
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
 
-    # Get professor's test directory
     test_dir = get_professor_dir(TESTE_DIR, subject)
-    
+
     test_file = os.path.join(test_dir, f"{test}.json")
     if os.path.exists(test_file):
         with open(test_file, 'r', encoding='utf-8') as f:
@@ -313,17 +305,15 @@ def view_test(subject, test):
         try:
             data = request.get_json()
             questions = data.get('questions')
-            action = data.get('action')  # 'save' or 'publish'
+            action = data.get('action')
 
             if not questions:
                 return jsonify({'success': False, 'message': 'Questions are required'}), 400
 
-            # Update test data
             test_data['questions'] = questions
             test_data['updated_at'] = datetime.utcnow().isoformat()
             test_data['status'] = 'Published' if action == 'publish' else 'Draft'
 
-            # Save updated test data
             with open(test_file, 'w', encoding='utf-8') as f:
                 json.dump(test_data, f, indent=2)
 
@@ -340,40 +330,36 @@ def view_test(subject, test):
 @login_required
 @require_professor
 def view_test_results(subject):
-    # Check if subject exists
+
     subject_key = subject
     if subject_key not in SUBJECTS:
         flash('Invalid subject.', 'error')
         return redirect(url_for('studio.dashboard'))
-    
-    # Get test results from the directory
+
     results_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, 'results')
     if not os.path.exists(results_dir):
         flash('No test results found.', 'info')
         return redirect(url_for('studio.dashboard'))
-    
-    # Get all result files
+
     results = []
     for filename in os.listdir(results_dir):
         if filename.endswith('.json'):
             with open(os.path.join(results_dir, filename), 'r') as f:
                 result = json.load(f)
-                # Get student name from email
+
                 student = User.query.filter_by(email=result['student_email']).first()
                 result['student_name'] = student.name if student else result['student_email']
-                
-                # Convert score to 1-10 scale
+
                 if 'score' in result and 'total' in result and result['total'] > 0:
                     result['grade'] = round((result['score'] / result['total']) * 10, 1)
                 else:
                     result['grade'] = 0
-                
+
                 results.append(result)
-    
-    # Sort results by timestamp
+
     results.sort(key=lambda x: x['timestamp'], reverse=True)
-    
-    return render_template('studio_test_results.html', 
+
+    return render_template('studio_test_results.html',
                          subject=SUBJECTS[subject_key],
                          results=results)
 
@@ -381,53 +367,44 @@ def view_test_results(subject):
 @login_required
 @require_professor
 def view_test_result(subject, lesson_title, student_email):
-    # Check if subject exists
+
     subject_key = subject
     if subject_key not in SUBJECTS:
         flash('Invalid subject.', 'error')
         return redirect(url_for('studio.dashboard'))
-    
-    # Get test result
+
     result_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, 'results', f'{lesson_title}_{student_email}.json')
     if not os.path.exists(result_path):
         flash('Test result not found.', 'error')
         return redirect(url_for('studio.view_test_results', subject=subject_key))
-    
-    # Load test result
+
     with open(result_path, 'r') as f:
         result = json.load(f)
-    
-    # Debug: Print result data
+
     print(f"Test result data: {result}")
-    
-    # Get original test
+
     test_path = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, f'{lesson_title}.json')
     if not os.path.exists(test_path):
         flash('Original test not found.', 'error')
         return redirect(url_for('studio.view_test_results', subject=subject_key))
-    
-    # Load original test
+
     with open(test_path, 'r') as f:
         test = json.load(f)
-    
-    # Debug: Print test data
+
     print(f"Test data: {test}")
-    
-    # Get student name
+
     student = User.query.filter_by(email=student_email).first()
     student_name = student.name if student else student_email
-    
-    # Calculate total score including graded questions
+
     total_score = result.get('score', 0)
     if 'grades' in result:
         graded_score = sum(result['grades'].values())
         total_score += graded_score
-    
+
     result['total_score'] = total_score
-    
-    # Debug: Print final result data
+
     print(f"Final result data: {result}")
-    
+
     return render_template('studio_test_result_detail.html',
                          subject=SUBJECTS[subject_key],
                          test=test,
@@ -442,52 +419,45 @@ def grade_question(subject, test, student_email):
         data = request.get_json()
         question_index = int(data.get('question_index'))
         grade = float(data.get('grade'))
-        
+
         if grade < 0 or grade > 10:
             return jsonify({'success': False, 'message': 'Grade must be between 0 and 10'})
-        
-        # Get test result file path
+
         result_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, 'results', f'{test}_{student_email}.json')
-        
+
         if not os.path.exists(result_path):
             return jsonify({'success': False, 'message': 'Test result not found'})
-        
-        # Load current result
+
         with open(result_path, 'r') as f:
             result = json.load(f)
-        
-        # Initialize grades dictionary if it doesn't exist
+
         if 'grades' not in result:
             result['grades'] = {}
-        
-        # Add or update grade
+
         result['grades'][str(question_index)] = grade
-        
-        # Check if all questions are now graded
+
         test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f'{test}.json')
         with open(test_path, 'r') as f:
             test_data = json.load(f)
-        
+
         total_questions = len(test_data['questions'])
         graded_questions = len(result['grades']) + result.get('graded_questions', 0)
-        
-        # Calculate total score
+
         total_score = result.get('score', 0)
         graded_score = sum(result['grades'].values())
         result['total_score'] = total_score + graded_score
-        
+
         if graded_questions == total_questions:
             result['status'] = 'graded'
-        
-        # Save updated result
+
         with open(result_path, 'w') as f:
             json.dump(result, f, indent=2)
-        
+
         return jsonify({
             'success': True,
             'all_graded': graded_questions == total_questions,
             'total_score': result['total_score']
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})

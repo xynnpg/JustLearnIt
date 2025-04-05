@@ -10,13 +10,11 @@ learn_bp = Blueprint('learn', __name__,
                      template_folder='../Templates',
                      static_folder='../static/learn')
 
-# Configuration
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
 LECTII_DIR = os.path.join(INSTANCE_DIR, 'lectii')
 TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
 
-# Subject mapping
 SUBJECTS = {
     'Bio': {
         'name': 'Biologie',
@@ -35,43 +33,37 @@ SUBJECTS = {
     }
 }
 
-
 def get_professors_for_subject(subject_key):
     """Get approved professors for a subject"""
     subject_name = SUBJECTS.get(subject_key, {}).get('name', '')
     if not subject_name:
         return []
 
-    # Get all professors and filter by subject (case-insensitive)
     professors = User.query.filter_by(
         user_type='profesor',
         is_professor_approved=True
     ).all()
-    
-    # Filter professors by subject (case-insensitive)
-    return [p for p in professors if p.subject and p.subject.lower() == subject_name.lower()]
 
+    return [p for p in professors if p.subject and p.subject.lower() == subject_name.lower()]
 
 def get_lessons_for_subject(subject_key):
     """Get all lessons for a subject"""
     lessons = []
-    
-    # Convert subject key to proper case for directory lookup
+
     subject_dir_name = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_dir_name = key
             break
-    
+
     if not subject_dir_name:
         return lessons
-        
+
     subject_dir = os.path.join(LECTII_DIR, subject_dir_name)
 
     if not os.path.exists(subject_dir):
         return lessons
 
-    # Get all professor directories
     professors_dir = os.path.join(subject_dir, 'profesori')
     if not os.path.exists(professors_dir):
         return lessons
@@ -81,10 +73,10 @@ def get_lessons_for_subject(subject_key):
         if os.path.isdir(prof_path):
             for lesson_file in os.listdir(prof_path):
                 if lesson_file.endswith('.html'):
-                    # Get professor name from database
+
                     professor = User.query.filter_by(email=professor_dir).first()
                     professor_name = professor.name if professor else professor_dir
-                    
+
                     lessons.append({
                         'professor': professor_name,
                         'professor_email': professor_dir,
@@ -92,7 +84,6 @@ def get_lessons_for_subject(subject_key):
                         'path': os.path.join(prof_path, lesson_file)
                     })
     return lessons
-
 
 def get_lesson_content(subject_key, professor_email, lesson_title):
     """Get content of a specific lesson"""
@@ -110,16 +101,15 @@ def get_lesson_content(subject_key, professor_email, lesson_title):
     with open(lesson_path, 'r', encoding='utf-8') as f:
         return f.read()
 
-
 def get_test_for_lesson(subject_key, professor_email, lesson_title):
     """Get test for a specific lesson"""
-    # Convert subject key to proper case for directory lookup
+
     subject_dir_name = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_dir_name = key
             break
-    
+
     if not subject_dir_name:
         return None
 
@@ -133,27 +123,25 @@ def get_test_for_lesson(subject_key, professor_email, lesson_title):
             return json.load(f)
     return None
 
-
 @learn_bp.route('/learn/<subject_key>')
 @login_required
 def subject_page(subject_key):
     """Main subject page showing professors and lessons"""
-    # Find the correct subject key (case-insensitive)
+
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject selected', 'error')
         return redirect(url_for('choose.index'))
 
     professors = get_professors_for_subject(subject_key)
     lessons = get_lessons_for_subject(subject_key)
-    
-    # Get tests for the subject
+
     tests = []
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori')
     if os.path.exists(test_dir):
@@ -164,13 +152,12 @@ def subject_page(subject_key):
                     if test_file.endswith('.json'):
                         with open(os.path.join(prof_path, test_file), 'r', encoding='utf-8') as f:
                             test_data = json.load(f)
-                            # Get professor name from database
+
                             professor = User.query.filter_by(email=professor_dir).first()
                             professor_name = professor.name if professor else professor_dir
-                            
-                            # Extract lesson title from test title if possible
+
                             lesson_title = test_data.get('lesson', test_file.replace('.json', ''))
-                            
+
                             tests.append({
                                 'title': test_data.get('title', test_file.replace('.json', '')),
                                 'professor': professor_name,
@@ -189,19 +176,17 @@ def subject_page(subject_key):
                            lessons=lessons,
                            tests=tests)
 
-
 @learn_bp.route('/learn/<subject_key>/<professor_email>')
 @login_required
 def professor_lessons(subject_key, professor_email):
     """Show all lessons from a specific professor"""
-    # Find the correct subject key (case-insensitive)
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject selected', 'error')
         return redirect(url_for('choose.index'))
@@ -229,27 +214,24 @@ def professor_lessons(subject_key, professor_email):
                            professor=professor,
                            lessons=lessons)
 
-
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>')
 @login_required
 def view_lesson(subject_key, professor_email, lesson_title):
     """View a specific lesson"""
-    # Find the correct subject key (case-insensitive)
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject', 'error')
         return redirect(url_for('account.account'))
 
-    # Get the lesson content
     lesson_dir = os.path.join(LECTII_DIR, subject_key, 'profesori', professor_email)
     lesson_file = os.path.join(lesson_dir, f"{lesson_title}.html")
-    
+
     if not os.path.exists(lesson_file):
         flash('Lesson not found', 'error')
         return redirect(url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email))
@@ -257,17 +239,14 @@ def view_lesson(subject_key, professor_email, lesson_title):
     with open(lesson_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Check if there's an associated test
     test = None
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
-    
-    # First try to find a test with the exact filename
+
     test_file = os.path.join(test_dir, f"{lesson_title}.json")
     if os.path.exists(test_file):
         with open(test_file, 'r', encoding='utf-8') as f:
             test = json.load(f)
     else:
-        # Then try to find a test with the lesson title in its data
         if os.path.exists(test_dir):
             for file in os.listdir(test_dir):
                 if file.endswith('.json'):
@@ -276,15 +255,13 @@ def view_lesson(subject_key, professor_email, lesson_title):
                         if test_data.get('lesson') == lesson_title:
                             test = test_data
                             break
-        
-        # If no test found, try the old naming pattern
+
         if not test:
             test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
             if os.path.exists(test_file):
                 with open(test_file, 'r', encoding='utf-8') as f:
                     test = json.load(f)
 
-    # Check if current user is the professor
     is_professor = current_user.email == professor_email
 
     return render_template('view_lessons.html',
@@ -298,27 +275,24 @@ def view_lesson(subject_key, professor_email, lesson_title):
                          test=test,
                          is_professor=is_professor)
 
-
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/test')
 @login_required
 def take_test(subject_key, professor_email, lesson_title):
     """Take a test for a specific lesson"""
-    # Find the correct subject key (case-insensitive)
+
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject', 'error')
         return redirect(url_for('account.account'))
 
-    # Get the test content
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
-    
-    # First try to find a test with the exact filename
+
     test_file = os.path.join(test_dir, f"{lesson_title}.json")
     if os.path.exists(test_file):
         with open(test_file, 'r', encoding='utf-8') as f:
@@ -331,8 +305,7 @@ def take_test(subject_key, professor_email, lesson_title):
                                  lesson_title=lesson_title,
                                  professor_email=professor_email,
                                  test=test)
-    
-    # Then try to find a test with the lesson title in its data
+
     if os.path.exists(test_dir):
         for file in os.listdir(test_dir):
             if file.endswith('.json'):
@@ -348,8 +321,7 @@ def take_test(subject_key, professor_email, lesson_title):
                                              lesson_title=lesson_title,
                                              professor_email=professor_email,
                                              test=test_data)
-    
-    # If no test found, try the old naming pattern
+
     test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
     if os.path.exists(test_file):
         with open(test_file, 'r', encoding='utf-8') as f:
@@ -362,40 +334,36 @@ def take_test(subject_key, professor_email, lesson_title):
                                  lesson_title=lesson_title,
                                  professor_email=professor_email,
                                  test=test)
-    
-    flash('Test not found', 'error')
-    return redirect(url_for('learn.view_lesson', 
-                          subject_key=subject_key, 
-                          professor_email=professor_email, 
-                          lesson_title=lesson_title))
 
+    flash('Test not found', 'error')
+    return redirect(url_for('learn.view_lesson',
+                          subject_key=subject_key,
+                          professor_email=professor_email,
+                          lesson_title=lesson_title))
 
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/test/submit', methods=['POST'])
 @login_required
 def submit_test(subject_key, professor_email, lesson_title):
     """Submit test answers"""
-    # Find the correct subject key (case-insensitive)
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject', 'error')
         return redirect(url_for('account.account'))
 
-    # Get the test content
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
-    
-    # First try to find a test with the exact filename
+
     test_file = os.path.join(test_dir, f"{lesson_title}.json")
     if os.path.exists(test_file):
         with open(test_file, 'r', encoding='utf-8') as f:
             test = json.load(f)
     else:
-        # Then try to find a test with the lesson title in its data
+
         test = None
         if os.path.exists(test_dir):
             for file in os.listdir(test_dir):
@@ -406,21 +374,19 @@ def submit_test(subject_key, professor_email, lesson_title):
                             test_file = os.path.join(test_dir, file)
                             test = test_data
                             break
-        
-        # If no test found, try the old naming pattern
+
         if not test:
             test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
             if os.path.exists(test_file):
                 with open(test_file, 'r', encoding='utf-8') as f:
                     test = json.load(f)
-    
+
     if not test:
         flash('Test not found', 'error')
-        return redirect(url_for('learn.professor_lessons', 
-                              subject_key=subject_key, 
+        return redirect(url_for('learn.professor_lessons',
+                              subject_key=subject_key,
                               professor_email=professor_email))
 
-    # Get answers from form
     answers = {}
     for i, question in enumerate(test['questions']):
         if question['type'] == 'multiple_choice':
@@ -428,7 +394,6 @@ def submit_test(subject_key, professor_email, lesson_title):
         elif question['type'] in ['short_answer', 'essay']:
             answers[str(i)] = request.form.get(f'question_{i}')
 
-    # Calculate score
     score = 0
     total = len(test['questions'])
     graded_questions = 0
@@ -438,10 +403,9 @@ def submit_test(subject_key, professor_email, lesson_title):
                 score += 1
             graded_questions += 1
 
-    # Save test results
     results_dir = os.path.join(test_dir, 'results')
     os.makedirs(results_dir, exist_ok=True)
-    
+
     result = {
         'student_email': current_user.email,
         'lesson_title': lesson_title,
@@ -452,7 +416,7 @@ def submit_test(subject_key, professor_email, lesson_title):
         'timestamp': datetime.now().isoformat(),
         'status': 'pending' if graded_questions < total else 'graded'
     }
-    
+
     result_file = os.path.join(results_dir, f"{lesson_title}_{current_user.email}.json")
     with open(result_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2)
@@ -461,36 +425,33 @@ def submit_test(subject_key, professor_email, lesson_title):
         flash('Test submitted! Some questions require professor grading.', 'success')
     else:
         flash(f'Test submitted! Your score: {score}/{total}', 'success')
-    return redirect(url_for('learn.professor_lessons', 
-                          subject_key=subject_key, 
+    return redirect(url_for('learn.professor_lessons',
+                          subject_key=subject_key,
                           professor_email=professor_email))
-
 
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/test-results')
 @login_required
 def view_test_results(subject_key, professor_email):
     """View test results for professors and admins"""
-    # Find the correct subject key (case-insensitive)
+
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject', 'error')
         return redirect(url_for('account.account'))
 
-    # Check if user is admin or the professor
     if not current_user.is_admin and current_user.email != professor_email:
         flash('You do not have permission to view these results', 'error')
         return redirect(url_for('learn.subject_page', subject_key=subject_key))
 
-    # Get all test results
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
     results = []
-    
+
     if os.path.exists(test_dir):
         results_dir = os.path.join(test_dir, 'results')
         if os.path.exists(results_dir):
@@ -498,10 +459,10 @@ def view_test_results(subject_key, professor_email):
                 if result_file.endswith('.json'):
                     with open(os.path.join(results_dir, result_file), 'r', encoding='utf-8') as f:
                         result_data = json.load(f)
-                        # Get student name from database
+
                         student = User.query.filter_by(email=result_data['student_email']).first()
                         student_name = student.name if student else result_data['student_email']
-                        
+
                         results.append({
                             'student_name': student_name,
                             'student_email': result_data['student_email'],
@@ -511,7 +472,6 @@ def view_test_results(subject_key, professor_email):
                             'timestamp': result_data['timestamp']
                         })
 
-    # Sort results by timestamp (newest first)
     results.sort(key=lambda x: x['timestamp'], reverse=True)
 
     return render_template('test_results.html',
@@ -522,47 +482,42 @@ def view_test_results(subject_key, professor_email):
                          professor_email=professor_email,
                          results=results)
 
-
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/student/<student_email>/result')
 @login_required
 def view_test_result(subject_key, professor_email, lesson_title, student_email):
     """View detailed test result for a specific student"""
-    # Find the correct subject key (case-insensitive)
+
     subject_data = None
     for key, data in SUBJECTS.items():
         if key.lower() == subject_key.lower():
             subject_data = data
-            subject_key = key  # Use the correct case
+            subject_key = key
             break
-            
+
     if not subject_data:
         flash('Invalid subject', 'error')
         return redirect(url_for('account.account'))
 
-    # Check if user is admin or the professor
     if not current_user.is_admin and current_user.email != professor_email:
         flash('You do not have permission to view these results', 'error')
         return redirect(url_for('learn.subject_page', subject_key=subject_key))
 
-    # Get the test result
     test_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', professor_email)
     results_dir = os.path.join(test_dir, 'results')
     result_file = os.path.join(results_dir, f"{lesson_title}_{student_email}.json")
-    
+
     if not os.path.exists(result_file):
         flash('Test result not found', 'error')
-        return redirect(url_for('learn.view_test_results', 
-                              subject_key=subject_key, 
+        return redirect(url_for('learn.view_test_results',
+                              subject_key=subject_key,
                               professor_email=professor_email))
 
-    # Load the test result
     with open(result_file, 'r', encoding='utf-8') as f:
         result = json.load(f)
 
-    # Get the original test to compare answers
     test_file = os.path.join(test_dir, f"{lesson_title}.json")
     if not os.path.exists(test_file):
-        # Try to find test with lesson title in data
+
         test = None
         if os.path.exists(test_dir):
             for file in os.listdir(test_dir):
@@ -572,8 +527,7 @@ def view_test_result(subject_key, professor_email, lesson_title, student_email):
                         if test_data.get('lesson') == lesson_title:
                             test = test_data
                             break
-        
-        # If still not found, try old naming pattern
+
         if not test:
             test_file = os.path.join(test_dir, f"{lesson_title}_test.json")
             if os.path.exists(test_file):
@@ -585,11 +539,10 @@ def view_test_result(subject_key, professor_email, lesson_title, student_email):
 
     if not test:
         flash('Original test not found', 'error')
-        return redirect(url_for('learn.view_test_results', 
-                              subject_key=subject_key, 
+        return redirect(url_for('learn.view_test_results',
+                              subject_key=subject_key,
                               professor_email=professor_email))
 
-    # Get student name
     student = User.query.filter_by(email=student_email).first()
     student_name = student.name if student else student_email
 
