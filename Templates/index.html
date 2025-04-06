@@ -35,7 +35,7 @@
             <h3><span class="highlight">JustLearnIt</span> este un site dedicat învățării ușoare și interactive a <span class="highlight">geografiei</span>, <span class="highlight">biologiei</span> și <span class="highlight">istoriei</span>. Indiferent dacă ești elev, profesor sau doar pasionat de cunoaștere, aici vei găsi lecții bine structurate, resurse vizuale captivante și metode inovatoare pentru a face învățarea mai simplă și mai <span class="highlight">distractivă</span>.</h3>
         </div>
         <div class="card-image wow animate__animated animate__fadeInRight">
-            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127126218936320/JustLearnIt.png?ex=67e428a9&is=67e2d729&hm=e59ea707fbb45d74818b31349c26d5bf2c97d0866e13f36b0545ffcf72ffc419&" alt="Imagine JustLearnIt" class="image">
+            <img src="{{ url_for('static', filename='images/JustLearnIt.png') }}" alt="Imagine JustLearnIt" class="image">
         </div>
     </div>
 </section>
@@ -60,7 +60,7 @@
             </h3>
         </div>
         <div class="card-image wow animate__animated animate__fadeInRight">
-            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127127175368784/Materii.png?ex=67e428a9&is=67e2d729&hm=f0811a5b5542a414f3ac6cc50f5558c506fe69b90d2b9144af885ae8c0ab2637&" alt="Imagine JustLearnIt" class="image">
+            <img src="{{ url_for('static', filename='images/Materii.png') }}" alt="Imagine JustLearnIt" class="image">
         </div>
     </div>
 </section>
@@ -89,7 +89,7 @@
             </h3>
         </div>
         <div class="card-image wow animate__animated animate__fadeInRight">
-            <img src="https://cdn.discordapp.com/attachments/1155436217316409364/1354127126646882456/Dece_MConverter.eu.png?ex=67e428a9&is=67e2d729&hm=e0daed3044b5a86f8994d08c0aadc9b5e5349194362928c9e46d0a1e9c4f873a&" alt="Imagine JustLearnIt" class="image">
+            <img src="{{ url_for('static', filename='images/dece.png') }}" alt="Imagine JustLearnIt" class="image">
         </div>
     </div>
 </section>
@@ -102,7 +102,7 @@
         </div>
         <div class="card-button wow animate__animated animate__fadeInRight">
             {% if request.cookies.get('logged_in') == 'true' and current_user.is_authenticated %}
-                <a href="{{ url_for('choose.index') }}" class="button">
+                <a href="{{ url_for('account.account') }}" class="button">
             {% else %}
                 <a href="{{ url_for('login.login') }}" class="button">
             {% endif %}

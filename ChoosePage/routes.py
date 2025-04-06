@@ -25,7 +25,7 @@ FULL_SUBJECTS = {
 def index():
     user = User.query.get(current_user.id)
     if user.user_type == 'profesor' and not user.is_professor_approved:
-        return render_template('pending.html')
+        return redirect(url_for('account.account'))
 
     if request.method == 'POST':
         user_type = request.form.get('user_type')
@@ -39,7 +39,6 @@ def index():
             flash('Please select a valid subject!', 'error')
             return redirect(url_for('choose.index'))
 
-
         user.user_type = user_type
         user.subject = FULL_SUBJECTS[subject_form]
         subject_key = SUBJECTS[subject_form]
@@ -50,7 +49,7 @@ def index():
 
         if user_type == 'profesor':
             flash('Your professor account is pending admin approval.', 'info')
-            return render_template('pending.html')
+            return redirect(url_for('account.account'))
         else:
             flash('Selections saved successfully!', 'success')
             return redirect(url_for('learn.subject_page', subject_key=subject_key))  # Use short key

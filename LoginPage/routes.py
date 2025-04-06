@@ -29,7 +29,7 @@ def verify_email_address(email):
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('choose.choose'))
+        return redirect(url_for('account.account'))
     
     if request.method == 'POST':
         email = request.form.get('email')
@@ -52,7 +52,7 @@ def login():
                 user.last_login = datetime.utcnow()
                 db.session.commit()
                 
-                return redirect(url_for('choose.choose'))
+                return redirect(url_for('account.account'))
             else:
                 flash('Your session has been terminated. Please log in again.', 'error')
                 return redirect(url_for('login.login'))
@@ -100,7 +100,7 @@ def verify_email(token):
         session.permanent = True
         login_user(user)
         flash('E-mail verificat cu succes! Alege o opțiune.', 'success')
-        return redirect(url_for('choose.index'))
+        return redirect(url_for('account.account'))
     else:
         flash('Link de verificare invalid sau expirat.', 'error')
         return redirect(url_for('login.login'))
@@ -113,7 +113,7 @@ def logout():
         db.session.commit()
     logout_user()
     session.clear()
-    return redirect(url_for('landing.landing'))
+    return redirect(url_for('landing.index'))
 
 def send_verification_email(user):
     token = user.verification_token

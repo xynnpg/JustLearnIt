@@ -137,7 +137,7 @@ def subject_page(subject_key):
 
     if not subject_data:
         flash('Invalid subject selected', 'error')
-        return redirect(url_for('choose.index'))
+        return redirect(url_for('account.account'))
 
     professors = get_professors_for_subject(subject_key)
     lessons = get_lessons_for_subject(subject_key)
@@ -189,7 +189,7 @@ def professor_lessons(subject_key, professor_email):
 
     if not subject_data:
         flash('Invalid subject selected', 'error')
-        return redirect(url_for('choose.index'))
+        return redirect(url_for('account.account'))
 
     professor = User.query.filter_by(email=professor_email).first()
     if not professor or not professor.is_professor_approved:

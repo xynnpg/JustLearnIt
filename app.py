@@ -152,7 +152,11 @@ def add_header(response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
-    if 'user_id' in session:
+    
+    # Check if this is a response from the email verification endpoint
+    if request.endpoint == 'login.verify_email':
+        response.set_cookie('logged_in', 'false', max_age=3600, httponly=True)
+    elif 'user_id' in session:
         response.set_cookie('logged_in', 'true', max_age=3600, httponly=True)
     else:
         response.set_cookie('logged_in', 'false', max_age=3600, httponly=True)
