@@ -6,12 +6,17 @@ from flask_mail import Message
 import requests
 import uuid
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 login_bp = Blueprint('login', __name__,
                      template_folder='../Templates',
                      static_folder='../static/login')
 
-ABSTRACT_API_KEY = 'your-abstract-api-key'
+ABSTRACT_API_KEY = os.getenv('ABSTRACT_API_KEY')
 
 def verify_email_address(email):
     try:

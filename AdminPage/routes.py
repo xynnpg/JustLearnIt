@@ -94,9 +94,33 @@ def admin_login():
     return render_template('admin_login.html')
 
 
-@admin_bp.route('/')
+@admin_bp.route('/', methods=['GET', 'POST'])
 @require_admin
 def admin_panel():
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        action = request.form.get('action')
+        
+        if user_id and action:
+            user = User.query.get(user_id)
+            if user:
+                if action == 'approve':
+                    user.is_professor_approved = True
+                    db.session.commit()
+                    flash(f'Professor {user.name} has been approved.', 'success')
+                elif action == 'revoke':
+                    user.is_professor_approved = False
+                    db.session.commit()
+                    flash(f'Professor {user.name} has been revoked.', 'warning')
+                elif action == 'delete':
+                    db.session.delete(user)
+                    db.session.commit()
+                    flash(f'User {user.name} has been deleted.', 'success')
+                elif action == 'decline':
+                    db.session.delete(user)
+                    db.session.commit()
+                    flash(f'Professor application for {user.name} has been declined.', 'warning')
+        
     # Get all professors
     professors = User.query.filter_by(user_type='profesor').all()
     

@@ -13,9 +13,13 @@ from datetime import datetime, timedelta
 from threading import Thread
 import atexit
 import requests
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -27,9 +31,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'justlearnitcnvga@gmail.com'
-app.config['MAIL_PASSWORD'] = 'rfgqitcihsfjouts'
-app.config['MAIL_DEFAULT_SENDER'] = 'justlearnitcnvga@gmail.com'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 app.config['MAIL_DEBUG'] = True
 app.config['MAIL_SUPPRESS_SEND'] = False
 
@@ -44,7 +48,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 CREDENTIALS_FILE = os.path.join(INSTANCE_DIR, 'admin_credentials.txt')
-ADMIN_EMAIL = "darius.doana@cnvgarad.ro"
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 
 def generate_random_credentials():
     letters = string.ascii_letters + string.digits
