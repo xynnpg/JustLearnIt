@@ -18,15 +18,16 @@
 
             {% if question.type == 'multiple_choice' %}
             <div class="options-list">
+                {% set qindex = loop.index0 %}
                 {% for option in question.options %}
                 {% if option is not none %}
                 <div class="option-item">
                     <input type="radio" 
-                           name="question_{{ loop.index0 }}" 
+                           name="question_{{ qindex }}" 
                            value="{{ loop.index0 }}" 
-                           id="option_{{ loop.index0 }}_{{ loop.index0 }}" 
+                           id="option_{{ qindex }}_{{ loop.index0 }}" 
                            required>
-                    <label for="option_{{ loop.index0 }}_{{ loop.index0 }}">
+                    <label for="option_{{ qindex }}_{{ loop.index0 }}">
                         {{ option|safe }}
                     </label>
                 </div>

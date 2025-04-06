@@ -7,7 +7,7 @@ from functools import wraps
 from . import studio_bp
 from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
-from models import User
+from models import User, Lesson
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
@@ -148,68 +148,28 @@ def lessons():
                          subjects=SUBJECTS,
                          lessons=lessons)
 
-@studio_bp.route('/lesson/<subject>/<lesson>', methods=['GET', 'POST'])
+@studio_bp.route('/lesson/<subject>/<title>')
 @login_required
 @require_professor
-def view_lesson(subject, lesson):
+def view_lesson(subject, title):
     if subject not in SUBJECTS:
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.lessons'))
 
-    file_path = os.path.join(get_professor_dir(LECTII_DIR, subject), f"{lesson}.html")
-    if not os.path.exists(file_path):
+    lesson_dir = get_professor_dir(LECTII_DIR, subject)
+    lesson_file = os.path.join(lesson_dir, f"{title}.html")
+    
+    if not os.path.exists(lesson_file):
         flash('Lesson not found', 'error')
-        return redirect(url_for('studio.lessons'))
-
-    with open(file_path, 'r', encoding='utf-8') as f:
+        return redirect(url_for('studio.lessons', subject=subject))
+    
+    with open(lesson_file, 'r', encoding='utf-8') as f:
         content = f.read()
-
-    start_marker = '<div class="ql-editor">'
-    end_marker = '</div>'
-    start_idx = content.find(start_marker) + len(start_marker)
-    end_idx = content.find(end_marker, start_idx)
-    lesson_content = content[start_idx:end_idx] if start_idx != -1 and end_idx != -1 else content
-
-    if request.method == 'POST':
-        try:
-            data = request.get_json()
-            new_content = data.get('content')
-            action = data.get('action')
-            if not new_content:
-                return jsonify({'success': False, 'message': 'Content is required'}), 400
-
-            html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{lesson}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; color: 
-        h1, h2, h3 {{ color: 
-        img {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    <h1>{lesson}</h1>
-    <div class="ql-editor">{new_content}</div>
-    <div class="metadata" style="font-size: 0.8em; color: #666; margin-top: 30px;">
-        Updated by: {current_user.email} | {datetime.now().strftime('%Y-%m-%d')} | Status: {'Published' if action == 'publish' else 'Draft'}
-    </div>
-</body>
-</html>"""
-
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-
-            return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
-
+    
     return render_template('view_lesson.html',
-                           user=current_user,
-                           subject=subject,
-                           lesson_title=lesson,
-                           content=lesson_content)
+                         lesson={'title': title, 'content': content, 'subject': subject},
+                         subjects=SUBJECTS,
+                         user=current_user)
 
 @studio_bp.route('/tests', methods=['GET', 'POST'])
 @login_required
@@ -324,44 +284,91 @@ def view_test(subject, test):
     return render_template('view_test.html',
                          user=current_user,
                          subject=subject,
-                         test=test_data)
+                         test=test_data,
+                         subjects=SUBJECTS)
 
 @studio_bp.route('/test-results/<subject>')
 @login_required
 @require_professor
 def view_test_results(subject):
-
-    subject_key = subject
-    if subject_key not in SUBJECTS:
-        flash('Invalid subject.', 'error')
+    if subject not in SUBJECTS:
+        flash('Invalid subject', 'error')
         return redirect(url_for('studio.dashboard'))
 
-    results_dir = os.path.join(TESTE_DIR, subject_key, 'profesori', current_user.email, 'results')
-    if not os.path.exists(results_dir):
-        flash('No test results found.', 'info')
-        return redirect(url_for('studio.dashboard'))
+    # Get all tests for this subject
+    tests = []
+    test_dir = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email)
+    if os.path.exists(test_dir):
+        for filename in os.listdir(test_dir):
+            if filename.endswith('.json'):
+                test_file = os.path.join(test_dir, filename)
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    test_data = json.load(f)
+                    tests.append({
+                        'title': test_data['title'],
+                        'created_at': datetime.fromisoformat(test_data['created_at']),
+                        'questions': len(test_data['questions']),
+                        'status': test_data.get('status', 'draft')
+                    })
 
-    results = []
-    for filename in os.listdir(results_dir):
-        if filename.endswith('.json'):
-            with open(os.path.join(results_dir, filename), 'r') as f:
-                result = json.load(f)
+    # Get all grades for this subject from both locations
+    grades = []
+    
+    # Check test results directory
+    results_dir = os.path.join(test_dir, 'results')
+    if os.path.exists(results_dir):
+        for filename in os.listdir(results_dir):
+            if filename.endswith('.json'):
+                result_file = os.path.join(results_dir, filename)
+                with open(result_file, 'r', encoding='utf-8') as f:
+                    result_data = json.load(f)
+                    student = User.query.filter_by(email=result_data['student_email']).first()
+                    if student:
+                        grades.append({
+                            'student': student,
+                            'test_title': result_data['lesson_title'],
+                            'score': result_data['score'],
+                            'date': datetime.fromisoformat(result_data['timestamp'])
+                        })
 
-                student = User.query.filter_by(email=result['student_email']).first()
-                result['student_name'] = student.name if student else result['student_email']
+    # Check grades directory
+    grades_dir = os.path.join(INSTANCE_DIR, 'grades')
+    if os.path.exists(grades_dir):
+        for student_email in os.listdir(grades_dir):
+            student_dir = os.path.join(grades_dir, student_email)
+            if os.path.isdir(student_dir):
+                for filename in os.listdir(student_dir):
+                    if filename.endswith('.json'):
+                        grade_file = os.path.join(student_dir, filename)
+                        with open(grade_file, 'r', encoding='utf-8') as f:
+                            grade_data = json.load(f)
+                            if (grade_data.get('subject') == subject and 
+                                grade_data.get('professor_email') == current_user.email):
+                                student = User.query.filter_by(email=student_email).first()
+                                if student:
+                                    grades.append({
+                                        'student': student,
+                                        'test_title': grade_data['test_title'],
+                                        'score': grade_data['score'],
+                                        'date': datetime.fromisoformat(grade_data['date'])
+                                    })
 
-                if 'score' in result and 'total' in result and result['total'] > 0:
-                    result['grade'] = round((result['score'] / result['total']) * 10, 1)
-                else:
-                    result['grade'] = 0
+    # Remove duplicates and sort by date
+    unique_grades = {}
+    for grade in grades:
+        key = f"{grade['student'].email}_{grade['test_title']}"
+        if key not in unique_grades or grade['date'] > unique_grades[key]['date']:
+            unique_grades[key] = grade
 
-                results.append(result)
-
-    results.sort(key=lambda x: x['timestamp'], reverse=True)
+    grades = list(unique_grades.values())
+    grades.sort(key=lambda x: x['date'], reverse=True)
 
     return render_template('studio_test_results.html',
-                         subject=SUBJECTS[subject_key],
-                         results=results)
+                         user=current_user,
+                         subject=subject,
+                         tests=tests,
+                         grades=grades,
+                         subjects=SUBJECTS)
 
 @studio_bp.route('/test-result/<subject>/<lesson_title>/<student_email>')
 @login_required

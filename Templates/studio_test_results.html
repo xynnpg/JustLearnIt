@@ -1,111 +1,207 @@
 {% extends "studio_base.html" %}
 
-{% block title %}Test Results - {{ subject.name }} - JustLearnIt{% endblock %}
+{% block title %}Test Results - {{ subject }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="studio-container">
     <div class="page-header">
-        <h1><i class="{{ subject.icon }}"></i> Test Results - {{ subject.name }}</h1>
+        <h1><i class="fas fa-chart-bar"></i> Test Results - {{ subject }}</h1>
     </div>
 
-    <div class="results-container">
-        {% if results %}
-        <div class="results-table">
-            <table>
+    <div class="results-section">
+        <div class="section-header">
+            <h2>Tests Overview</h2>
+            <span class="count-badge">{{ tests|length }} tests</span>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Student</th>
-                        <th>Lesson</th>
-                        <th>Grade</th>
-                        <th>Date</th>
+                        <th>Test Title</th>
+                        <th>Questions</th>
+                        <th>Status</th>
+                        <th>Created At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for result in results %}
+                    {% for test in tests %}
                     <tr>
-                        <td>{{ result.student_name }}</td>
-                        <td>{{ result.lesson_title }}</td>
-                        <td>{{ result.grade }}</td>
-                        <td>{{ result.timestamp }}</td>
+                        <td>{{ test.title }}</td>
+                        <td>{{ test.questions }}</td>
+                        <td><span class="status-badge {{ test.status|lower }}">{{ test.status }}</span></td>
+                        <td>{{ test.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td>
-                            <a href="{{ url_for('studio.view_test_result', subject=subject.key, lesson_title=result.lesson_title, student_email=result.student_email) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
-                                <i class="fas fa-eye"></i> View Details
+                            <a href="{{ url_for('studio.view_test', subject=subject, test=test.title) }}" class="action-btn view">
+                                <i class="fas fa-eye"></i> View
                             </a>
                         </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No tests found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="empty-state">
-            <i class="fas fa-chart-bar"></i>
-            <p>No test results found.</p>
+    </div>
+
+    <div class="results-section">
+        <div class="section-header">
+            <h2>Student Grades</h2>
+            <span class="count-badge">{{ grades|length }} grades</span>
         </div>
-        {% endif %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Test</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grade in grades %}
+                    <tr>
+                        <td>{{ grade.student.name }}</td>
+                        <td>{{ grade.test_title }}</td>
+                        <td>{{ "%.1f"|format(grade.score) }}/10</td>
+                        <td>{{ grade.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-state">No grades found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <style>
-.results-container {
+.studio-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.results-section {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 20px;
-    margin: 20px 0;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
 }
 
-.results-table {
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0;
+}
+
+.count-badge {
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.table-responsive {
     overflow-x: auto;
 }
 
-table {
+.data-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-th, td {
-    padding: 12px;
+.data-table th,
+.data-table td {
+    padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #dee2e6;
 }
 
-th {
+.data-table th {
     background: #f8f9fa;
     font-weight: 600;
-    color: #333;
-}
-
-tr:hover {
-    background: #f8f9fa;
-}
-
-.btn {
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: white;
-    font-size: 0.9em;
-}
-
-.btn:hover {
-    opacity: 0.9;
+    color: #495057;
 }
 
 .empty-state {
     text-align: center;
-    padding: 40px;
-    color: #666;
+    color: #6c757d;
+    padding: 2rem !important;
 }
 
-.empty-state i {
-    font-size: 3em;
-    margin-bottom: 20px;
-    opacity: 0.5;
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.draft {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.status-badge.published {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.action-btn {
+    padding: 0.5rem;
+    border-radius: 4px;
+    color: #495057;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.action-btn:hover {
+    background: #f8f9fa;
+}
+
+.action-btn i {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .studio-container {
+        padding: 10px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem;
+    }
 }
 </style>
 {% endblock %} 

@@ -111,3 +111,13 @@ class Grade(db.Model):
 
     def __repr__(self):
         return f"Grade('{self.student_id}', '{self.score}')"
+
+class AdminWhitelist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), unique=True, nullable=False)  # IPv6 addresses can be up to 45 chars
+    description = db.Column(db.String(200), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(120), nullable=False)  # Email of admin who added it
+
+    def __repr__(self):
+        return f"AdminWhitelist('{self.ip_address}', '{self.description}')"

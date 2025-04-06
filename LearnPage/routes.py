@@ -390,7 +390,9 @@ def submit_test(subject_key, professor_email, lesson_title):
     answers = {}
     for i, question in enumerate(test['questions']):
         if question['type'] == 'multiple_choice':
-            answers[str(i)] = request.form.get(f'question_{i}')
+            answer = request.form.get(f'question_{i}')
+            if answer is not None:
+                answers[str(i)] = str(answer)
         elif question['type'] in ['short_answer', 'essay']:
             answers[str(i)] = request.form.get(f'question_{i}')
 
@@ -403,14 +405,23 @@ def submit_test(subject_key, professor_email, lesson_title):
                 score += 1
             graded_questions += 1
 
+    # Convert score to 1-10 scale
+    if total > 0:
+        score_10_scale = 1 + (score / total) * 9  # This ensures score is between 1 and 10
+    else:
+        score_10_scale = 1
+
     results_dir = os.path.join(test_dir, 'results')
     os.makedirs(results_dir, exist_ok=True)
 
+    # Save test result
     result = {
         'student_email': current_user.email,
         'lesson_title': lesson_title,
-        'score': score,
-        'total': total,
+        'score': round(score_10_scale, 1),  # Round to 1 decimal place
+        'total': 10,  # Always show out of 10
+        'raw_score': score,
+        'raw_total': total,
         'graded_questions': graded_questions,
         'answers': answers,
         'timestamp': datetime.now().isoformat(),
@@ -421,13 +432,36 @@ def submit_test(subject_key, professor_email, lesson_title):
     with open(result_file, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2)
 
-    if graded_questions < total:
-        flash('Test submitted! Some questions require professor grading.', 'success')
-    else:
-        flash(f'Test submitted! Your score: {score}/{total}', 'success')
-    return redirect(url_for('learn.professor_lessons',
-                          subject_key=subject_key,
-                          professor_email=professor_email))
+    # Also save in grades directory
+    grades_dir = os.path.join(INSTANCE_DIR, 'grades', current_user.email)
+    os.makedirs(grades_dir, exist_ok=True)
+
+    grade_data = {
+        'subject': subject_key,
+        'test_title': lesson_title,
+        'professor_email': professor_email,
+        'score': round(score_10_scale, 1),
+        'date': datetime.now().isoformat(),
+        'type': 'test'
+    }
+
+    grade_file = os.path.join(grades_dir, f"test_{subject_key}_{lesson_title}.json")
+    with open(grade_file, 'w', encoding='utf-8') as f:
+        json.dump(grade_data, f, indent=2)
+
+    # Instead of redirecting to professor lessons, show the test results
+    return render_template('learn_test_results.html',
+                         subject=subject_data['name'],
+                         subject_key=subject_key,
+                         subject_color=subject_data['color'],
+                         subject_icon=subject_data['icon'],
+                         test_title=lesson_title,
+                         professor_email=professor_email,
+                         lesson_title=lesson_title,
+                         score=result['score'],
+                         raw_score=result['raw_score'],
+                         raw_total=result['raw_total'],
+                         completed_at=datetime.now().strftime('%Y-%m-%d %H:%M'))
 
 @learn_bp.route('/subject/<subject_key>/professor/<professor_email>/test-results')
 @login_required

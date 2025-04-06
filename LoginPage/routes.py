@@ -100,7 +100,7 @@ def verify_email(token):
         session.permanent = True
         login_user(user)
         flash('E-mail verificat cu succes! Alege o opțiune.', 'success')
-        return redirect(url_for('account.account'))
+        return redirect(url_for('choose.index'))
     else:
         flash('Link de verificare invalid sau expirat.', 'error')
         return redirect(url_for('login.login'))

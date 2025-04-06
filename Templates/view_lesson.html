@@ -18,17 +18,26 @@
     </div>
 
     <div class="lesson-content card">
-        <div class="content-wrapper">
-            {{ content|safe }}
+        <div class="lesson-body">
+            {{ lesson_content|safe }}
         </div>
-
+        
         <div class="action-buttons">
-            <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit Lesson
-            </a>
+            {% if not is_admin %}
+            <button id="save-lesson" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Lesson
+            </button>
+            <button id="publish-lesson" class="btn btn-success">
+                <i class="fas fa-check"></i> Publish Lesson
+            </button>
             <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Lessons
             </a>
+            {% else %}
+            <a href="{{ url_for('admin.admin_panel') }}#lessons" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Admin Panel
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -37,164 +46,74 @@
 .lesson-container {
     max-width: 1000px;
     margin: 0 auto;
+    padding: 20px;
 }
 
 .lesson-header {
     margin-bottom: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
 }
 
 .lesson-title {
-    font-size: 2rem;
-    font-weight: 700;
     margin: 0;
-    color: var(--light-text);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.lesson-title i {
-    color: var(--primary-color);
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    font-size: 1.8rem;
+    color: #333;
 }
 
 .lesson-content {
+    background: white;
     padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lesson-body {
     margin-bottom: 2rem;
-}
-
-.content-wrapper {
-    margin-bottom: 2rem;
-    line-height: 1.8;
-    color: var(--light-text);
-}
-
-.content-wrapper h1,
-.content-wrapper h2,
-.content-wrapper h3,
-.content-wrapper h4,
-.content-wrapper h5,
-.content-wrapper h6 {
-    color: var(--light-text);
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.content-wrapper p {
-    margin-bottom: 1.5rem;
-}
-
-.content-wrapper ul,
-.content-wrapper ol {
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
-
-.content-wrapper li {
-    margin-bottom: 0.5rem;
-}
-
-.content-wrapper code {
-    background-color: var(--darker-bg);
-    padding: 0.2rem 0.4rem;
-    border-radius: var(--radius-sm);
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
-}
-
-.content-wrapper pre {
-    background-color: var(--darker-bg);
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    overflow-x: auto;
-    margin-bottom: 1.5rem;
-}
-
-.content-wrapper blockquote {
-    border-left: 4px solid var(--primary-color);
-    padding-left: 1rem;
-    margin-left: 0;
-    margin-bottom: 1.5rem;
-    color: var(--muted-text);
-}
-
-.content-wrapper img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius-md);
-    margin: 1.5rem 0;
-}
-
-.content-wrapper table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1.5rem;
-}
-
-.content-wrapper th,
-.content-wrapper td {
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-}
-
-.content-wrapper th {
-    background-color: var(--darker-bg);
-    font-weight: 600;
 }
 
 .action-buttons {
+    margin-top: 2rem;
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
-    flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
-    .lesson-container {
-        padding: 1rem;
-    }
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
 
-    .lesson-header {
-        margin-bottom: 1.5rem;
-    }
+.btn i {
+    font-size: 1rem;
+}
 
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+.btn-primary {
+    background: #7808d0;
+    color: white;
+}
 
-    .lesson-title {
-        font-size: 1.5rem;
-    }
+.btn-success {
+    background: #28a745;
+    color: white;
+}
 
-    .lesson-content {
-        padding: 1.5rem;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
+.btn-secondary {
+    background: #6c757d;
+    color: white;
 }
 </style>
 {% endblock %} 

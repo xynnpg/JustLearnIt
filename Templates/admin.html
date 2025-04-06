@@ -1,5 +1,3 @@
-<!-- File: /Templates/admin.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +7,264 @@
     <link rel="stylesheet" href="{{ url_for('admin.static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add this inside the head section, after the other stylesheet links */
+        .nav-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+
+        .nav-menu a:hover {
+            background-color: rgba(138, 43, 226, 0.1);
+            color: blueviolet;
+        }
+
+        .nav-menu a.active {
+            background-color: blueviolet;
+            color: white;
+        }
+
+        .nav-menu i {
+            margin-right: 10px;
+        }
+
+        .subject-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .subject-badge i {
+            margin-right: 6px;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            padding: 12px;
+            text-align: left;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1rem 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .dashboard-section {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-section h2 {
+            margin-bottom: 1rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-section h2 i {
+            margin-right: 0.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .action-btn i {
+            margin-right: 4px;
+        }
+
+        .action-btn.approve {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .action-btn.revoke {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .action-btn.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .action-btn.view {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .status.approved {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status.pending {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            color: blueviolet;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 300px;
+        }
+
+        .tab-container {
+            margin-top: 1rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: rgba(138, 43, 226, 0.1);
+            color: blueviolet;
+        }
+
+        .tab-btn.active {
+            background-color: blueviolet;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
@@ -38,7 +294,7 @@
                         <li><a href="#lessons"><i class="fas fa-book"></i> Lessons</a></li>
                         <li><a href="#tests"><i class="fas fa-tasks"></i> Tests</a></li>
                         <li><a href="#grades"><i class="fas fa-star"></i> Grades</a></li>
-                        <li><a href="#reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+                        <li><a href="#whitelist"><i class="fas fa-shield-alt"></i> IP Whitelist</a></li>
                     </ul>
                 </div>
             </div>
@@ -101,43 +357,49 @@
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Email</th>
                                             <th>Name</th>
-                                            <th>Subject</th>
+                                            <th>Email</th>
                                             <th>Status</th>
-                                            <th>Last Login</th>
-                                            <th>IP Country</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for prof in professors %}
-                                        <tr>
-                                            <td>{{ prof.email }}</td>
-                                            <td>{{ prof.name or 'N/A' }}</td>
-                                            <td>{{ prof.subject or 'N/A' }}</td>
-                                            <td>
-                                                <span class="status-badge {% if prof.is_professor_approved %}status-approved{% else %}status-pending{% endif %}">
-                                                    {{ 'Approved' if prof.is_professor_approved else 'Pending' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ prof.last_login.strftime('%Y-%m-%d %H:%M') if prof.last_login else 'Never' }}</td>
-                                            <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
-                                            <td>
-                                                {% if not prof.is_professor_approved %}
-                                                <form method="POST" style="display:inline;">
-                                                    <input type="hidden" name="user_id" value="{{ prof.id }}">
-                                                    <button type="submit" name="action" value="approve" class="action-btn approve">
-                                                        <i class="fas fa-check"></i> Approve
-                                                    </button>
-                                                </form>
-                                                {% endif %}
-                                                <button class="action-btn view" onclick="viewUserDetails('{{ prof.id }}')">
-                                                    <i class="fas fa-eye"></i> View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
+                                        {% if professors %}
+                                            {% for prof in professors %}
+                                            <tr>
+                                                <td>{{ prof.name }}</td>
+                                                <td>{{ prof.email }}</td>
+                                                <td>
+                                                    {% if prof.is_professor_approved %}
+                                                        <span class="status approved">Approved</span>
+                                                    {% else %}
+                                                        <span class="status pending">Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <form method="POST" style="display:inline;">
+                                                        <input type="hidden" name="user_id" value="{{ prof.id }}">
+                                                        {% if not prof.is_professor_approved %}
+                                                            <button type="submit" name="action" value="approve" class="action-btn approve">
+                                                                <i class="fas fa-check"></i> Approve
+                                                            </button>
+                                                        {% else %}
+                                                            <button type="submit" name="action" value="revoke" class="action-btn revoke">
+                                                                <i class="fas fa-times"></i> Revoke
+                                                            </button>
+                                                        {% endif %}
+                                                        <button type="submit" name="action" value="delete" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this professor?')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No professors found</td>
+                                            </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>
@@ -149,33 +411,37 @@
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Email</th>
                                             <th>Name</th>
+                                            <th>Email</th>
                                             <th>Last Login</th>
-                                            <th>IP Country</th>
-                                            <th>Lessons Completed</th>
-                                            <th>Tests Taken</th>
-                                            <th>Average Grade</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for student in students %}
-                                        <tr>
-                                            <td>{{ student.email }}</td>
-                                            <td>{{ student.name or 'N/A' }}</td>
-                                            <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M') if student.last_login else 'Never' }}</td>
-                                            <td>{{ ip_countries.get(student.id, 'Unknown') }}</td>
-                                            <td>{{ student.lessons_completed|default(0) }}</td>
-                                            <td>{{ student.tests_taken|default(0) }}</td>
-                                            <td>{{ student.average_grade|default('N/A') }}</td>
-                                            <td>
-                                                <button class="action-btn view" onclick="viewUserDetails('{{ student.id }}')">
-                                                    <i class="fas fa-eye"></i> View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
+                                        {% if students %}
+                                            {% for student in students %}
+                                            <tr>
+                                                <td>{{ student.name or 'N/A' }}</td>
+                                                <td>{{ student.email }}</td>
+                                                <td>{{ student.last_login.strftime('%Y-%m-%d %H:%M') if student.last_login else 'Never' }}</td>
+                                                <td>
+                                                    <form method="POST" style="display:inline;">
+                                                        <input type="hidden" name="user_id" value="{{ student.id }}">
+                                                        <button type="submit" name="action" value="delete" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this student?')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                    <a href="{{ url_for('admin.view_student', student_id=student.id) }}" class="action-btn view">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No students found</td>
+                                            </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>
@@ -188,22 +454,20 @@
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Email</th>
                                             <th>Name</th>
+                                            <th>Email</th>
                                             <th>Subject</th>
                                             <th>Applied On</th>
-                                            <th>IP Country</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for prof in unapproved %}
                                         <tr>
-                                            <td>{{ prof.email }}</td>
                                             <td>{{ prof.name or 'N/A' }}</td>
+                                            <td>{{ prof.email }}</td>
                                             <td>{{ prof.subject or 'N/A' }}</td>
                                             <td>{{ prof.last_login.strftime('%Y-%m-%d') if prof.last_login else 'N/A' }}</td>
-                                            <td>{{ ip_countries.get(prof.id, 'Unknown') }}</td>
                                             <td>
                                                 <form method="POST" style="display:inline;">
                                                     <input type="hidden" name="user_id" value="{{ prof.id }}">
@@ -229,47 +493,45 @@
 
                 <!-- Lessons Section -->
                 <section id="lessons" class="dashboard-section">
-                    <h2><i class="fas fa-book"></i> Lessons</h2>
-                    
+                    <h2><i class="fas fa-book"></i> Lessons ({{ lessons|length }})</h2>
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Title</th>
                                     <th>Subject</th>
-                                    <th>Author</th>
-                                    <th>Created</th>
-                                    <th>Views</th>
-                                    <th>Completions</th>
-                                    <th>Rating</th>
+                                    <th>Professor</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for lesson in lessons %}
-                                <tr>
-                                    <td>{{ lesson.title }}</td>
-                                    <td>{{ lesson.subject }}</td>
-                                    <td>{{ lesson.author.name or lesson.author.email }}</td>
-                                    <td>{{ lesson.created_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ lesson.views|default(0) }}</td>
-                                    <td>{{ lesson.completions|default(0) }}</td>
-                                    <td>
-                                        <div class="rating">
-                                            <i class="fas fa-star"></i>
-                                            <span>{{ lesson.rating|default('N/A') }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button class="action-btn view" onclick="viewLesson('{{ lesson.id }}')">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                        <button class="action-btn edit" onclick="editLesson('{{ lesson.id }}')">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% if lessons %}
+                                    {% for lesson in lessons %}
+                                    <tr>
+                                        <td>{{ lesson.title }}</td>
+                                        <td>{{ lesson.subject }}</td>
+                                        <td>{{ lesson.professor }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin.view_lesson', subject=lesson.subject_key, title=lesson.title, professor_email=lesson.professor_email) }}" class="action-btn view">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <form method="POST" action="{{ url_for('admin.delete_item') }}" style="display:inline;">
+                                                <input type="hidden" name="action" value="delete_lesson">
+                                                <input type="hidden" name="lesson_title" value="{{ lesson.title }}">
+                                                <input type="hidden" name="subject" value="{{ lesson.subject_key }}">
+                                                <input type="hidden" name="professor_email" value="{{ lesson.professor_email }}">
+                                                <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this lesson?')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No lessons found</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -277,8 +539,7 @@
 
                 <!-- Tests Section -->
                 <section id="tests" class="dashboard-section">
-                    <h2><i class="fas fa-tasks"></i> Tests</h2>
-                    
+                    <h2><i class="fas fa-tasks"></i> Tests ({{ tests|length }})</h2>
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
@@ -286,75 +547,75 @@
                                     <th>Title</th>
                                     <th>Subject</th>
                                     <th>Author</th>
-                                    <th>Created</th>
-                                    <th>Attempts</th>
-                                    <th>Avg. Score</th>
-                                    <th>Pass Rate</th>
+                                    <th>Questions</th>
+                                    <th>Created At</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for test in tests %}
-                                <tr>
-                                    <td>{{ test.title }}</td>
-                                    <td>{{ test.subject }}</td>
-                                    <td>{{ test.author.name or test.author.email }}</td>
-                                    <td>{{ test.created_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ test.attempts|default(0) }}</td>
-                                    <td>{{ test.avg_score|default('N/A') }}%</td>
-                                    <td>{{ test.pass_rate|default('N/A') }}%</td>
-                                    <td>
-                                        <button class="action-btn view" onclick="viewTest('{{ test.id }}')">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                        <button class="action-btn edit" onclick="editTest('{{ test.id }}')">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% if tests %}
+                                    {% for test in tests %}
+                                    <tr>
+                                        <td>{{ test.title }}</td>
+                                        <td>{{ test.subject }}</td>
+                                        <td>{{ test.author.name if test.author else 'Unknown' }}</td>
+                                        <td>{{ test.questions }}</td>
+                                        <td>{{ test.created_at }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin.view_test', subject=test.subject_key, test=test.title, professor_email=test.author.email) }}" class="action-btn view">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <form method="POST" action="{{ url_for('admin.delete_item') }}" style="display:inline;">
+                                                <input type="hidden" name="action" value="delete_test">
+                                                <input type="hidden" name="test_title" value="{{ test.title }}">
+                                                <input type="hidden" name="subject" value="{{ test.subject_key }}">
+                                                <input type="hidden" name="professor_email" value="{{ test.author.email }}">
+                                                <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this test?')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No tests found</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- Grades Section -->
-                <section id="grades" class="dashboard-section">
-                    <h2><i class="fas fa-star"></i> Grades</h2>
-                    
-                    <div class="table-container">
+                <!-- Test Results Section -->
+                <section id="test-results" class="dashboard-section">
+                    <h2><i class="fas fa-chart-bar"></i> Test Results</h2>
+                    <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Student</th>
-                                    <th>Test/Lesson</th>
+                                    <th>Professor</th>
                                     <th>Subject</th>
+                                    <th>Test</th>
                                     <th>Score</th>
                                     <th>Date</th>
-                                    <th>Time Spent</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for grade in grades %}
                                 <tr>
-                                    <td>{{ grade.student.name or grade.student.email }}</td>
-                                    <td>{{ grade.item_title }}</td>
-                                    <td>{{ grade.subject }}</td>
-                                    <td>{{ grade.score }}%</td>
-                                    <td>{{ grade.date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>{{ grade.time_spent }} min</td>
+                                    <td>{{ grade.student.name }}</td>
+                                    <td>{{ grade.professor.name }}</td>
                                     <td>
-                                        <span class="status-badge {% if grade.score >= 70 %}status-approved{% else %}status-pending{% endif %}">
-                                            {{ 'Pass' if grade.score >= 70 else 'Fail' }}
+                                        <span class="subject-badge" style="background-color: {{ subjects[grade.subject].color }}">
+                                            <i class="{{ subjects[grade.subject].icon }}"></i>
+                                            {{ subjects[grade.subject].name }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <button class="action-btn view" onclick="viewGradeDetails('{{ grade.id }}')">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
+                                    <td>{{ grade.test_title }}</td>
+                                    <td>{{ grade.score }}/10</td>
+                                    <td>{{ grade.date.strftime('%Y-%m-%d %H:%M') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -362,49 +623,141 @@
                     </div>
                 </section>
 
-                <!-- Reports Section -->
-                <section id="reports" class="dashboard-section">
-                    <h2><i class="fas fa-file-alt"></i> Reports</h2>
+                <!-- Whitelist Section -->
+                <section id="whitelist" class="dashboard-section">
+                    <h2><i class="fas fa-shield-alt"></i> IP Whitelist</h2>
                     
-                    <div class="reports-grid">
-                        <div class="report-card">
-                            <h3>User Activity Report</h3>
-                            <p>Generate a report of user activity over a specified time period.</p>
-                            <button class="action-btn" onclick="generateReport('user_activity')">
-                                <i class="fas fa-download"></i> Generate
-                            </button>
+                    <div class="whitelist-container">
+                        <div class="whitelist-form">
+                            <h3>Add IP to Whitelist</h3>
+                            <form method="POST" action="{{ url_for('admin.manage_whitelist') }}">
+                                <input type="hidden" name="action" value="add">
+                                <div class="form-group">
+                                    <label for="ip_address">IP Address</label>
+                                    <input type="text" id="ip_address" name="ip_address" required 
+                                           placeholder="e.g. 192.168.1.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="description">Description (Optional)</label>
+                                    <input type="text" id="description" name="description" 
+                                           placeholder="e.g. Home Office">
+                                </div>
+                                <button type="submit" class="action-btn approve">
+                                    <i class="fas fa-plus"></i> Add IP
+                                </button>
+                            </form>
                         </div>
-                        
-                        <div class="report-card">
-                            <h3>Test Performance Report</h3>
-                            <p>Analyze test performance across subjects and user groups.</p>
-                            <button class="action-btn" onclick="generateReport('test_performance')">
-                                <i class="fas fa-download"></i> Generate
-                            </button>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h3>Lesson Engagement Report</h3>
-                            <p>Track lesson completion rates and user engagement.</p>
-                            <button class="action-btn" onclick="generateReport('lesson_engagement')">
-                                <i class="fas fa-download"></i> Generate
-                            </button>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h3>User Growth Report</h3>
-                            <p>Monitor user registration and growth trends.</p>
-                            <button class="action-btn" onclick="generateReport('user_growth')">
-                                <i class="fas fa-download"></i> Generate
-                            </button>
+
+                        <div class="whitelist-table">
+                            <h3>Whitelisted IPs</h3>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>IP Address</th>
+                                            <th>Description</th>
+                                            <th>Added By</th>
+                                            <th>Added On</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ip in whitelisted_ips %}
+                                        <tr>
+                                            <td>{{ ip.ip_address }}</td>
+                                            <td>{{ ip.description or 'N/A' }}</td>
+                                            <td>{{ ip.created_by }}</td>
+                                            <td>{{ ip.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <form method="POST" action="{{ url_for('admin.manage_whitelist') }}" 
+                                                      style="display:inline;">
+                                                    <input type="hidden" name="action" value="remove">
+                                                    <input type="hidden" name="ip_id" value="{{ ip.id }}">
+                                                    <button type="submit" class="action-btn decline">
+                                                        <i class="fas fa-trash"></i> Remove
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                <style>
+                    .whitelist-container {
+                        display: flex;
+                        gap: 2rem;
+                        margin-top: 1rem;
+                    }
+
+                    .whitelist-form {
+                        flex: 1;
+                        background: white;
+                        padding: 1.5rem;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+
+                    .whitelist-table {
+                        flex: 2;
+                    }
+
+                    .form-group {
+                        margin-bottom: 1rem;
+                    }
+
+                    .form-group label {
+                        display: block;
+                        margin-bottom: 0.5rem;
+                        color: #666;
+                    }
+
+                    .form-group input {
+                        width: 100%;
+                        padding: 0.5rem;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                    }
+                </style>
             </div>
         </div>
     </div>
 
     <script>
+        // Add this at the beginning of the script section
+        // Navigation active state management
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            
+            // Set initial active state based on hash or default to overview
+            function setInitialActive() {
+                const hash = window.location.hash || '#overview';
+                const activeLink = document.querySelector(`.nav-menu a[href="${hash}"]`);
+                if (activeLink) {
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    activeLink.classList.add('active');
+                }
+            }
+
+            // Handle navigation clicks
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Set initial active state
+            setInitialActive();
+
+            // Handle browser back/forward buttons
+            window.addEventListener('hashchange', setInitialActive);
+        });
+
         // User Activity Chart
         const activityCtx = document.getElementById('userActivityChart').getContext('2d');
         const activityChart = new Chart(activityCtx, {
@@ -414,17 +767,18 @@
                 datasets: [{
                     label: 'Active Users (Last 7 Days)',
                     data: Object.values({{ stats.activity.active_users|tojson|safe }}),
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(138, 43, 226, 0.2)',
+                    borderColor: 'rgba(138, 43, 226, 1)',
                     borderWidth: 2,
                     tension: 0.1
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'top'
                     },
                     title: {
                         display: true,
@@ -439,22 +793,27 @@
         const typeChart = new Chart(typeCtx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys({{ stats.activity.user_types|tojson|safe }}),
+                labels: ['Students', 'Professors', 'Admins'],
                 datasets: [{
-                    data: Object.values({{ stats.activity.user_types|tojson|safe }}),
+                    data: [
+                        {{ stats.activity.user_types.students }},
+                        {{ stats.activity.user_types.professors }},
+                        {{ stats.activity.user_types.admins }}
+                    ],
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
                         'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)'
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(138, 43, 226, 0.7)'
                     ],
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right',
+                        position: 'right'
                     },
                     title: {
                         display: true,
@@ -462,27 +821,6 @@
                     }
                 }
             }
-        });
-
-        // Tab Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    button.classList.add('active');
-                    
-                    // Show corresponding content
-                    const tabId = button.getAttribute('data-tab') + '-tab';
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
         });
 
         // Placeholder functions for actions
@@ -515,11 +853,25 @@
             alert('View grade details for ID: ' + gradeId);
             // Implement grade details view
         }
-        
-        function generateReport(reportType) {
-            alert('Generate ' + reportType + ' report');
-            // Implement report generation
-        }
+
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
     </script>
 </body>
 </html>
