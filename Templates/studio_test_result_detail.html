@@ -151,8 +151,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <style>
 .student-info {
-    color: #666;
-    margin-top: 10px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    margin-top: 15px;
 }
 
 .result-summary {
@@ -160,6 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 20px;
     margin: 20px 0;
     align-items: center;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .score-card {
@@ -168,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     color: white;
     text-align: center;
     min-width: 150px;
+    background: #7808d0;
 }
 
 .score {
@@ -192,13 +199,15 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px;
+    padding: 15px;
     background: #f8f9fa;
     border-radius: 6px;
+    color: #333;
+    font-size: 16px;
 }
 
 .detail-item i {
-    color: {{ subject.color }};
+    color: #7808d0;
     font-size: 1.2em;
 }
 
@@ -209,13 +218,15 @@ document.addEventListener('DOMContentLoaded', function() {
 .questions-review h2 {
     margin-bottom: 20px;
     color: #333;
+    font-size: 24px;
+    font-weight: 600;
 }
 
 .question-card {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 20px;
     border-left: 4px solid #ddd;
 }
@@ -232,45 +243,53 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
-    color: #666;
-    font-size: 0.9em;
+    color: #555;
+    font-size: 16px;
 }
 
 .question-text {
-    font-size: 1.1em;
+    font-size: 18px;
     margin-bottom: 15px;
     color: #333;
+    font-weight: 500;
+    line-height: 1.6;
 }
 
 .options {
     display: grid;
-    gap: 10px;
-    margin: 15px 0;
+    gap: 12px;
+    margin: 20px 0;
 }
 
 .option {
-    padding: 10px;
-    border-radius: 4px;
+    padding: 12px 15px;
+    border-radius: 6px;
     background: #f8f9fa;
+    color: #333;
+    font-size: 16px;
 }
 
 .option.correct {
     background: #d4edda;
     color: #155724;
+    font-weight: 500;
 }
 
 .option.incorrect {
     background: #f8d7da;
     color: #721c24;
+    font-weight: 500;
 }
 
 .answer-status {
     margin-top: 15px;
     font-weight: 500;
+    font-size: 16px;
+    color: #333;
 }
 
 .answer-status i {
-    margin-right: 5px;
+    margin-right: 8px;
 }
 
 .answer-status .fa-check {
@@ -282,53 +301,59 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .student-answer {
-    margin: 15px 0;
-    padding: 15px;
+    margin: 20px 0;
+    padding: 20px;
     background: #f8f9fa;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .answer-text {
-    margin: 10px 0;
+    margin: 15px 0;
     padding: 15px;
     background: white;
     border: 1px solid #dee2e6;
-    border-radius: 4px;
+    border-radius: 6px;
     min-height: 50px;
     white-space: pre-wrap;
     word-wrap: break-word;
-    color: #000000;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
 .grading-section {
-    margin-top: 15px;
+    margin-top: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: #fff;
-    border-radius: 4px;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
     border: 1px solid #dee2e6;
 }
 
 .grade-input {
     width: 80px;
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    font-size: 1em;
+    font-size: 16px;
+    color: #333;
 }
 
 .save-grade {
-    padding: 8px 15px;
-    font-size: 0.9em;
-    background-color: {{ subject.color }};
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    background-color: #7808d0;
     border: none;
     color: white;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .save-grade:hover {
-    opacity: 0.9;
+    background-color: #6006a5;
 }
 
 .save-grade:disabled {

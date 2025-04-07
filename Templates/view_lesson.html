@@ -1,6 +1,6 @@
 {% extends "studio_base.html" %}
 
-{% block title %}View Lesson: {{ lesson_title }} - JustLearnIt{% endblock %}
+{% block title %}View Lesson: {{ lesson.title }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="lesson-container">
@@ -8,7 +8,7 @@
         <div class="header-content">
             <h1 class="lesson-title">
                 <i class="fas fa-book"></i>
-                {{ lesson_title }}
+                {{ lesson.title }}
             </h1>
             <div class="user-info">
                 <span class="badge badge-primary">{{ subject }}</span>
@@ -19,7 +19,7 @@
 
     <div class="lesson-content card">
         <div class="lesson-body">
-            {{ lesson_content|safe }}
+            {{ lesson.content|safe }}
         </div>
         
         <div class="action-buttons">
@@ -78,6 +78,36 @@
 
 .lesson-body {
     margin-bottom: 2rem;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.lesson-body h1,
+.lesson-body h2,
+.lesson-body h3,
+.lesson-body h4,
+.lesson-body h5,
+.lesson-body h6 {
+    color: #333;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.lesson-body p {
+    margin-bottom: 1em;
+}
+
+.lesson-body ul,
+.lesson-body ol {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+.lesson-body img {
+    max-width: 100%;
+    height: auto;
+    margin: 1em 0;
 }
 
 .action-buttons {
@@ -95,6 +125,7 @@
     align-items: center;
     gap: 0.5rem;
     font-weight: 500;
+    text-decoration: none;
 }
 
 .btn i {
@@ -114,6 +145,30 @@
 .btn-secondary {
     background: #6c757d;
     color: white;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background: #7808d0;
+    color: white;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }
 </style>
 {% endblock %} 

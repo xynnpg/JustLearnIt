@@ -119,11 +119,12 @@
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
+    background: #f5f7fa;
 }
 
 .test-header {
     margin-bottom: 2rem;
-    padding: 1rem;
+    padding: 1.5rem;
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -141,9 +142,11 @@
     color: #333;
 }
 
-.test-subtitle {
-    margin: 0 0 1rem 0;
-    color: #666;
+.test-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .test-info {
@@ -152,38 +155,50 @@
     border-bottom: 1px solid #eee;
 }
 
+.test-subtitle {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
 .lesson-link, .author-info {
     color: #666;
     margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .question-card {
     margin-bottom: 1.5rem;
-    border: 1px solid #ddd;
+    padding: 1.5rem;
+    background: white;
     border-radius: 8px;
-    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .question-header {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-bottom: 1px solid #ddd;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 1rem;
 }
 
 .question-type {
-    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: 4px;
     color: #666;
+    font-size: 0.9rem;
 }
 
 .question-body {
-    padding: 1.5rem;
+    color: #333;
 }
 
 .question-text {
     font-size: 1.1rem;
+    line-height: 1.6;
     margin-bottom: 1rem;
 }
 
@@ -192,16 +207,16 @@
 }
 
 .option-item {
-    display: flex;
-    align-items: center;
+    padding: 0.75rem;
     margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
+    background: #f8f9fa;
     border-radius: 4px;
+    border: 1px solid #eee;
 }
 
-.correct-option {
-    margin-right: 1rem;
+.option-item.correct-option {
+    background: #e8f5e9;
+    border-color: #4caf50;
 }
 
 .action-buttons {
@@ -211,7 +226,7 @@
 }
 
 .btn {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 4px;
     border: none;
     cursor: pointer;
@@ -219,6 +234,8 @@
     align-items: center;
     gap: 0.5rem;
     font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
 }
 
 .btn i {
@@ -230,9 +247,17 @@
     color: white;
 }
 
+.btn-primary:hover {
+    background: #6a07b8;
+}
+
 .btn-success {
     background: #28a745;
     color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
 }
 
 .btn-secondary {
@@ -240,14 +265,92 @@
     color: white;
 }
 
-.btn-danger {
-    background: #dc3545;
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background: #7808d0;
     color: white;
 }
 
-.btn-info {
-    background: #17a2b8;
-    color: white;
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* Editor styles */
+.question-editor {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.option-editor {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+}
+
+.ql-toolbar {
+    background: #f8f9fa !important;
+    border-top-left-radius: 4px !important;
+    border-top-right-radius: 4px !important;
+}
+
+.ql-container {
+    border-bottom-left-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    min-height: 100px !important;
+}
+
+.ql-editor {
+    color: #333 !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+}
+
+.ql-editor p {
+    margin-bottom: 1em !important;
+}
+
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3,
+.ql-editor h4,
+.ql-editor h5,
+.ql-editor h6 {
+    color: #333 !important;
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+}
+
+.ql-editor ul,
+.ql-editor ol {
+    margin-bottom: 1em !important;
+    padding-left: 2em !important;
+}
+
+.ql-editor img {
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 1em 0 !important;
 }
 </style>
 {% endblock %} 

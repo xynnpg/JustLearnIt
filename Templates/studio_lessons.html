@@ -5,47 +5,205 @@
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <style>
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    .lesson-creator {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .lesson-creator h2 {
+        color: #333;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #333;
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    #lesson-title {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        color: #333;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    #editor-container {
+        height: 400px;
+        margin-bottom: 20px;
+        background: white !important;
+    }
+
+    .ql-editor {
+        font-size: 16px !important;
+        color: #333 !important;
+        line-height: 1.6 !important;
+        background: white !important;
+    }
+
+    .ql-toolbar {
+        background: white !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .ql-toolbar .ql-stroke {
+        stroke: #333 !important;
+    }
+
+    .ql-toolbar .ql-fill {
+        fill: #333 !important;
+    }
+
+    .ql-toolbar .ql-picker {
+        color: #333 !important;
+    }
+
+    .ql-container {
+        border: 1px solid #ddd !important;
+        background: white !important;
+    }
+
+    .existing-lessons {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .existing-lessons h3 {
+        color: #333;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
     .lesson-list {
         list-style: none;
         padding: 0;
-        margin: 20px 0;
+        margin: 0;
     }
+
     .lesson-item {
-        padding: 15px;
-        background: white;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 15px;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin-bottom: 10px;
     }
+
+    .lesson-item:hover {
+        border-color: #ddd;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .lesson-item span {
+        color: #333;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
     .lesson-actions {
         display: flex;
         gap: 10px;
     }
-    #editor-container {
-        height: 400px;
-        margin-bottom: 20px;
-    }
+
     .btn-view, .btn-edit {
-        padding: 5px 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 15px;
         border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
         text-decoration: none;
         color: white;
+        transition: all 0.2s ease;
     }
+
     .btn-view {
-        background-color: #007bff;
+        background: #007bff;
     }
+
     .btn-view:hover {
-        background-color: #0056b3;
-        color: white;
+        background: #0056b3;
     }
+
     .btn-edit {
-        background-color: #28a745;
+        background: #28a745;
     }
+
     .btn-edit:hover {
-        background-color: #218838;
+        background: #218838;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #7808d0;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background: #6006a5;
+    }
+
+    /* Select2 Customization */
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        padding: 5px;
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 28px;
+        color: #333;
+        font-size: 16px;
+    }
+
+    .select2-dropdown {
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .select2-container--default .select2-results__option {
+        padding: 8px 12px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background: #7808d0;
         color: white;
     }
 </style>
@@ -53,162 +211,98 @@
 
 {% block studio_content %}
 <div class="lesson-creator">
-    <h2>Manage Lessons</h2>
-
-    <div class="subject-selector mb-4">
-        <select id="subject-select" class="form-control">
-            {% for subj in subjects %}
-                <option value="{{ subj }}" {% if subj == subject %}selected{% endif %}>{{ subj }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div id="create-lesson" class="mb-4">
+    <h2>Create New Lesson</h2>
+    <form method="POST" class="lesson-form">
         <div class="form-group">
             <label for="lesson-title">Lesson Title</label>
-            <input type="text" id="lesson-title" class="form-control" placeholder="Enter lesson title">
+            <input type="text" id="lesson-title" name="title" class="form-control" required>
         </div>
-
         <div class="form-group">
-            <label>Lesson Content</label>
+            <label for="editor-container">Lesson Content</label>
             <div id="editor-container"></div>
+            <input type="hidden" name="content" id="lesson-content">
         </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Lesson
+        </button>
+    </form>
+</div>
 
-        <div class="form-actions">
-            <button id="save-lesson" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Lesson
-            </button>
-        </div>
-    </div>
-
+<div class="existing-lessons">
     <h3>Existing Lessons</h3>
-    {% if lessons %}
     <ul class="lesson-list">
         {% for lesson in lessons %}
         <li class="lesson-item">
             <span>{{ lesson.title }}</span>
             <div class="lesson-actions">
-                <a href="{{ url_for('studio.view_lesson', subject=subject.key, title=lesson.title) }}"
-                   class="btn btn-view">
+                <a href="{{ url_for('studio.view_lesson', subject=subject.key, title=lesson.title) }}" class="btn-view">
                     <i class="fas fa-eye"></i> View
                 </a>
-                <a href="{{ url_for('studio.view_lesson', subject=subject.key, title=lesson.title) }}"
-                   class="btn btn-edit">
+                <a href="{{ url_for('studio.view_lesson', subject=subject.key, title=lesson.title) }}" class="btn-edit">
                     <i class="fas fa-edit"></i> Edit
                 </a>
             </div>
         </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p>No lessons found for this subject.</p>
-    {% endif %}
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
-<!-- Add jQuery first -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Initialize Select2
-        $('#subject-select').select2();
+    var quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean'],
+                ['link', 'image']
+            ]
+        },
+        placeholder: 'Write your lesson content here...',
+    });
 
-        // Initialize Quill editor
-        const quill = new Quill('#editor-container', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    [{ 'align': [] }],
-                    ['blockquote', 'code-block'],
-                    ['clean']
-                ]
+    document.querySelector('.lesson-form').onsubmit = function(e) {
+        e.preventDefault();
+        
+        var title = document.querySelector('#lesson-title').value;
+        var content = quill.root.innerHTML;
+        var urlParams = new URLSearchParams(window.location.search);
+        var subject = urlParams.get('subject') || 'Bio';
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             },
-            placeholder: 'Write your lesson content here...'
-        });
-
-        // Handle subject change
-        $('#subject-select').on('change', function() {
-            window.location.href = "{{ url_for('studio.lessons') }}?subject=" + $(this).val();
-        });
-
-        // Handle save lesson button click
-        $('#save-lesson').on('click', function() {
-            const title = $('#lesson-title').val();
-            const content = quill.root.innerHTML;
-
-            if (!title) {
-                alert('Please enter a lesson title');
-                return;
-            }
-
-            const data = {
+            body: JSON.stringify({
                 title: title,
                 content: content,
-                subject: $('#subject-select').val()
-            };
-
-            // Show loading state
-            const saveBtn = $(this);
-            saveBtn.prop('disabled', true);
-            saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-
-            fetch("{{ url_for('studio.lessons') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+                subject: subject
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    throw new Error(data.message || 'Unknown error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error saving lesson: ' + error.message);
-            })
-            .finally(() => {
-                saveBtn.prop('disabled', false);
-                saveBtn.html('<i class="fas fa-save"></i> Save Lesson');
-            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error saving lesson: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error saving lesson: ' + error);
         });
-
-        // Handle edit lesson button clicks
-        $(document).on('click', '.edit-lesson', function() {
-            const title = $(this).data('title');
-            const subject = $(this).data('subject');
-
-            fetch(`/studio/lesson/${subject}/${title}`)
-            .then(response => response.text())
-            .then(html => {
-                const content = $(html).find('.lesson-content').html();
-                quill.root.innerHTML = content;
-                $('#lesson-title').val(title);
-                $('html, body').animate({ scrollTop: 0 }, 'slow');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load lesson for editing');
-            });
-        });
-    });
+    };
 </script>
 {% endblock %}
