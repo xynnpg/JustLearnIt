@@ -206,13 +206,85 @@
         background: #7808d0;
         color: white;
     }
+
+    /* Video Styles */
+    .ql-video {
+        width: 100%;
+        height: 400px;
+        max-width: 100%;
+    }
+
+    .ql-editor iframe {
+        width: 100%;
+        height: 400px;
+        max-width: 100%;
+    }
+
+    .video-upload-container {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px dashed #ddd;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .video-upload-container p {
+        margin-bottom: 10px;
+        color: #666;
+    }
+
+    .video-upload-container input[type="file"] {
+        display: none;
+    }
+
+    .video-upload-container label {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #333;
+    }
+
+    .video-upload-container label:hover {
+        background: #e9ecef;
+    }
+
+    .video-embed-container {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px dashed #ddd;
+        border-radius: 4px;
+    }
+
+    .video-embed-container input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+
+    .video-embed-container button {
+        padding: 8px 16px;
+        background: #7808d0;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .video-embed-container button:hover {
+        background: #6006a5;
+    }
 </style>
 {% endblock %}
 
 {% block studio_content %}
 <div class="lesson-creator">
     <h2>Create New Lesson</h2>
-    <form method="POST" class="lesson-form">
+    <form method="POST" class="lesson-form" enctype="multipart/form-data">
         <div class="form-group">
             <label for="lesson-title">Lesson Title</label>
             <input type="text" id="lesson-title" name="title" class="form-control" required>
@@ -221,6 +293,7 @@
             <label for="editor-container">Lesson Content</label>
             <div id="editor-container"></div>
             <input type="hidden" name="content" id="lesson-content">
+            
         </div>
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> Save Lesson
@@ -263,46 +336,67 @@
                 [{ 'script': 'sub'}, { 'script': 'super' }],
                 [{ 'indent': '-1'}, { 'indent': '+1' }],
                 [{ 'direction': 'rtl' }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
                 [{ 'color': [] }, { 'background': [] }],
                 [{ 'font': [] }],
                 [{ 'align': [] }],
                 ['clean'],
-                ['link', 'image']
+                ['link', 'image', 'video']
             ]
-        },
-        placeholder: 'Write your lesson content here...',
+        }
     });
 
-    document.querySelector('.lesson-form').onsubmit = function(e) {
-        e.preventDefault();
-        
-        var title = document.querySelector('#lesson-title').value;
-        var content = quill.root.innerHTML;
-        var urlParams = new URLSearchParams(window.location.search);
-        var subject = urlParams.get('subject') || 'Bio';
-
-        fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: title,
-                content: content,
-                subject: subject
+    // Handle video upload
+    document.getElementById('video-upload').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) {
+            console.log('File selected:', file.name);
+            var formData = new FormData();
+            formData.append('video', file);
+            
+            console.log('Uploading video...');
+            fetch('/studio/upload-video', {
+                method: 'POST',
+                body: formData
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Error saving lesson: ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            alert('Error saving lesson: ' + error);
-        });
-    };
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Upload response:', data);
+                if (data.success) {
+                    var range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'video', data.url);
+                    console.log('Video inserted at position:', range.index);
+                } else {
+                    alert('Error uploading video: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error uploading video');
+            });
+        }
+    });
+
+    // Handle video embed
+    document.getElementById('embed-video').addEventListener('click', function() {
+        var url = document.getElementById('video-url').value;
+        if (url) {
+            var range = quill.getSelection();
+            quill.insertEmbed(range.index, 'video', url);
+            document.getElementById('video-url').value = '';
+        }
+    });
+
+    // Handle form submission
+    document.querySelector('.lesson-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var content = quill.root.innerHTML;
+        document.getElementById('lesson-content').value = content;
+        this.submit();
+    });
 </script>
 {% endblock %}

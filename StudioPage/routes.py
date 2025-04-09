@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_login import login_required, current_user
 from datetime import datetime
 import os
@@ -8,6 +8,7 @@ from . import studio_bp
 from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from models import User, Lesson
+import uuid
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
@@ -80,6 +81,58 @@ def studio():
                          total_tests=test_count,
                          total_students=student_count)
 
+@studio_bp.route('/upload-video', methods=['POST'])
+@login_required
+@require_professor
+def upload_video():
+    print("Upload video request received")
+    if 'video' not in request.files:
+        print("No video file in request")
+        return jsonify({'success': False, 'message': 'No video file provided'}), 400
+    
+    video = request.files['video']
+    if video.filename == '':
+        print("Empty filename")
+        return jsonify({'success': False, 'message': 'No video file selected'}), 400
+    
+    if not video.filename.lower().endswith(('.mp4', '.webm', '.ogg')):
+        print(f"Invalid file format: {video.filename}")
+        return jsonify({'success': False, 'message': 'Invalid video format. Supported formats: MP4, WebM, OGG'}), 400
+    
+    try:
+        # Create a unique filename
+        filename = f"{uuid.uuid4()}_{video.filename}"
+        print(f"Generated filename: {filename}")
+        
+        # Create videos directory if it doesn't exist
+        videos_dir = os.path.join(INSTANCE_DIR, 'videos')
+        os.makedirs(videos_dir, exist_ok=True)
+        print(f"Videos directory: {videos_dir}")
+        
+        # Save the video
+        video_path = os.path.join(videos_dir, filename)
+        video.save(video_path)
+        print(f"Video saved to: {video_path}")
+        
+        # Return the URL for the video
+        video_url = url_for('studio.serve_video', filename=filename, _external=True)
+        print(f"Generated video URL: {video_url}")
+        return jsonify({'success': True, 'url': video_url})
+    
+    except Exception as e:
+        print(f"Error uploading video: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@studio_bp.route('/videos/<filename>')
+@login_required
+def serve_video(filename):
+    videos_dir = os.path.join(INSTANCE_DIR, 'videos')
+    try:
+        return send_from_directory(videos_dir, filename, as_attachment=False)
+    except Exception as e:
+        print(f"Error serving video {filename}: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 404
+
 @studio_bp.route('/lessons', methods=['GET', 'POST'])
 @login_required
 @require_professor
@@ -105,22 +158,22 @@ def lessons():
         lessons = []
 
     if request.method == 'POST':
-        try:
-            data = request.get_json()
-            title = data.get('title')
-            content = data.get('content')
-            subject = data.get('subject', 'Bio')
+        data = request.get_json()
+        if data is None:
+            return jsonify({'success': False, 'message': 'Invalid data'}), 400
 
-            if not title or not content:
-                return jsonify({'success': False, 'message': 'Title and content are required'}), 400
+        title = data.get('title')
+        content = data.get('content')
+        if not title or not content:
+            return jsonify({'success': False, 'message': 'Title and content are required'}), 400
 
-            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            lessons_dir = get_professor_dir(LECTII_DIR, subject)
-            os.makedirs(lessons_dir, exist_ok=True)
+        safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        lessons_dir = get_professor_dir(LECTII_DIR, subject)
+        os.makedirs(lessons_dir, exist_ok=True)
 
-            file_path = os.path.join(lessons_dir, f"{safe_title}.html")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(f"""
+        file_path = os.path.join(lessons_dir, f"{safe_title}.html")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -130,6 +183,8 @@ def lessons():
         <style>
             body {{ padding: 20px; font-family: Arial, sans-serif; }}
             .ql-editor {{ border: none; padding: 0; }}
+            .ql-video {{ width: 100%; height: 400px; max-width: 100%; }}
+            iframe {{ width: 100%; height: 400px; max-width: 100%; }}
         </style>
     </head>
     <body>
@@ -138,9 +193,7 @@ def lessons():
     </html>
     """)
 
-            return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify({'success': True})
 
     return render_template('studio_lessons.html',
                          user=current_user,
