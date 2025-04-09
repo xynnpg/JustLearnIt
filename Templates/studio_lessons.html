@@ -347,7 +347,6 @@
         }
     });
 
-    // Handle video upload
     document.getElementById('video-upload').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (file) {
@@ -394,9 +393,32 @@
     // Handle form submission
     document.querySelector('.lesson-form').addEventListener('submit', function(e) {
         e.preventDefault();
+        var title = document.getElementById('lesson-title').value;
         var content = quill.root.innerHTML;
-        document.getElementById('lesson-content').value = content;
-        this.submit();
+        
+        // Send data to server
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error saving lesson: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving lesson');
+        });
     });
 </script>
 {% endblock %}

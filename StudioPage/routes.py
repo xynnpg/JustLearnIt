@@ -158,42 +158,50 @@ def lessons():
         lessons = []
 
     if request.method == 'POST':
-        data = request.get_json()
-        if data is None:
-            return jsonify({'success': False, 'message': 'Invalid data'}), 400
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'message': 'No data received'}), 400
 
-        title = data.get('title')
-        content = data.get('content')
-        if not title or not content:
-            return jsonify({'success': False, 'message': 'Title and content are required'}), 400
+            title = data.get('title')
+            content = data.get('content')
+            
+            if not title:
+                return jsonify({'success': False, 'message': 'Title is required'}), 400
+            if not content:
+                return jsonify({'success': False, 'message': 'Content is required'}), 400
 
-        safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        lessons_dir = get_professor_dir(LECTII_DIR, subject)
-        os.makedirs(lessons_dir, exist_ok=True)
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            lessons_dir = get_professor_dir(LECTII_DIR, subject)
+            os.makedirs(lessons_dir, exist_ok=True)
 
-        file_path = os.path.join(lessons_dir, f"{safe_title}.html")
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{safe_title}</title>
-        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-        <style>
-            body {{ padding: 20px; font-family: Arial, sans-serif; }}
-            .ql-editor {{ border: none; padding: 0; }}
-            .ql-video {{ width: 100%; height: 400px; max-width: 100%; }}
-            iframe {{ width: 100%; height: 400px; max-width: 100%; }}
-        </style>
-    </head>
-    <body>
-        <div class="ql-editor">{content}</div>
-    </body>
-    </html>
-    """)
+            file_path = os.path.join(lessons_dir, f"{safe_title}.html")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{safe_title}</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        body {{ padding: 20px; font-family: Arial, sans-serif; }}
+        .ql-editor {{ border: none; padding: 0; }}
+        .ql-video {{ width: 100%; height: 400px; max-width: 100%; }}
+        iframe {{ width: 100%; height: 400px; max-width: 100%; }}
+    </style>
+</head>
+<body>
+    <div class="ql-editor">{content}</div>
+</body>
+</html>
+""")
 
-        return jsonify({'success': True})
+            return jsonify({'success': True, 'message': 'Lesson saved successfully'})
+
+        except Exception as e:
+            print(f"Error saving lesson: {str(e)}")
+            return jsonify({'success': False, 'message': f'Error saving lesson: {str(e)}'}), 500
 
     return render_template('studio_lessons.html',
                          user=current_user,
