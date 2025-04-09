@@ -12,7 +12,6 @@ import time
 from datetime import datetime, timedelta
 from threading import Thread
 import atexit
-import requests
 from dotenv import load_dotenv
 
 # Load environment variables
