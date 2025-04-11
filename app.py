@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from threading import Thread
 import atexit
 from dotenv import load_dotenv
+from sync_service import sync_service
 
 # Load environment variables
 load_dotenv()
@@ -123,6 +124,16 @@ def check_and_regenerate():
 thread = Thread(target=check_and_regenerate, daemon=True)
 thread.start()
 atexit.register(lambda: logger.info("Shutting down credential regeneration thread"))
+
+# Start the sync service
+sync_service.start_sync_service()
+
+# Register cleanup function
+def cleanup():
+    sync_service.stop_sync_service()
+    logger.info("Shutting down sync service")
+
+atexit.register(cleanup)
 
 from LandingPage.routes import landing_bp
 from LoginPage.routes import login_bp

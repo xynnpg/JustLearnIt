@@ -9,6 +9,7 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from models import User, Lesson
 import uuid
+from sync_service import sync_service
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
@@ -114,6 +115,9 @@ def upload_video():
         video.save(video_path)
         print(f"Video saved to: {video_path}")
         
+        # Sync with Google Drive
+        sync_service.sync_videos()
+        
         # Return the URL for the video
         video_url = url_for('studio.serve_video', filename=filename, _external=True)
         print(f"Generated video URL: {video_url}")
@@ -187,36 +191,20 @@ def lessons():
 
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{safe_title}</title>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <style>
-        body {{ padding: 20px; font-family: Arial, sans-serif; }}
-        .ql-editor {{ border: none; padding: 0; }}
-        .ql-video {{ width: 100%; height: 400px; max-width: 100%; }}
-        iframe {{ width: 100%; height: 400px; max-width: 100%; }}
-    </style>
-</head>
-<body>
-    <div class="ql-editor">{content}</div>
-</body>
-</html>
-""")
+                f.write(content)
 
-            print("Lesson saved successfully")
+            # Sync with Google Drive
+            sync_service.sync_lessons()
+            
             return jsonify({'success': True, 'message': 'Lesson saved successfully'})
-
+            
         except Exception as e:
             print(f"Error saving lesson: {str(e)}")
-            return jsonify({'success': False, 'message': f'Error saving lesson: {str(e)}'}), 500
+            return jsonify({'success': False, 'message': str(e)}), 500
 
     return render_template('studio_lessons.html',
                          user=current_user,
-                         subject=SUBJECTS[subject],
+                         subject=subject,
                          subjects=SUBJECTS,
                          lessons=lessons)
 
@@ -259,13 +247,10 @@ def tests():
         if os.path.exists(tests_dir):
             for f in os.listdir(tests_dir):
                 if f.endswith('.json'):
-                    with open(os.path.join(tests_dir, f), 'r', encoding='utf-8') as test_file:
-                        test_data = json.load(test_file)
-                        tests.append({
-                            'title': f.replace('.json', ''),
-                            'question_count': len(test_data.get('questions', [])),
-                            'created_at': test_data.get('created_at', 'Unknown')
-                        })
+                    tests.append({
+                        'title': f.replace('.json', ''),
+                        'path': os.path.join(tests_dir, f)
+                    })
     except Exception as e:
         flash('Error accessing tests. Please try again.', 'error')
         tests = []
@@ -273,33 +258,37 @@ def tests():
     if request.method == 'POST':
         try:
             data = request.get_json()
-            title = data.get('title')
-            questions = data.get('questions')
-            subject = data.get('subject', 'Bio')
+            if not data:
+                return jsonify({'success': False, 'message': 'No data received'}), 400
 
-            if not title or not questions:
-                return jsonify({'success': False, 'message': 'Title and questions are required'}), 400
+            title = data.get('title')
+            questions = data.get('questions', [])
+            
+            if not title:
+                return jsonify({'success': False, 'message': 'Title is required'}), 400
+            if not questions:
+                return jsonify({'success': False, 'message': 'At least one question is required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-
             tests_dir = get_professor_dir(TESTE_DIR, subject)
-
-            test_data = {
-                'title': title,
-                'subject': subject,
-                'questions': questions,
-                'created_by': current_user.email,
-                'created_at': datetime.utcnow().isoformat(),
-                'updated_at': datetime.utcnow().isoformat(),
-                'status': 'Draft'
-            }
+            os.makedirs(tests_dir, exist_ok=True)
 
             file_path = os.path.join(tests_dir, f"{safe_title}.json")
             with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(test_data, f, indent=2)
+                json.dump({
+                    'title': title,
+                    'questions': questions,
+                    'created_at': datetime.now().isoformat(),
+                    'created_by': current_user.email
+                }, f, ensure_ascii=False, indent=4)
 
-            return jsonify({'success': True})
+            # Sync with Google Drive
+            sync_service.sync_tests()
+            
+            return jsonify({'success': True, 'message': 'Test saved successfully'})
+            
         except Exception as e:
+            print(f"Error saving test: {str(e)}")
             return jsonify({'success': False, 'message': str(e)}), 500
 
     return render_template('studio_tests.html',
