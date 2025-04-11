@@ -159,12 +159,22 @@ def lessons():
 
     if request.method == 'POST':
         try:
+            print("Received POST request")
+            print("Content-Type:", request.headers.get('Content-Type'))
+            print("Request data:", request.get_data())
+            
             data = request.get_json()
+            print("Parsed JSON data:", data)
+            
             if not data:
+                print("No data received")
                 return jsonify({'success': False, 'message': 'No data received'}), 400
 
             title = data.get('title')
             content = data.get('content')
+            
+            print("Title:", title)
+            print("Content length:", len(content) if content else 0)
             
             if not title:
                 return jsonify({'success': False, 'message': 'Title is required'}), 400
@@ -197,6 +207,7 @@ def lessons():
 </html>
 """)
 
+            print("Lesson saved successfully")
             return jsonify({'success': True, 'message': 'Lesson saved successfully'})
 
         except Exception as e:

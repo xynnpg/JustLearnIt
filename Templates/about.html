@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despre Noi - JustLearnIt</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease;
+        }
+
+        .about-header h1 {
+            font-size: 2.8rem;
+            color: #5a67d8;
+            margin-bottom: 10px;
+        }
+
+        .about-header .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+        }
+
+        .about-section {
+            margin-bottom: 50px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .about-section h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .about-section p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: #5a67d8;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            font-size: 1rem;
+            color: #718096;
+        }
+
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .benefits-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            animation: fadeInLeft 1s ease;
+        }
+
+        .benefits-list i {
+            color: #5a67d8;
+            margin-right: 15px;
+            font-size: 1.3rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .team-member {
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .team-member h3 {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .team-member p {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .contact-section {
+            text-align: center;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+        }
+
+        .contact-info p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .contact-info i {
+            color: #5a67d8;
+        }
+
+        @media (max-width: 768px) {
+            .about-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .about-section h2 {
+                font-size: 1.7rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="about-header">
+            <h1>Despre JustLearnIt</h1>
+            <p class="subtitle">Platforma ta de învățare online</p>
+        </header>
+
+        <main class="about-content">
+            <section class="about-section">
+                <h2>Misiunea Noastră</h2>
+                <center>
+                    <p>JustLearnIt a fost creat cu un singur scop: să facă învățarea accesibilă și plăcută pentru toți elevii din România. Ne dorim să oferim o platformă unde elevii pot învăța în ritmul lor, cu materiale de calitate și suport de la profesori experimentați.</p>
+                </center>
+            </section>
+
+            <section class="about-section">
+                <h2>Ce Oferim</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-book-open"></i>
+                        <h3>Lecții Interactive</h3>
+                        <p>Materiale de învățare structurate și interactive pentru diverse materii.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <h3>Profesori Dedicati</h3>
+                        <p>Profesori verificați și experimentați care îți oferă suport personalizat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-tasks"></i>
+                        <h3>Teste și Evaluări</h3>
+                        <p>Teste interactive pentru a-ți verifica progresul și cunoștințele.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Urmărirea Progresului</h3>
+                        <p>Monitorizează-ți evoluția și identifică zonele care necesită mai multă atenție.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h2>De Ce JustLearnIt?</h2>
+                <ul class="benefits-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Accesibil 24/7 de oriunde</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Materiale actualizate și relevante</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Interfață prietenoasă și ușor de utilizat</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Suport personalizat de la profesori</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Prețuri accesibile pentru toți</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h2>Echipa Noastră</h2>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=7808d0&color=fff" alt="Admin">
+                        <h3>Admin User</h3>
+                        <p>Fondator & CEO</p>
+                    </div>
+                    <div class="team-member">
+                        <img src="https://ui-avatars.com/api/?name=Dev+Team&background=7808d0&color=fff" alt="Dev Team">
+                        <h3>Dev Team</h3>
+                        <p>Echipa de Dezvoltare</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section contact-section">
+                <h2>Contactează-ne</h2>
+                <p>Ai întrebări sau sugestii? Suntem aici să te ajutăm!</p>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> justlearnitcnvga@gmail.com</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html> 

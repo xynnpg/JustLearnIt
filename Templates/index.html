@@ -14,7 +14,7 @@
             {% if show_studio_button %}
                 <a href="{{ url_for('studio.lessons') }}" class="studio-btn">Go to Studio</a>
             {% endif %}
-            <a href="{{ url_for('landing.index') }}">About</a>
+            <a href="{{ url_for('about.about') }}">About</a>
             {% if current_user.is_authenticated %}
                 <a href="{{ url_for('login.logout') }}">Logout</a>
             {% endif %}

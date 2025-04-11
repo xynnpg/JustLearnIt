@@ -284,7 +284,7 @@
 {% block studio_content %}
 <div class="lesson-creator">
     <h2>Create New Lesson</h2>
-    <form method="POST" class="lesson-form" enctype="multipart/form-data">
+    <form id="lesson-form" class="lesson-form">
         <div class="form-group">
             <label for="lesson-title">Lesson Title</label>
             <input type="text" id="lesson-title" name="title" class="form-control" required>
@@ -292,10 +292,8 @@
         <div class="form-group">
             <label for="editor-container">Lesson Content</label>
             <div id="editor-container"></div>
-            <input type="hidden" name="content" id="lesson-content">
-            
         </div>
-        <button type="submit" class="btn btn-primary">
+        <button type="button" id="save-lesson" class="btn btn-primary">
             <i class="fas fa-save"></i> Save Lesson
         </button>
     </form>
@@ -325,6 +323,7 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    // Initialize Quill editor
     var quill = new Quill('#editor-container', {
         theme: 'snow',
         modules: {
@@ -347,69 +346,49 @@
         }
     });
 
-    document.getElementById('video-upload').addEventListener('change', function(e) {
-        var file = e.target.files[0];
-        if (file) {
-            console.log('File selected:', file.name);
-            var formData = new FormData();
-            formData.append('video', file);
-            
-            console.log('Uploading video...');
-            fetch('/studio/upload-video', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Upload response:', data);
-                if (data.success) {
-                    var range = quill.getSelection();
-                    quill.insertEmbed(range.index, 'video', data.url);
-                    console.log('Video inserted at position:', range.index);
-                } else {
-                    alert('Error uploading video: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error uploading video');
-            });
-        }
-    });
+    console.log('Quill editor initialized');
 
-    // Handle video embed
-    document.getElementById('embed-video').addEventListener('click', function() {
-        var url = document.getElementById('video-url').value;
-        if (url) {
-            var range = quill.getSelection();
-            quill.insertEmbed(range.index, 'video', url);
-            document.getElementById('video-url').value = '';
-        }
-    });
-
-    // Handle form submission
-    document.querySelector('.lesson-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var title = document.getElementById('lesson-title').value;
-        var content = quill.root.innerHTML;
+    // Save button click handler
+    function saveLesson() {
+        console.log('Save button clicked');
         
-        // Send data to server
+        const title = document.getElementById('lesson-title').value;
+        const content = quill.root.innerHTML;
+        
+        console.log('Title:', title);
+        console.log('Content:', content);
+        
+        if (!title) {
+            alert('Please enter a title');
+            return;
+        }
+        
+        if (!content) {
+            alert('Please enter some content');
+            return;
+        }
+        
+        console.log('Sending data to server...');
+        
         fetch(window.location.href, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 title: title,
                 content: content
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Server response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Server response data:', data);
             if (data.success) {
+                alert('Lesson saved successfully!');
                 window.location.reload();
             } else {
                 alert('Error saving lesson: ' + data.message);
@@ -417,8 +396,19 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error saving lesson');
+            alert('Error saving lesson: ' + error.message);
         });
-    });
+    }
+
+    // Add click event listener to save button
+    const saveButton = document.getElementById('save-lesson');
+    console.log('Save button element:', saveButton);
+    
+    if (saveButton) {
+        saveButton.addEventListener('click', saveLesson);
+        console.log('Save button event listener added');
+    } else {
+        console.error('Save button not found!');
+    }
 </script>
 {% endblock %}
