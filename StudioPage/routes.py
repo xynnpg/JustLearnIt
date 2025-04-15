@@ -9,7 +9,6 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from models import User, Lesson
 import uuid
-from sync_service import sync_service
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
@@ -115,9 +114,6 @@ def upload_video():
         video.save(video_path)
         print(f"Video saved to: {video_path}")
         
-        # Sync with Google Drive
-        sync_service.sync_videos()
-        
         # Return the URL for the video
         video_url = url_for('studio.serve_video', filename=filename, _external=True)
         print(f"Generated video URL: {video_url}")
@@ -192,9 +188,6 @@ def lessons():
             file_path = os.path.join(lessons_dir, f"{safe_title}.html")
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
-
-            # Sync with Google Drive
-            sync_service.sync_lessons()
             
             return jsonify({'success': True, 'message': 'Lesson saved successfully'})
             
@@ -207,29 +200,6 @@ def lessons():
                          subject=subject,
                          subjects=SUBJECTS,
                          lessons=lessons)
-
-@studio_bp.route('/lesson/<subject>/<title>')
-@login_required
-@require_professor
-def view_lesson(subject, title):
-    if subject not in SUBJECTS:
-        flash('Invalid subject', 'error')
-        return redirect(url_for('studio.lessons'))
-
-    lesson_dir = get_professor_dir(LECTII_DIR, subject)
-    lesson_file = os.path.join(lesson_dir, f"{title}.html")
-    
-    if not os.path.exists(lesson_file):
-        flash('Lesson not found', 'error')
-        return redirect(url_for('studio.lessons', subject=subject))
-    
-    with open(lesson_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    return render_template('view_lesson.html',
-                         lesson={'title': title, 'content': content, 'subject': subject},
-                         subjects=SUBJECTS,
-                         user=current_user)
 
 @studio_bp.route('/tests', methods=['GET', 'POST'])
 @login_required
@@ -281,9 +251,6 @@ def tests():
                     'created_at': datetime.now().isoformat(),
                     'created_by': current_user.email
                 }, f, ensure_ascii=False, indent=4)
-
-            # Sync with Google Drive
-            sync_service.sync_tests()
             
             return jsonify({'success': True, 'message': 'Test saved successfully'})
             
