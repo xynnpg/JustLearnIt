@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from threading import Thread
 import atexit
 from dotenv import load_dotenv
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -21,10 +22,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
-os.makedirs(INSTANCE_DIR, exist_ok=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(INSTANCE_DIR, "site.db")}'
+STORAGE_API_URL = os.getenv('STORAGE_API_URL', 'http://localhost:5000/api')
+
+# Configure SQLAlchemy to use storage.db database
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:////home/xympg/Desktop/Github/storage_api_website/storage/storage.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -46,7 +47,6 @@ mail = Mail(app)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-CREDENTIALS_FILE = os.path.join(INSTANCE_DIR, 'admin_credentials.txt')
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 
 def generate_random_credentials():
@@ -56,36 +56,54 @@ def generate_random_credentials():
     return username, password
 
 def save_credentials(username, password, timestamp):
-    with open(CREDENTIALS_FILE, 'w') as f:
-        f.write(f"{username}:{password}:{timestamp}")
+    try:
+        response = requests.post(
+            f"{STORAGE_API_URL}/admin/credentials",
+            json={
+                'username': username,
+                'password': password,
+                'timestamp': timestamp
+            }
+        )
+        if response.status_code != 201:
+            logger.error(f"Failed to save admin credentials: {response.text}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Error saving admin credentials: {e}")
+        return False
 
 def load_credentials():
     try:
-        with open(CREDENTIALS_FILE, 'r') as f:
-            data = f.read().strip().split(':')
-            if len(data) == 3:
-                return data[0], data[1], float(data[2])
-    except FileNotFoundError:
-        pass
+        response = requests.get(f"{STORAGE_API_URL}/admin/credentials")
+        if response.status_code == 200:
+            data = response.json()
+            return data['username'], data['password'], float(data['timestamp'])
+        else:
+            logger.error(f"Failed to load admin credentials: {response.text}")
+    except Exception as e:
+        logger.error(f"Error loading admin credentials: {e}")
     return None, None, 0
 
 def send_credentials_email(username, password):
     try:
-        msg = Message("New Admin Credentials",
-                     recipients=[ADMIN_EMAIL])
-        msg.body = f"Your new admin credentials:\nUsername: {username}\nPassword: {password}\nValid until: {datetime.fromtimestamp(time.time() + 7*86400).strftime('%Y-%m-%d %H:%M:%S')}"
-        mail.send(msg)
-        logger.info(f"Admin credentials sent to {ADMIN_EMAIL}: {username}/{password}")
+        with app.app_context():
+            msg = Message("New Admin Credentials",
+                        recipients=[ADMIN_EMAIL])
+            msg.body = f"Your new admin credentials:\nUsername: {username}\nPassword: {password}\nValid until: {datetime.fromtimestamp(time.time() + 7*86400).strftime('%Y-%m-%d %H:%M:%S')}"
+            mail.send(msg)
+            logger.info(f"Admin credentials sent to {ADMIN_EMAIL}: {username}/{password}")
     except Exception as e:
         logger.error(f"Failed to send admin credentials email: {str(e)}")
 
 def send_login_notification(username, ip_address):
     try:
-        msg = Message("Admin Login Notification",
-                     recipients=[ADMIN_EMAIL])
-        msg.body = f"Admin login detected:\nUsername: {username}\nIP Address: {ip_address}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        mail.send(msg)
-        logger.info(f"Admin login notification sent to {ADMIN_EMAIL}")
+        with app.app_context():
+            msg = Message("Admin Login Notification",
+                        recipients=[ADMIN_EMAIL])
+            msg.body = f"Admin login detected:\nUsername: {username}\nIP Address: {ip_address}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            mail.send(msg)
+            logger.info(f"Admin login notification sent to {ADMIN_EMAIL}")
     except Exception as e:
         logger.error(f"Failed to send admin login notification: {str(e)}")
 
@@ -103,21 +121,25 @@ def clear_all_sessions():
 def regenerate_credentials():
     username, password = generate_random_credentials()
     timestamp = time.time()
-    save_credentials(username, password, timestamp)
-    send_credentials_email(username, password)
-    clear_all_sessions()
-    return username, password, timestamp
+    if save_credentials(username, password, timestamp):
+        send_credentials_email(username, password)
+        clear_all_sessions()
+        return username, password, timestamp
+    return None, None, 0
 
-if not os.path.exists(CREDENTIALS_FILE):
-    regenerate_credentials()
+# Check if admin credentials exist, if not create them
+response = requests.head(f"{STORAGE_API_URL}/admin/credentials")
+if response.status_code == 404:
+    with app.app_context():
+        regenerate_credentials()
 
 def check_and_regenerate():
     while True:
         _, _, last_timestamp = load_credentials()
-
-        if time.time() - last_timestamp >= 7*86400:
+        if last_timestamp and time.time() - last_timestamp >= 7*86400:
             logger.debug("Regenerating admin credentials (7 days passed)")
-            regenerate_credentials()
+            with app.app_context():
+                regenerate_credentials()
         time.sleep(3600)
 
 thread = Thread(target=check_and_regenerate, daemon=True)
@@ -184,7 +206,9 @@ def test_email():
 def force_password_change():
     """Force a password change and send the new credentials via email"""
     username, password, timestamp = regenerate_credentials()
-    return f"Password changed successfully! New credentials sent to {ADMIN_EMAIL}. Username: {username}, Password: {password}"
+    if username and password:
+        return f"Password changed successfully! New credentials sent to {ADMIN_EMAIL}. Username: {username}, Password: {password}"
+    return "Failed to change password. Check logs for details."
 
 @app.route('/force-logout-all')
 def force_logout_all():

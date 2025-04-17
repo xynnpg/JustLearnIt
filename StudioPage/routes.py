@@ -9,11 +9,17 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from models import User, Lesson
 import uuid
+import requests
+from dotenv import load_dotenv
+from io import BytesIO
+
+# Load environment variables
+load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
-LECTII_DIR = os.path.join(INSTANCE_DIR, 'lectii')
-TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
+STORAGE_API_URL = os.getenv('STORAGE_API_URL', 'http://localhost:5000/api')
+
 SUBJECTS = {
     'Bio': {
         'name': 'Biology',
@@ -35,9 +41,6 @@ SUBJECTS = {
     }
 }
 
-os.makedirs(LECTII_DIR, exist_ok=True)
-os.makedirs(TESTE_DIR, exist_ok=True)
-
 def require_professor(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -47,14 +50,11 @@ def require_professor(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def get_professor_dir(base_dir, subject):
-    """Get professor-specific directory for a subject"""
+def get_professor_path(subject):
+    """Get professor-specific path for a subject"""
     if not current_user.is_authenticated:
         return None
-
-    professor_dir = os.path.join(base_dir, subject, 'profesori', current_user.email)
-    os.makedirs(professor_dir, exist_ok=True)
-    return professor_dir
+    return f"lectii/{subject}/profesori/{current_user.email}"
 
 @studio_bp.route('/')
 @login_required
@@ -65,12 +65,20 @@ def studio():
     student_count = 0
     try:
         for subject_key in SUBJECTS:
-            lesson_dir = get_professor_dir(LECTII_DIR, subject_key)
-            test_dir = get_professor_dir(TESTE_DIR, subject_key)
-            if os.path.exists(lesson_dir):
-                lesson_count += len([f for f in os.listdir(lesson_dir) if f.endswith('.html')])
-            if os.path.exists(test_dir):
-                test_count += len([f for f in os.listdir(test_dir) if f.endswith('.json')])
+            lectii_path = get_professor_path(subject_key)
+            teste_path = get_professor_path(subject_key)
+            
+            # Get lessons count
+            response = requests.get(f"{STORAGE_API_URL}/folders/{lectii_path}")
+            if response.status_code == 200:
+                contents = response.json()
+                lesson_count += len([f for f in contents if f['type'] == 'file' and f['name'].endswith('.html')])
+            
+            # Get tests count
+            response = requests.get(f"{STORAGE_API_URL}/folders/{teste_path}")
+            if response.status_code == 200:
+                contents = response.json()
+                test_count += len([f for f in contents if f['type'] == 'file' and f['name'].endswith('.json')])
     except Exception as e:
         flash('Error counting lessons and tests', 'error')
 
@@ -104,18 +112,23 @@ def upload_video():
         filename = f"{uuid.uuid4()}_{video.filename}"
         print(f"Generated filename: {filename}")
         
-        # Create videos directory if it doesn't exist
-        videos_dir = os.path.join(INSTANCE_DIR, 'videos')
-        os.makedirs(videos_dir, exist_ok=True)
-        print(f"Videos directory: {videos_dir}")
+        # Create videos folder in storage API
+        response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'videos', 'parent_path': ''})
+        if response.status_code != 201:
+            print(f"Error creating videos folder: {response.text}")
+            return jsonify({'success': False, 'message': 'Error creating videos folder'}), 500
         
-        # Save the video
-        video_path = os.path.join(videos_dir, filename)
-        video.save(video_path)
-        print(f"Video saved to: {video_path}")
+        # Upload the video to storage API
+        files = {'file': (filename, video)}
+        data = {'folder_path': 'videos'}
+        response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+        
+        if response.status_code != 201:
+            print(f"Error uploading video: {response.text}")
+            return jsonify({'success': False, 'message': 'Error uploading video'}), 500
         
         # Return the URL for the video
-        video_url = url_for('studio.serve_video', filename=filename, _external=True)
+        video_url = f"{STORAGE_API_URL}/files/videos/{filename}"
         print(f"Generated video URL: {video_url}")
         return jsonify({'success': True, 'url': video_url})
     
@@ -126,9 +139,11 @@ def upload_video():
 @studio_bp.route('/videos/<filename>')
 @login_required
 def serve_video(filename):
-    videos_dir = os.path.join(INSTANCE_DIR, 'videos')
     try:
-        return send_from_directory(videos_dir, filename, as_attachment=False)
+        response = requests.get(f"{STORAGE_API_URL}/files/videos/{filename}")
+        if response.status_code == 200:
+            return response.content, 200, {'Content-Type': 'video/mp4'}
+        return jsonify({'success': False, 'message': 'Video not found'}), 404
     except Exception as e:
         print(f"Error serving video {filename}: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 404
@@ -142,16 +157,18 @@ def lessons():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    lessons_dir = get_professor_dir(LECTII_DIR, subject)
+    lessons_path = get_professor_path(subject)
 
     try:
         lessons = []
-        if os.path.exists(lessons_dir):
-            for f in os.listdir(lessons_dir):
-                if f.endswith('.html'):
+        response = requests.get(f"{STORAGE_API_URL}/folders/{lessons_path}")
+        if response.status_code == 200:
+            contents = response.json()
+            for item in contents:
+                if item['type'] == 'file' and item['name'].endswith('.html'):
                     lessons.append({
-                        'title': f.replace('.html', ''),
-                        'path': os.path.join(lessons_dir, f)
+                        'title': item['name'].replace('.html', ''),
+                        'path': item['path']
                     })
     except Exception as e:
         flash('Error accessing lessons. Please try again.', 'error')
@@ -159,7 +176,7 @@ def lessons():
 
     if request.method == 'POST':
         try:
-            print("Received POST request")
+            print("Received POST request for saving lesson")
             print("Content-Type:", request.headers.get('Content-Type'))
             print("Request data:", request.get_data())
             
@@ -177,18 +194,58 @@ def lessons():
             print("Content length:", len(content) if content else 0)
             
             if not title:
+                print("No title provided")
                 return jsonify({'success': False, 'message': 'Title is required'}), 400
             if not content:
+                print("No content provided")
                 return jsonify({'success': False, 'message': 'Content is required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            lessons_dir = get_professor_dir(LECTII_DIR, subject)
-            os.makedirs(lessons_dir, exist_ok=True)
-
-            file_path = os.path.join(lessons_dir, f"{safe_title}.html")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+            print("Safe title:", safe_title)
             
+            # Create folder structure in storage API
+            print("Creating lectii folder")
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'lectii', 'parent_path': ''})
+            print("Lectii folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating lectii folder")
+                return jsonify({'success': False, 'message': 'Error creating lectii folder'}), 500
+                
+            print("Creating subject folder:", subject)
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': subject, 'parent_path': 'lectii'})
+            print("Subject folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating subject folder")
+                return jsonify({'success': False, 'message': 'Error creating subject folder'}), 500
+                
+            print("Creating professors folder")
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'profesori', 'parent_path': f"lectii/{subject}"})
+            print("Professors folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating professors folder")
+                return jsonify({'success': False, 'message': 'Error creating professors folder'}), 500
+                
+            print("Creating professor folder:", current_user.email)
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': current_user.email, 'parent_path': f"lectii/{subject}/profesori"})
+            print("Professor folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating professor folder")
+                return jsonify({'success': False, 'message': 'Error creating professor folder'}), 500
+
+            # Upload the lesson file
+            print("Uploading lesson file")
+            file_content = BytesIO(content.encode('utf-8'))
+            file_content.name = f"{safe_title}.html"
+            files = {'file': (f"{safe_title}.html", file_content, 'text/html')}
+            data = {'folder_path': f"lectii/{subject}/profesori/{current_user.email}"}
+            response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+            print("File upload response:", response.status_code, response.text)
+            
+            if response.status_code != 201:
+                print("Error saving lesson")
+                return jsonify({'success': False, 'message': 'Error saving lesson'}), 500
+            
+            print("Lesson saved successfully")
             return jsonify({'success': True, 'message': 'Lesson saved successfully'})
             
         except Exception as e:
@@ -210,16 +267,18 @@ def tests():
         subject = 'Bio'
         flash('Invalid subject selected. Defaulting to Biology.', 'warning')
 
-    tests_dir = get_professor_dir(TESTE_DIR, subject)
+    tests_path = get_professor_path(subject)
 
     try:
         tests = []
-        if os.path.exists(tests_dir):
-            for f in os.listdir(tests_dir):
-                if f.endswith('.json'):
+        response = requests.get(f"{STORAGE_API_URL}/folders/{tests_path}")
+        if response.status_code == 200:
+            contents = response.json()
+            for item in contents:
+                if item['type'] == 'file' and item['name'].endswith('.json'):
                     tests.append({
-                        'title': f.replace('.json', ''),
-                        'path': os.path.join(tests_dir, f)
+                        'title': item['name'].replace('.json', ''),
+                        'path': item['path']
                     })
     except Exception as e:
         flash('Error accessing tests. Please try again.', 'error')
@@ -240,18 +299,50 @@ def tests():
                 return jsonify({'success': False, 'message': 'At least one question is required'}), 400
 
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            tests_dir = get_professor_dir(TESTE_DIR, subject)
-            os.makedirs(tests_dir, exist_ok=True)
-
-            file_path = os.path.join(tests_dir, f"{safe_title}.json")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'title': title,
-                    'questions': questions,
-                    'created_at': datetime.now().isoformat(),
-                    'created_by': current_user.email
-                }, f, ensure_ascii=False, indent=4)
             
+            # Create folder structure in storage API
+            print("Creating teste folder")
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'teste', 'parent_path': ''})
+            print("Teste folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating teste folder")
+                return jsonify({'success': False, 'message': 'Error creating teste folder'}), 500
+                
+            print("Creating subject folder:", subject)
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': subject, 'parent_path': 'teste'})
+            print("Subject folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating subject folder")
+                return jsonify({'success': False, 'message': 'Error creating subject folder'}), 500
+                
+            print("Creating professors folder")
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'profesori', 'parent_path': f"teste/{subject}"})
+            print("Professors folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating professors folder")
+                return jsonify({'success': False, 'message': 'Error creating professors folder'}), 500
+                
+            print("Creating professor folder:", current_user.email)
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': current_user.email, 'parent_path': f"teste/{subject}/profesori"})
+            print("Professor folder response:", response.status_code, response.text)
+            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
+                print("Error creating professor folder")
+                return jsonify({'success': False, 'message': 'Error creating professor folder'}), 500
+
+            # Upload the test file
+            test_data = {
+                'title': title,
+                'questions': questions
+            }
+            files = {'file': (f"{safe_title}.json", json.dumps(test_data).encode('utf-8'))}
+            data = {'folder_path': f"teste/{subject}/profesori/{current_user.email}"}
+            response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+            
+            if response.status_code != 201:
+                print("Error saving test")
+                return jsonify({'success': False, 'message': 'Error saving test'}), 500
+            
+            print("Test saved successfully")
             return jsonify({'success': True, 'message': 'Test saved successfully'})
             
         except Exception as e:
@@ -496,3 +587,24 @@ def grade_question(subject, test, student_email):
 
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@studio_bp.route('/view-lesson/<subject>/<title>')
+@login_required
+@require_professor
+def view_lesson(subject, title):
+    try:
+        lesson_path = f"lectii/{subject}/profesori/{current_user.email}/{title}.html"
+        response = requests.get(f"{STORAGE_API_URL}/files/{lesson_path}")
+        if response.status_code == 200:
+            content = response.text
+            return render_template('view_lesson.html',
+                                subject=subject,
+                                title=title,
+                                content=content)
+        else:
+            flash('Lesson not found', 'error')
+            return redirect(url_for('studio.lessons', subject=subject))
+    except Exception as e:
+        print(f"Error viewing lesson: {str(e)}")
+        flash('Error viewing lesson', 'error')
+        return redirect(url_for('studio.lessons', subject=subject))

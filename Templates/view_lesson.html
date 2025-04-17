@@ -1,174 +1,124 @@
-{% extends "studio_base.html" %}
+{% extends "learn_base.html" %}
 
-{% block title %}View Lesson: {{ lesson.title }} - JustLearnIt{% endblock %}
+{% block title %}{{ lesson_title }} - {{ subject }}{% endblock %}
 
 {% block content %}
-<div class="lesson-container">
-    <div class="lesson-header">
-        <div class="header-content">
-            <h1 class="lesson-title">
-                <i class="fas fa-book"></i>
-                {{ lesson.title }}
-            </h1>
-            <div class="user-info">
-                <span class="badge badge-primary">{{ subject }}</span>
-                <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&background=7808d0&color=fff" class="avatar" alt="Profile">
-            </div>
-        </div>
-    </div>
+<style>
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    .lesson-viewer {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: 30px auto;
+        max-width: 1200px;
+    }
 
-    <div class="lesson-content card">
-        <div class="lesson-body">
-            {{ lesson.content|safe }}
-        </div>
-        
-        <div class="action-buttons">
-            {% if not is_admin %}
-            <button id="save-lesson" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Lesson
-            </button>
-            <button id="publish-lesson" class="btn btn-success">
-                <i class="fas fa-check"></i> Publish Lesson
-            </button>
-            <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Lessons
-            </a>
-            {% else %}
-            <a href="{{ url_for('admin.admin_panel') }}#lessons" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Admin Panel
-            </a>
-            {% endif %}
-        </div>
+    .lesson-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 20px;
+        border-bottom: 2px solid {{ subject_color }};
+        padding-bottom: 10px;
+    }
+
+    .lesson-header i {
+        font-size: 2rem;
+        color: {{ subject_color }};
+    }
+
+    .lesson-header h2 {
+        color: #333;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .lesson-meta {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    .lesson-content {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+    }
+
+    .lesson-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 20px 0;
+    }
+
+    .lesson-content video {
+        max-width: 100%;
+        margin: 20px 0;
+    }
+
+    .lesson-actions {
+        margin-top: 30px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-back {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    .btn-primary {
+        background: {{ subject_color }};
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: {{ subject_color }}dd;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="lesson-viewer">
+    <div class="lesson-header">
+        <i class="{{ subject_icon }}"></i>
+        <h2>{{ lesson_title }}</h2>
+    </div>
+    <div class="lesson-meta">
+        By: {{ professor.name }} ({{ professor.email }})
+    </div>
+    <div class="lesson-content">
+        {{ lesson_content | safe }}
+    </div>
+    <div class="lesson-actions">
+        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor.email) }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Lessons
+        </a>
+        {% if current_user.email == professor.email %}
+        <a href="{{ url_for('studio.edit_lesson', subject=subject, lesson_title=lesson_title) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Lesson
+        </a>
+        {% endif %}
     </div>
 </div>
-
-<style>
-.lesson-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.lesson-header {
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.lesson-title {
-    margin: 0;
-    font-size: 1.8rem;
-    color: #333;
-}
-
-.lesson-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.lesson-body {
-    margin-bottom: 2rem;
-    color: #333;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.lesson-body h1,
-.lesson-body h2,
-.lesson-body h3,
-.lesson-body h4,
-.lesson-body h5,
-.lesson-body h6 {
-    color: #333;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-}
-
-.lesson-body p {
-    margin-bottom: 1em;
-}
-
-.lesson-body ul,
-.lesson-body ol {
-    margin-bottom: 1em;
-    padding-left: 2em;
-}
-
-.lesson-body img {
-    max-width: 100%;
-    height: auto;
-    margin: 1em 0;
-}
-
-.action-buttons {
-    margin-top: 2rem;
-    display: flex;
-    gap: 1rem;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    text-decoration: none;
-}
-
-.btn i {
-    font-size: 1rem;
-}
-
-.btn-primary {
-    background: #7808d0;
-    color: white;
-}
-
-.btn-success {
-    background: #28a745;
-    color: white;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.badge-primary {
-    background: #7808d0;
-    color: white;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-</style>
 {% endblock %} 

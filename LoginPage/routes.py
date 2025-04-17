@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+STORAGE_API_URL = os.getenv('STORAGE_API_URL', 'http://localhost:5000/api')
+
 login_bp = Blueprint('login', __name__,
                      template_folder='../Templates',
                      static_folder='../static/login')
@@ -87,6 +89,14 @@ def signup():
         new_user.generate_verification_token()
         db.session.add(new_user)
         db.session.commit()
+
+        # Create user directory in storage API
+        try:
+            response = requests.post(f"{STORAGE_API_URL}/folders/users/{email}")
+            if response.status_code != 201:
+                print(f"Error creating user directory: {response.text}")
+        except Exception as e:
+            print(f"Error creating user directory: {e}")
 
         send_verification_email(new_user)
 

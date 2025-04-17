@@ -5,10 +5,17 @@ from models import User, Lesson, Test, Grade, AdminWhitelist
 from datetime import datetime, timedelta
 import os
 import json
+import requests
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
-from StudioPage.routes import SUBJECTS, get_professor_dir, LECTII_DIR, TESTE_DIR, INSTANCE_DIR
+from StudioPage.routes import SUBJECTS
 from functools import wraps
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+STORAGE_API_URL = os.getenv('STORAGE_API_URL', 'http://localhost:5000/api')
 
 admin_bp = Blueprint('admin', __name__,
                      template_folder='../Templates',
@@ -82,13 +89,28 @@ def admin_login():
                 logger.info(f"Admin login successful for {input_username}")
                 session[ADMIN_SESSION_KEY] = True
                 session.permanent = True
+                
+                # Send login notification
+                send_login_notification(input_username, request.remote_addr)
+                
+                # Add IP to whitelist if not already there
+                whitelisted = AdminWhitelist.query.filter_by(ip_address=request.remote_addr).first()
+                if not whitelisted:
+                    whitelist = AdminWhitelist(
+                        ip_address=request.remote_addr,
+                        created_by=input_username
+                    )
+                    db.session.add(whitelist)
+                    db.session.commit()
+                    logger.info(f"Added IP {request.remote_addr} to admin whitelist")
+                
                 flash('Admin access granted.', 'info')
                 return redirect(url_for('admin.admin_panel'))
             else:
                 logger.debug(f"Admin login failed: Invalid credentials for {input_username}")
                 flash('Invalid username or password.', 'error')
         else:
-            logger.error("No admin credentials found in file")
+            logger.error("No admin credentials found")
             flash('Admin credentials not initialized.', 'error')
 
     return render_template('admin_login.html')
@@ -113,10 +135,22 @@ def admin_panel():
                     db.session.commit()
                     flash(f'Professor {user.name} has been revoked.', 'warning')
                 elif action == 'delete':
+                    # Delete user's data from storage API
+                    try:
+                        requests.delete(f"{STORAGE_API_URL}/folders/users/{user.email}")
+                    except Exception as e:
+                        logger.error(f"Error deleting user data from storage API: {e}")
+                    
                     db.session.delete(user)
                     db.session.commit()
                     flash(f'User {user.name} has been deleted.', 'success')
                 elif action == 'decline':
+                    # Delete user's data from storage API
+                    try:
+                        requests.delete(f"{STORAGE_API_URL}/folders/users/{user.email}")
+                    except Exception as e:
+                        logger.error(f"Error deleting user data from storage API: {e}")
+                    
                     db.session.delete(user)
                     db.session.commit()
                     flash(f'Professor application for {user.name} has been declined.', 'warning')
@@ -130,92 +164,88 @@ def admin_panel():
     # Get all lessons
     lessons = []
     for subject_key in SUBJECTS:
-        subject_dir = os.path.join(LECTII_DIR, subject_key, 'profesori')
-        if os.path.exists(subject_dir):
-            for professor_dir in os.listdir(subject_dir):
-                prof_path = os.path.join(subject_dir, professor_dir)
-                if os.path.isdir(prof_path):
-                    for lesson_file in os.listdir(prof_path):
-                        if lesson_file.endswith('.html'):
-                            professor = User.query.filter_by(email=professor_dir).first()
-                            professor_name = professor.name if professor else professor_dir
-                            lessons.append({
-                                'title': lesson_file.replace('.html', ''),
-                                'subject': SUBJECTS[subject_key]['name'],
-                                'subject_key': subject_key,
-                                'professor': professor_name,
-                                'professor_email': professor_dir
-                            })
+        try:
+            response = requests.get(f"{STORAGE_API_URL}/folders/lectii/{subject_key}/profesori")
+            if response.status_code == 200:
+                contents = response.json()
+                for item in contents:
+                    if item['type'] == 'folder':
+                        professor_email = item['name']
+                        prof_response = requests.get(f"{STORAGE_API_URL}/folders/lectii/{subject_key}/profesori/{professor_email}")
+                        if prof_response.status_code == 200:
+                            prof_contents = prof_response.json()
+                            for lesson in prof_contents:
+                                if lesson['type'] == 'file' and lesson['name'].endswith('.html'):
+                                    professor = User.query.filter_by(email=professor_email).first()
+                                    professor_name = professor.name if professor else professor_email
+                                    lessons.append({
+                                        'title': lesson['name'].replace('.html', ''),
+                                        'subject': SUBJECTS[subject_key]['name'],
+                                        'subject_key': subject_key,
+                                        'professor': professor_name,
+                                        'professor_email': professor_email
+                                    })
+        except Exception as e:
+            logger.error(f"Error getting lessons for {subject_key}: {str(e)}")
 
     # Get all tests
     tests = []
     for subject_key in SUBJECTS:
-        subject_dir = os.path.join(TESTE_DIR, subject_key, 'profesori')
-        if os.path.exists(subject_dir):
-            for professor_dir in os.listdir(subject_dir):
-                prof_path = os.path.join(subject_dir, professor_dir)
-                if os.path.isdir(prof_path):
-                    for test_file in os.listdir(prof_path):
-                        if test_file.endswith('.json'):
-                            with open(os.path.join(prof_path, test_file), 'r', encoding='utf-8') as f:
-                                test_data = json.load(f)
-                                professor = User.query.filter_by(email=professor_dir).first()
-                                tests.append({
-                                    'title': test_data.get('title', test_file.replace('.json', '')),
-                                    'subject_key': subject_key,
-                                    'subject': SUBJECTS[subject_key]['name'],
-                                    'author': professor,
-                                    'questions': len(test_data.get('questions', [])),
-                                    'created_at': test_data.get('created_at', 'Unknown')
-                                })
-
-    # Get all grades from both locations
-    grades = []
-    
-    # Check test results in each subject directory
-    for subject_key in SUBJECTS:
-        subject_dir = os.path.join(TESTE_DIR, subject_key, 'profesori')
-        if os.path.exists(subject_dir):
-            for professor_dir in os.listdir(subject_dir):
-                results_dir = os.path.join(subject_dir, professor_dir, 'results')
-                if os.path.exists(results_dir):
-                    for result_file in os.listdir(results_dir):
-                        if result_file.endswith('.json'):
-                            with open(os.path.join(results_dir, result_file), 'r', encoding='utf-8') as f:
-                                result_data = json.load(f)
-                                student = User.query.filter_by(email=result_data['student_email']).first()
-                                professor = User.query.filter_by(email=professor_dir).first()
-                                if student and professor:
-                                    grades.append({
-                                        'student': student,
-                                        'professor': professor,
-                                        'subject': subject_key,
-                                        'test_title': result_data['lesson_title'],
-                                        'score': result_data['score'],
-                                        'date': datetime.fromisoformat(result_data['timestamp'])
+        try:
+            response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
+            if response.status_code == 200:
+                contents = response.json()
+                for item in contents:
+                    if item['type'] == 'folder':
+                        professor_email = item['name']
+                        prof_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}")
+                        if prof_response.status_code == 200:
+                            prof_contents = prof_response.json()
+                            for test in prof_contents:
+                                if test['type'] == 'file' and test['name'].endswith('.json'):
+                                    professor = User.query.filter_by(email=professor_email).first()
+                                    professor_name = professor.name if professor else professor_email
+                                    tests.append({
+                                        'title': test['name'].replace('.json', ''),
+                                        'subject': SUBJECTS[subject_key]['name'],
+                                        'subject_key': subject_key,
+                                        'professor': professor_name,
+                                        'professor_email': professor_email
                                     })
+        except Exception as e:
+            logger.error(f"Error getting tests for {subject_key}: {str(e)}")
 
-    # Check grades directory
-    grades_dir = os.path.join(INSTANCE_DIR, 'grades')
-    if os.path.exists(grades_dir):
-        for student_email in os.listdir(grades_dir):
-            student_dir = os.path.join(grades_dir, student_email)
-            if os.path.isdir(student_dir):
-                for grade_file in os.listdir(student_dir):
-                    if grade_file.endswith('.json'):
-                        with open(os.path.join(student_dir, grade_file), 'r', encoding='utf-8') as f:
-                            grade_data = json.load(f)
-                            student = User.query.filter_by(email=student_email).first()
-                            professor = User.query.filter_by(email=grade_data.get('professor_email')).first()
-                            if student and professor:
-                                grades.append({
-                                    'student': student,
-                                    'professor': professor,
-                                    'subject': grade_data['subject'],
-                                    'test_title': grade_data['test_title'],
-                                    'score': grade_data['score'],
-                                    'date': datetime.fromisoformat(grade_data['date'])
-                                })
+    # Get all grades
+    grades = []
+    for subject_key in SUBJECTS:
+        try:
+            response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
+            if response.status_code == 200:
+                contents = response.json()
+                for item in contents:
+                    if item['type'] == 'folder':
+                        professor_email = item['name']
+                        results_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}/results")
+                        if results_response.status_code == 200:
+                            results_contents = results_response.json()
+                            for result in results_contents:
+                                if result['type'] == 'file' and result['name'].endswith('.json'):
+                                    result_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{result['name']}")
+                                    if result_response.status_code == 200:
+                                        result_data = result_response.json()
+                                        student = User.query.filter_by(email=result_data['student_email']).first()
+                                        professor = User.query.filter_by(email=professor_email).first()
+                                        if student and professor:
+                                            grades.append({
+                                                'student': student,
+                                                'professor': professor,
+                                                'subject': subject_key,
+                                                'test_title': result_data['lesson_title'],
+                                                'score': result_data['score'],
+                                                'date': datetime.fromisoformat(result_data['timestamp'])
+                                            })
+        except Exception as e:
+            logger.error(f"Error getting grades for {subject_key}: {str(e)}")
 
     # Remove duplicates and sort by date
     unique_grades = {}
@@ -242,211 +272,66 @@ def admin_panel():
         'total_professors': len(professors),
         'total_students': len(students),
         'unapproved_professors': User.query.filter(User.user_type == 'profesor', User.is_professor_approved == False).count(),
-        'activity': {
-            'active_users': active_users,
-            'user_types': {
-                'students': len(students),
-                'professors': len(professors),
-                'admins': User.query.filter_by(user_type='admin').count()
-            }
-        }
+        'active_users': active_users,
+        'total_lessons': len(lessons),
+        'total_tests': len(tests),
+        'total_grades': len(grades)
     }
 
-    return render_template('admin.html',
-                         user=current_user,
+    return render_template('admin_panel.html',
                          professors=professors,
                          students=students,
                          lessons=lessons,
                          tests=tests,
                          grades=grades,
-                         subjects=SUBJECTS,
                          stats=stats)
+
+
+@admin_bp.route('/whitelist', methods=['GET', 'POST'])
+@require_admin
+def whitelist():
+    if request.method == 'POST':
+        ip_address = request.form.get('ip_address')
+        if ip_address:
+            whitelisted = AdminWhitelist.query.filter_by(ip_address=ip_address).first()
+            if whitelisted:
+                db.session.delete(whitelisted)
+                db.session.commit()
+                flash(f'IP {ip_address} has been removed from whitelist.', 'success')
+            else:
+                # Get the current admin username
+                username, _, _ = load_credentials()
+                new_whitelist = AdminWhitelist(
+                    ip_address=ip_address,
+                    created_by=username
+                )
+                db.session.add(new_whitelist)
+                db.session.commit()
+                flash(f'IP {ip_address} has been added to whitelist.', 'success')
+    
+    whitelisted_ips = AdminWhitelist.query.all()
+    return render_template('whitelist.html', whitelisted_ips=whitelisted_ips)
+
+
+@admin_bp.route('/credentials', methods=['GET', 'POST'])
+@require_admin
+def credentials():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'regenerate':
+            regenerate_credentials()
+            flash('Admin credentials have been regenerated.', 'success')
+        elif action == 'view':
+            username, password, timestamp = load_credentials()
+            if username and password:
+                flash(f'Current credentials - Username: {username}, Password: {password}', 'info')
+            else:
+                flash('No admin credentials found.', 'error')
+    return render_template('credentials.html')
 
 
 @admin_bp.route('/logout')
 def admin_logout():
     session.pop(ADMIN_SESSION_KEY, None)
-    logger.info("Admin logged out")
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('admin.admin_login'))
-
-
-@admin_bp.route('/whitelist', methods=['GET', 'POST'])
-def manage_whitelist():
-    if not is_admin_logged_in():
-        return redirect(url_for('admin.admin_login'))
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-        ip_address = request.form.get('ip_address')
-        description = request.form.get('description')
-
-        if action == 'add':
-            if not ip_address:
-                flash('IP address is required', 'error')
-            else:
-                # Check if IP is already whitelisted
-                existing = AdminWhitelist.query.filter_by(ip_address=ip_address).first()
-                if existing:
-                    flash('IP address is already whitelisted', 'error')
-                else:
-                    whitelist = AdminWhitelist(
-                        ip_address=ip_address,
-                        description=description,
-                        created_by=current_user.email if current_user.is_authenticated else 'System'
-                    )
-                    db.session.add(whitelist)
-                    db.session.commit()
-                    flash('IP address added to whitelist', 'success')
-        elif action == 'remove':
-            ip_id = request.form.get('ip_id')
-            if ip_id:
-                whitelist = AdminWhitelist.query.get(ip_id)
-                if whitelist:
-                    db.session.delete(whitelist)
-                    db.session.commit()
-                    flash('IP address removed from whitelist', 'success')
-
-    # Get all whitelisted IPs
-    whitelisted_ips = AdminWhitelist.query.order_by(AdminWhitelist.created_at.desc()).all()
-
-    return render_template('admin_whitelist.html',
-                         user=current_user,
-                         whitelisted_ips=whitelisted_ips)
-
-
-@admin_bp.route('/test/<subject>/<test>/<professor_email>')
-def view_test(subject, test, professor_email):
-    if not is_admin_logged_in():
-        return redirect(url_for('admin.admin_login'))
-
-    if subject not in SUBJECTS:
-        flash('Invalid subject', 'error')
-        return redirect(url_for('admin.admin_panel'))
-
-    test_dir = os.path.join(TESTE_DIR, subject, 'profesori', professor_email)
-    test_file = os.path.join(test_dir, f"{test}.json")
-
-    if not os.path.exists(test_file):
-        flash('Test not found', 'error')
-        return redirect(url_for('admin.admin_panel'))
-
-    with open(test_file, 'r', encoding='utf-8') as f:
-        test_data = json.load(f)
-
-    return render_template('view_test.html',
-                         user=current_user,
-                         subject=subject,
-                         test=test_data,
-                         subjects=SUBJECTS,
-                         is_admin=True)
-
-
-@admin_bp.route('/lesson/<subject>/<title>/<professor_email>')
-def view_lesson(subject, title, professor_email):
-    if not is_admin_logged_in():
-        return redirect(url_for('admin.admin_login'))
-
-    if subject not in SUBJECTS:
-        flash('Invalid subject', 'error')
-        return redirect(url_for('admin.admin_panel'))
-
-    lesson_dir = os.path.join(LECTII_DIR, subject, 'profesori', professor_email)
-    lesson_file = os.path.join(lesson_dir, f"{title}.html")
-
-    if not os.path.exists(lesson_file):
-        flash('Lesson not found', 'error')
-        return redirect(url_for('admin.admin_panel'))
-
-    with open(lesson_file, 'r', encoding='utf-8') as f:
-        lesson_content = f.read()
-
-    return render_template('view_lesson.html',
-                         user=current_user,
-                         subject=subject,
-                         lesson_title=title,
-                         lesson_content=lesson_content,
-                         subjects=SUBJECTS,
-                         is_admin=True)
-
-
-@admin_bp.route('/student/<student_id>')
-def view_student(student_id):
-    if not is_admin_logged_in():
-        return redirect(url_for('admin.admin_login'))
-
-    student = User.query.get(student_id)
-    if not student or student.user_type != 'elev':
-        flash('Student not found', 'error')
-        return redirect(url_for('admin.admin_panel'))
-
-    # Get student's grades
-    grades = []
-    grades_dir = os.path.join(INSTANCE_DIR, 'grades', student.email)
-    if os.path.exists(grades_dir):
-        for grade_file in os.listdir(grades_dir):
-            if grade_file.endswith('.json'):
-                with open(os.path.join(grades_dir, grade_file), 'r', encoding='utf-8') as f:
-                    grade_data = json.load(f)
-                    professor = User.query.filter_by(email=grade_data.get('professor_email')).first()
-                    if professor:
-                        grades.append({
-                            'subject': grade_data['subject'],
-                            'test_title': grade_data['test_title'],
-                            'score': grade_data['score'],
-                            'professor': professor,
-                            'date': datetime.fromisoformat(grade_data['date'])
-                        })
-
-    grades.sort(key=lambda x: x['date'], reverse=True)
-
-    return render_template('view_student.html',
-                         user=current_user,
-                         student=student,
-                         grades=grades,
-                         subjects=SUBJECTS,
-                         is_admin=True)
-
-
-@admin_bp.route('/delete', methods=['POST'])
-@require_admin
-def delete_item():
-    action = request.form.get('action')
-    
-    if action == 'delete_lesson':
-        lesson_title = request.form.get('lesson_title')
-        subject = request.form.get('subject')
-        professor_email = request.form.get('professor_email')
-        
-        if lesson_title and subject and professor_email:
-            lesson_dir = os.path.join(LECTII_DIR, subject, 'profesori', professor_email)
-            lesson_file = os.path.join(lesson_dir, f"{lesson_title}.html")
-            
-            if os.path.exists(lesson_file):
-                try:
-                    os.remove(lesson_file)
-                    flash('Lesson deleted successfully', 'success')
-                except Exception as e:
-                    flash(f'Error deleting lesson: {str(e)}', 'error')
-            else:
-                flash('Lesson not found', 'error')
-    
-    elif action == 'delete_test':
-        test_title = request.form.get('test_title')
-        subject = request.form.get('subject')
-        professor_email = request.form.get('professor_email')
-        
-        if test_title and subject and professor_email:
-            test_dir = os.path.join(TESTE_DIR, subject, 'profesori', professor_email)
-            test_file = os.path.join(test_dir, f"{test_title}.json")
-            
-            if os.path.exists(test_file):
-                try:
-                    os.remove(test_file)
-                    flash('Test deleted successfully', 'success')
-                except Exception as e:
-                    flash(f'Error deleting test: {str(e)}', 'error')
-            else:
-                flash('Test not found', 'error')
-    
-    return redirect(url_for('admin.admin_panel'))
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('landing.index'))
