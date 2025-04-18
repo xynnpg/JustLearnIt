@@ -335,3 +335,98 @@ def admin_logout():
     session.pop(ADMIN_SESSION_KEY, None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('landing.index'))
+
+
+def get_professor_path(subject, content_type='lectii'):
+    return f"{content_type}/{subject}/profesori/{current_user.email}"
+
+def get_test_path(subject, professor_email, test_name):
+    return f"teste/{subject}/profesori/{professor_email}/{test_name}"
+
+def get_test_result_path(subject, professor_email, test_name, student_email):
+    return f"teste/{subject}/profesori/{professor_email}/results/{test_name}_{student_email}.json"
+
+@admin_bp.route('/tests/<subject_key>', methods=['GET'])
+@login_required
+@require_admin
+def view_tests(subject_key):
+    if subject_key not in SUBJECTS:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('admin.index'))
+        
+    try:
+        tests_by_professor = {}
+        # Get all professors
+        response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
+        if response.status_code == 200:
+            # The API returns a list directly, not a dictionary with 'folders' key
+            professors = [item for item in response.json() if item['type'] == 'folder']
+            
+            for professor in professors:
+                professor_email = professor['name']
+                # Get tests for each professor
+                prof_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}")
+                if prof_response.status_code == 200:
+                    # The API returns a list directly, not a dictionary with 'files' key
+                    tests = [
+                        {'name': file['name'].replace('.json', '')}
+                        for file in prof_response.json()
+                        if file['type'] == 'file' and file['name'].endswith('.json')
+                    ]
+                    if tests:
+                        tests_by_professor[professor_email] = tests
+                        
+        return render_template('admin_tests.html',
+                            user=current_user,
+                            subject=subject_key,
+                            tests=tests_by_professor)
+                            
+    except Exception as e:
+        print(f"Error viewing tests: {str(e)}")
+        flash('Error viewing tests', 'error')
+        return redirect(url_for('admin.index'))
+
+@admin_bp.route('/results/<subject_key>', methods=['GET'])
+@login_required
+@require_admin
+def view_results(subject_key):
+    if subject_key not in SUBJECTS:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('admin.index'))
+        
+    try:
+        results_by_professor = {}
+        # Get all professors
+        response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
+        if response.status_code == 200:
+            # The API returns a list directly, not a dictionary with 'folders' key
+            professors = [item for item in response.json() if item['type'] == 'folder']
+            
+            for professor in professors:
+                professor_email = professor['name']
+                # Get results for each professor
+                results_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}/results")
+                if results_response.status_code == 200:
+                    # The API returns a list directly, not a dictionary with 'files' key
+                    result_files = [item for item in results_response.json() if item['type'] == 'file']
+                    
+                    if result_files:
+                        results = []
+                        for result_file in result_files:
+                            result_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{result_file['name']}")
+                            if result_response.status_code == 200:
+                                result_data = result_response.json()
+                                results.append(result_data)
+                        
+                        if results:
+                            results_by_professor[professor_email] = results
+                            
+        return render_template('admin_results.html',
+                            user=current_user,
+                            subject=subject_key,
+                            results=results_by_professor)
+                            
+    except Exception as e:
+        print(f"Error viewing results: {str(e)}")
+        flash('Error viewing results', 'error')
+        return redirect(url_for('admin.index'))

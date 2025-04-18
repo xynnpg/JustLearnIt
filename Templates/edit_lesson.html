@@ -1,0 +1,62 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Edit Lesson - {{ lesson }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Edit Lesson: {{ lesson }}</h4>
+                    <div>
+                        <a href="{{ url_for('studio.view_lesson', subject=subject, title=lesson) }}" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> Preview
+                        </a>
+                        <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Lessons
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="lesson_content">Lesson Content</label>
+                            <textarea id="lesson_content" name="lesson_content" class="form-control" rows="20">{{ content }}</textarea>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include CodeMirror for better editing experience -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var editor = CodeMirror.fromTextArea(document.getElementById('lesson_content'), {
+            mode: 'htmlmixed',
+            theme: 'monokai',
+            lineNumbers: true,
+            autoCloseTags: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            lineWrapping: true
+        });
+    });
+</script>
+{% endblock %}

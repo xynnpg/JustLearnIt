@@ -279,6 +279,9 @@
         <li class="test-item">
             <span>{{ test.title }} ({{ test.question_count }} questions)</span>
             <div class="test-actions">
+                <a href="{{ url_for('studio.edit_test', subject=subject, test=test.title) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
                 <a href="{{ url_for('studio.view_test', subject=subject, test=test.title) }}"
                    class="btn btn-view">
                     <i class="fas fa-eye"></i> View

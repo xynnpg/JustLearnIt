@@ -50,11 +50,11 @@ def require_professor(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def get_professor_path(subject):
+def get_professor_path(subject, content_type='lectii'):
     """Get professor-specific path for a subject"""
     if not current_user.is_authenticated:
         return None
-    return f"lectii/{subject}/profesori/{current_user.email}"
+    return f"{content_type}/{subject}/profesori/{current_user.email}"
 
 @studio_bp.route('/')
 @login_required
@@ -66,7 +66,7 @@ def studio():
     try:
         for subject_key in SUBJECTS:
             lectii_path = get_professor_path(subject_key)
-            teste_path = get_professor_path(subject_key)
+            teste_path = get_professor_path(subject_key, 'teste')
             
             # Get lessons count
             response = requests.get(f"{STORAGE_API_URL}/folders/{lectii_path}")
@@ -258,102 +258,90 @@ def lessons():
                          subjects=SUBJECTS,
                          lessons=lessons)
 
-@studio_bp.route('/tests', methods=['GET', 'POST'])
+@studio_bp.route('/tests', defaults={'subject': None}, methods=['GET', 'POST'])
+@studio_bp.route('/tests/<subject>', methods=['GET', 'POST'])
 @login_required
 @require_professor
-def tests():
-    subject = request.args.get('subject', 'Bio')
-    if subject not in SUBJECTS:
-        subject = 'Bio'
-        flash('Invalid subject selected. Defaulting to Biology.', 'warning')
-
-    tests_path = get_professor_path(subject)
-
-    try:
-        tests = []
-        response = requests.get(f"{STORAGE_API_URL}/folders/{tests_path}")
-        if response.status_code == 200:
-            contents = response.json()
-            for item in contents:
-                if item['type'] == 'file' and item['name'].endswith('.json'):
-                    tests.append({
-                        'title': item['name'].replace('.json', ''),
-                        'path': item['path']
-                    })
-    except Exception as e:
-        flash('Error accessing tests. Please try again.', 'error')
-        tests = []
+def tests(subject):
+    if subject and subject not in SUBJECTS:
+        flash('Invalid subject', 'error')
+        return redirect(url_for('studio.tests'))
 
     if request.method == 'POST':
+        subject = request.form.get('subject')
+        test_name = request.form.get('test_name')
+        
+        if not subject or not test_name:
+            flash('Subject and test name are required', 'error')
+            return redirect(url_for('studio.tests'))
+            
+        if subject not in SUBJECTS:
+            flash('Invalid subject', 'error')
+            return redirect(url_for('studio.tests'))
+            
         try:
-            data = request.get_json()
-            if not data:
-                return jsonify({'success': False, 'message': 'No data received'}), 400
-
-            title = data.get('title')
-            questions = data.get('questions', [])
-            
-            if not title:
-                return jsonify({'success': False, 'message': 'Title is required'}), 400
-            if not questions:
-                return jsonify({'success': False, 'message': 'At least one question is required'}), 400
-
-            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            
-            # Create folder structure in storage API
-            print("Creating teste folder")
-            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'teste', 'parent_path': ''})
-            print("Teste folder response:", response.status_code, response.text)
-            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
-                print("Error creating teste folder")
-                return jsonify({'success': False, 'message': 'Error creating teste folder'}), 500
-                
-            print("Creating subject folder:", subject)
-            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': subject, 'parent_path': 'teste'})
-            print("Subject folder response:", response.status_code, response.text)
-            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
-                print("Error creating subject folder")
-                return jsonify({'success': False, 'message': 'Error creating subject folder'}), 500
-                
-            print("Creating professors folder")
-            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': 'profesori', 'parent_path': f"teste/{subject}"})
-            print("Professors folder response:", response.status_code, response.text)
-            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
-                print("Error creating professors folder")
-                return jsonify({'success': False, 'message': 'Error creating professors folder'}), 500
-                
-            print("Creating professor folder:", current_user.email)
+            # Create professor folder if it doesn't exist
             response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': current_user.email, 'parent_path': f"teste/{subject}/profesori"})
-            print("Professor folder response:", response.status_code, response.text)
-            if response.status_code not in [200, 201]:  # 200 means folder exists, 201 means folder created
-                print("Error creating professor folder")
-                return jsonify({'success': False, 'message': 'Error creating professor folder'}), 500
-
-            # Upload the test file
-            test_data = {
-                'title': title,
-                'questions': questions
+            
+            # Create test file
+            test_content = {
+                'title': test_name,
+                'questions': []
             }
-            files = {'file': (f"{safe_title}.json", json.dumps(test_data).encode('utf-8'))}
-            data = {'folder_path': f"teste/{subject}/profesori/{current_user.email}"}
+            file_content = BytesIO(json.dumps(test_content, indent=2).encode('utf-8'))
+            file_content.name = f"{test_name}.json"
+            files = {'file': (f"{test_name}.json", file_content, 'application/json')}
+            data = {'folder_path': get_professor_path(subject, 'teste')}
             response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
             
-            if response.status_code != 201:
-                print("Error saving test")
-                return jsonify({'success': False, 'message': 'Error saving test'}), 500
-            
-            print("Test saved successfully")
-            return jsonify({'success': True, 'message': 'Test saved successfully'})
-            
+            if response.status_code == 201:
+                flash('Test created successfully', 'success')
+                return redirect(url_for('studio.view_test', subject=subject, test=test_name))
+            else:
+                flash('Error creating test', 'error')
+                return redirect(url_for('studio.tests', subject=subject))
+                
         except Exception as e:
-            print(f"Error saving test: {str(e)}")
-            return jsonify({'success': False, 'message': str(e)}), 500
-
-    return render_template('studio_tests.html',
-                         user=current_user,
-                         subject=subject,
-                         subjects=SUBJECTS,
-                         tests=tests)
+            print(f"Error creating test: {str(e)}")
+            flash('Error creating test', 'error')
+            return redirect(url_for('studio.tests', subject=subject))
+            
+    try:
+        tests_by_subject = {}
+        if subject:
+            # Get tests for specific subject
+            test_path = get_professor_path(subject, 'teste')
+            response = requests.get(f"{STORAGE_API_URL}/folders/{test_path}")
+            if response.status_code == 200:
+                files = response.json()  # API returns a list directly
+                tests_by_subject[subject] = [
+                    {'name': file['name'].replace('.json', '')}
+                    for file in files
+                    if file['type'] == 'file' and file['name'].endswith('.json')
+                ]
+        else:
+            # Get tests for all subjects
+            for subject in SUBJECTS:
+                test_path = get_professor_path(subject, 'teste')
+                response = requests.get(f"{STORAGE_API_URL}/folders/{test_path}")
+                if response.status_code == 200:
+                    files = response.json()  # API returns a list directly
+                    tests_by_subject[subject] = [
+                        {'name': file['name'].replace('.json', '')}
+                        for file in files
+                        if file['type'] == 'file' and file['name'].endswith('.json')
+                    ]
+                    
+        return render_template('studio_tests.html',
+                            user=current_user,
+                            subjects=SUBJECTS,
+                            tests=tests_by_subject,
+                            selected_subject=subject)
+                            
+    except Exception as e:
+        print(f"Error fetching tests: {str(e)}")
+        flash('Error fetching tests', 'error')
+        return redirect(url_for('studio.studio'))
 
 @studio_bp.route('/test/<subject>/<test>', methods=['GET', 'POST'])
 @login_required
@@ -363,48 +351,108 @@ def view_test(subject, test):
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
 
-    test_dir = get_professor_dir(TESTE_DIR, subject)
+    try:
+        test_path = f"{get_professor_path(subject, 'teste')}/{test}.json"
+        
+        # GET request - fetch test content
+        response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
+        if response.status_code == 200:
+            test_data = response.json()
+            return render_template('view_test.html',
+                                user=current_user,
+                                subject=subject,
+                                test=test_data,
+                                subjects=SUBJECTS)
+        else:
+            flash('Test not found', 'error')
+            return redirect(url_for('studio.tests', subject=subject))
+            
+    except Exception as e:
+        print(f"Error viewing test: {str(e)}")
+        flash('Error viewing test', 'error')
+        return redirect(url_for('studio.tests', subject=subject))
 
-    test_file = os.path.join(test_dir, f"{test}.json")
-    if os.path.exists(test_file):
-        with open(test_file, 'r', encoding='utf-8') as f:
-            test_data = json.load(f)
-    else:
-        test_data = {
-            'title': test,
-            'subject': subject,
-            'questions': [],
-            'created_by': current_user.email,
-            'created_at': datetime.utcnow().isoformat(),
-            'updated_at': datetime.utcnow().isoformat(),
-            'status': 'Draft'
-        }
-
-    if request.method == 'POST':
-        try:
-            data = request.get_json()
-            questions = data.get('questions')
-            action = data.get('action')
-
-            if not questions:
-                return jsonify({'success': False, 'message': 'Questions are required'}), 400
-
-            test_data['questions'] = questions
-            test_data['updated_at'] = datetime.utcnow().isoformat()
-            test_data['status'] = 'Published' if action == 'publish' else 'Draft'
-
-            with open(test_file, 'w', encoding='utf-8') as f:
-                json.dump(test_data, f, indent=2)
-
-            return jsonify({'success': True})
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
-
-    return render_template('view_test.html',
-                         user=current_user,
-                         subject=subject,
-                         test=test_data,
-                         subjects=SUBJECTS)
+@studio_bp.route('/edit-test/<subject>/<test>', methods=['GET', 'POST'])
+@login_required
+@require_professor
+def edit_test(subject, test):
+    if subject not in SUBJECTS:
+        flash('Invalid subject selected', 'error')
+        return redirect(url_for('studio.tests'))
+        
+    try:
+        test_path = f"{get_professor_path(subject, 'teste')}/{test}.json"
+        
+        if request.method == 'POST':
+            content = request.form.get('test_content')
+            if not content:
+                flash('Test content cannot be empty', 'error')
+                return redirect(url_for('studio.edit_test', subject=subject, test=test))
+            
+            try:
+                # Validate JSON content
+                test_data = json.loads(content)
+                # Ensure required fields are present
+                if 'title' not in test_data or 'questions' not in test_data:
+                    flash('Invalid test format: missing required fields', 'error')
+                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                
+                # Validate questions format
+                if not isinstance(test_data['questions'], list):
+                    flash('Invalid test format: questions must be a list', 'error')
+                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                
+                for question in test_data['questions']:
+                    if not isinstance(question, dict):
+                        flash('Invalid question format', 'error')
+                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                    
+                    if 'content' not in question:
+                        flash('Invalid question format: missing content', 'error')
+                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                
+            except json.JSONDecodeError as e:
+                flash(f'Invalid JSON content: {str(e)}', 'error')
+                return redirect(url_for('studio.edit_test', subject=subject, test=test))
+            
+            # Create test file
+            file_content = BytesIO(content.encode('utf-8'))
+            file_content.name = f"{test}.json"
+            files = {'file': (f"{test}.json", file_content, 'application/json')}
+            data = {'folder_path': get_professor_path(subject, 'teste')}
+            
+            # Create professor folder if it doesn't exist
+            response = requests.post(f"{STORAGE_API_URL}/folders", json={'name': current_user.email, 'parent_path': f"teste/{subject}/profesori"})
+            
+            # Upload test file
+            response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+            
+            if response.status_code == 201:
+                flash('Test updated successfully', 'success')
+                return redirect(url_for('studio.view_test', subject=subject, test=test))
+            else:
+                flash('Error updating test', 'error')
+                return redirect(url_for('studio.edit_test', subject=subject, test=test))
+        
+        # GET request - fetch test content
+        response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
+        if response.status_code == 200:
+            content = json.dumps(response.json(), indent=2)
+            return render_template('edit_test.html',
+                                subject=subject,
+                                test=test,
+                                content=content,
+                                user=current_user,
+                                subjects=SUBJECTS,
+                                subject_data=SUBJECTS[subject])
+        else:
+            flash('Test not found', 'error')
+            return redirect(url_for('studio.tests', subject=subject))
+            
+    except Exception as e:
+        print(f"Error editing test: {str(e)}")
+        flash('Error editing test', 'error')
+        return redirect(url_for('studio.tests', subject=subject))
 
 @studio_bp.route('/test-results/<subject>')
 @login_required
@@ -600,11 +648,66 @@ def view_lesson(subject, title):
             return render_template('view_lesson.html',
                                 subject=subject,
                                 title=title,
-                                content=content)
+                                content=content,
+                                professor=current_user,
+                                subject_key=subject,
+                                subject_data=SUBJECTS[subject])
         else:
             flash('Lesson not found', 'error')
             return redirect(url_for('studio.lessons', subject=subject))
     except Exception as e:
         print(f"Error viewing lesson: {str(e)}")
         flash('Error viewing lesson', 'error')
+        return redirect(url_for('studio.lessons', subject=subject))
+
+@studio_bp.route('/edit-lesson/<subject>/<title>', methods=['GET', 'POST'])
+@login_required
+@require_professor
+def edit_lesson(subject, title):
+    if subject not in SUBJECTS:
+        flash('Invalid subject selected', 'error')
+        return redirect(url_for('studio.lessons'))
+        
+    try:
+        lesson_path = f"lectii/{subject}/profesori/{current_user.email}/{title}.html"
+        
+        if request.method == 'POST':
+            content = request.form.get('lesson_content')
+            if not content:
+                flash('Lesson content cannot be empty', 'error')
+                return redirect(url_for('studio.edit_lesson', subject=subject, title=title))
+            
+            # Update lesson in storage API using POST
+            file_content = BytesIO(content.encode('utf-8'))
+            file_content.name = f"{title}.html"
+            files = {'file': (f"{title}.html", file_content, 'text/html')}
+            data = {'folder_path': f"lectii/{subject}/profesori/{current_user.email}"}
+            response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+            
+            if response.status_code == 201:
+                flash('Lesson updated successfully', 'success')
+                return redirect(url_for('studio.view_lesson', subject=subject, title=title))
+            else:
+                flash('Error updating lesson', 'error')
+                return redirect(url_for('studio.edit_lesson', subject=subject, title=title))
+        
+        # GET request - fetch lesson content
+        response = requests.get(f"{STORAGE_API_URL}/files/{lesson_path}")
+        if response.status_code == 200:
+            content = response.text
+            return render_template('edit_lesson.html',
+                                subject=subject,
+                                title=title,
+                                lesson=title,
+                                content=content,
+                                user=current_user,
+                                subjects=SUBJECTS,
+                                subject_data=SUBJECTS[subject])
+        else:
+            flash('Lesson not found', 'error')
+            return redirect(url_for('studio.lessons', subject=subject))
+            
+    except Exception as e:
+        print(f"Error editing lesson: {str(e)}")
+        flash('Error editing lesson', 'error')
         return redirect(url_for('studio.lessons', subject=subject))

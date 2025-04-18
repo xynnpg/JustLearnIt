@@ -1,6 +1,6 @@
 {% extends "learn_base.html" %}
 
-{% block title %}{{ lesson_title }} - {{ subject }}{% endblock %}
+{% block title %}{{ title }} - {{ subject }}{% endblock %}
 
 {% block content %}
 <style>
@@ -22,13 +22,13 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 20px;
-        border-bottom: 2px solid {{ subject_color }};
+        border-bottom: 2px solid {{ subject_data.color }};
         padding-bottom: 10px;
     }
 
     .lesson-header i {
         font-size: 2rem;
-        color: {{ subject_color }};
+        color: {{ subject_data.color }};
     }
 
     .lesson-header h2 {
@@ -89,36 +89,36 @@
     }
 
     .btn-primary {
-        background: {{ subject_color }};
+        background: {{ subject_data.color }};
         color: white;
     }
 
     .btn-primary:hover {
-        background: {{ subject_color }}dd;
+        background: {{ subject_data.color }}dd;
         transform: translateY(-1px);
     }
 </style>
 
 <div class="lesson-viewer">
     <div class="lesson-header">
-        <i class="{{ subject_icon }}"></i>
-        <h2>{{ lesson_title }}</h2>
+        <i class="{{ subject_data.icon }}"></i>
+        <h2>{{ title }}</h2>
     </div>
     <div class="lesson-meta">
         By: {{ professor.name }} ({{ professor.email }})
     </div>
     <div class="lesson-content">
-        {{ lesson_content | safe }}
+        {{ content | safe }}
     </div>
     <div class="lesson-actions">
-        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor.email) }}" class="btn btn-back">
+        <a href="{{ url_for('studio.lessons', subject=subject) }}" class="btn btn-back">
             <i class="fas fa-arrow-left"></i> Back to Lessons
         </a>
         {% if current_user.email == professor.email %}
-        <a href="{{ url_for('studio.edit_lesson', subject=subject, lesson_title=lesson_title) }}" class="btn btn-primary">
+        <a href="{{ url_for('studio.edit_lesson', subject=subject, title=title) }}" class="btn btn-primary">
             <i class="fas fa-edit"></i> Edit Lesson
         </a>
         {% endif %}
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

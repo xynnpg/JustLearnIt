@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
+from io import BytesIO
+from functools import wraps
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +23,15 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, '../instance')
 LECTII_DIR = os.path.join(INSTANCE_DIR, 'lectii')
 TESTE_DIR = os.path.join(INSTANCE_DIR, 'teste')
+
+def require_professor(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.user_type != 'profesor' or not current_user.is_professor_approved:
+            flash('You must be an approved professor to access this page.', 'error')
+            return redirect(url_for('landing.index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 SUBJECTS = {
     'Bio': {
@@ -170,6 +181,15 @@ def get_test_for_lesson(subject_key, professor_email, lesson_title):
         with open(test_file, 'r', encoding='utf-8') as f:
             return json.load(f)
     return None
+
+def get_professor_path(subject, content_type='lectii'):
+    return f"{content_type}/{subject}/profesori/{current_user.email}"
+
+def get_test_path(subject, professor_email, test_name):
+    return f"teste/{subject}/profesori/{professor_email}/{test_name}"
+
+def get_test_result_path(subject, professor_email, test_name, student_email):
+    return f"teste/{subject}/profesori/{professor_email}/results/{test_name}_{student_email}.json"
 
 @learn_bp.route('/learn')
 @login_required
@@ -470,278 +490,172 @@ def view_lesson(subject_key, professor_email, lesson_title):
                            lesson_title=lesson_title,
                            lesson_content=lesson_content)
 
-@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/test')
+@learn_bp.route('/test/<subject_key>/<professor_email>/<lesson_title>', methods=['GET'])
 @login_required
 def take_test(subject_key, professor_email, lesson_title):
-    """Take a test for a specific lesson"""
-    subject_data = None
-    for key, data in SUBJECTS.items():
-        if key.lower() == subject_key.lower():
-            subject_data = data
-            subject_key = key
-            break
-
-    if not subject_data:
+    if subject_key not in SUBJECTS:
         flash('Invalid subject', 'error')
-        return redirect(url_for('account.account'))
+        return redirect(url_for('learn.index'))
 
     try:
-        # Get test from storage API
-        response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/{lesson_title}_test.json")
+        test_path = get_test_path(subject_key, professor_email, f"{lesson_title}_test.json")
+        response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
         if response.status_code == 200:
-            test = response.json()
+            test_data = response.json()
             return render_template('take_test.html',
-                                 subject=subject_data['name'],
-                                 subject_key=subject_key,
-                                 subject_color=subject_data['color'],
-                                 subject_icon=subject_data['icon'],
-                                 lesson_title=lesson_title,
-                                 professor_email=professor_email,
-                                 test=test)
+                                user=current_user,
+                                subject=subject_key,
+                                test=test_data,
+                                professor_email=professor_email,
+                                lesson_title=lesson_title)
         else:
             flash('Test not found', 'error')
-            return redirect(url_for('learn.view_lesson',
-                                  subject_key=subject_key,
-                                  professor_email=professor_email,
-                                  lesson_title=lesson_title))
+            return redirect(url_for('learn.index'))
+            
     except Exception as e:
-        print(f"Error getting test: {e}")
+        print(f"Error loading test: {str(e)}")
         flash('Error loading test', 'error')
-        return redirect(url_for('learn.view_lesson',
-                              subject_key=subject_key,
-                              professor_email=professor_email,
-                              lesson_title=lesson_title))
+        return redirect(url_for('learn.index'))
 
-@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/test/submit', methods=['POST'])
+@learn_bp.route('/test/<subject_key>/<professor_email>/<lesson_title>/submit', methods=['POST'])
 @login_required
 def submit_test(subject_key, professor_email, lesson_title):
-    """Submit test answers"""
-    subject_data = None
-    for key, data in SUBJECTS.items():
-        if key.lower() == subject_key.lower():
-            subject_data = data
-            subject_key = key
-            break
-
-    if not subject_data:
+    if subject_key not in SUBJECTS:
         flash('Invalid subject', 'error')
-        return redirect(url_for('account.account'))
+        return redirect(url_for('learn.index'))
 
     try:
-        # Get test from storage API
-        response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/{lesson_title}_test.json")
-        if response.status_code == 200:
-            test = response.json()
-        else:
+        # Get test data
+        test_path = get_test_path(subject_key, professor_email, f"{lesson_title}_test.json")
+        response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
+        if response.status_code != 200:
             flash('Test not found', 'error')
-            return redirect(url_for('learn.professor_lessons',
-                                  subject_key=subject_key,
-                                  professor_email=professor_email))
-    except Exception as e:
-        print(f"Error getting test: {e}")
-        flash('Error loading test', 'error')
-        return redirect(url_for('learn.professor_lessons',
-                              subject_key=subject_key,
-                              professor_email=professor_email))
-
-    answers = {}
-    for i, question in enumerate(test['questions']):
-        if question['type'] == 'multiple_choice':
-            answer = request.form.get(f'question_{i}')
-            if answer is not None:
-                answers[str(i)] = str(answer)
-        elif question['type'] in ['short_answer', 'essay']:
-            answers[str(i)] = request.form.get(f'question_{i}')
-
-    score = 0
-    total = len(test['questions'])
-    graded_questions = 0
-    for i, question in enumerate(test['questions']):
-        if question['type'] == 'multiple_choice':
-            if str(answers.get(str(i))) == str(question.get('correctIndex')):
-                score += 1
-            graded_questions += 1
-
-    # Convert score to 1-10 scale
-    if total > 0:
-        score_10_scale = 1 + (score / total) * 9  # This ensures score is between 1 and 10
-    else:
-        score_10_scale = 1
-
-    # Save test result
-    result = {
-        'student_email': current_user.email,
-        'lesson_title': lesson_title,
-        'score': round(score_10_scale, 1),  # Round to 1 decimal place
-        'total': 10,  # Always show out of 10
-        'raw_score': score,
-        'raw_total': total,
-        'graded_questions': graded_questions,
-        'answers': answers,
-        'timestamp': datetime.now().isoformat(),
-        'status': 'pending' if graded_questions < total else 'graded'
-    }
-
-    try:
-        # Save result in storage API
-        response = requests.post(
-            f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{lesson_title}_{current_user.email}.json",
-            json=result
-        )
-        if response.status_code != 201:
-            print(f"Error saving test result: {response.text}")
-            flash('Error saving test result', 'error')
-    except Exception as e:
-        print(f"Error saving test result: {e}")
-        flash('Error saving test result', 'error')
-
-    try:
-        # Save grade in storage API
-        grade_data = {
-            'subject': subject_key,
-            'test_title': lesson_title,
+            return redirect(url_for('learn.index'))
+            
+        test_data = response.json()
+        answers = request.form
+        
+        # Calculate score
+        total_questions = len(test_data['questions'])
+        correct_answers = 0
+        for i, question in enumerate(test_data['questions']):
+            answer_key = f'answer_{i}'
+            if answer_key in answers and answers[answer_key] == question['correct_answer']:
+                correct_answers += 1
+                
+        score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        # Save result
+        result = {
+            'student_email': current_user.email,
             'professor_email': professor_email,
-            'score': round(score_10_scale, 1),
-            'date': datetime.now().isoformat(),
-            'type': 'test'
+            'subject': subject_key,
+            'lesson_title': lesson_title,
+            'score': score,
+            'total_questions': total_questions,
+            'correct_answers': correct_answers,
+            'submission_date': datetime.now().isoformat()
         }
-        response = requests.post(
-            f"{STORAGE_API_URL}/files/grades/{current_user.email}/test_{subject_key}_{lesson_title}.json",
-            json=grade_data
-        )
-        if response.status_code != 201:
-            print(f"Error saving grade: {response.text}")
-            flash('Error saving grade', 'error')
+        
+        # Create results folder if it doesn't exist
+        response = requests.post(f"{STORAGE_API_URL}/folders", 
+                               json={'name': 'results', 
+                                     'parent_path': f"teste/{subject_key}/profesori/{professor_email}"})
+        
+        # Save result file
+        result_path = get_test_result_path(subject_key, professor_email, lesson_title, current_user.email)
+        file_content = BytesIO(json.dumps(result, indent=2).encode('utf-8'))
+        file_content.name = f"{lesson_title}_{current_user.email}.json"
+        files = {'file': (file_content.name, file_content, 'application/json')}
+        data = {'folder_path': f"teste/{subject_key}/profesori/{professor_email}/results"}
+        response = requests.post(f"{STORAGE_API_URL}/files", files=files, data=data)
+        
+        if response.status_code == 201:
+            flash(f'Test submitted successfully. Your score: {score:.1f}%', 'success')
+        else:
+            flash('Error saving test result', 'error')
+            
+        return redirect(url_for('learn.view_results', subject_key=subject_key))
+        
     except Exception as e:
-        print(f"Error saving grade: {e}")
-        flash('Error saving grade', 'error')
+        print(f"Error submitting test: {str(e)}")
+        flash('Error submitting test', 'error')
+        return redirect(url_for('learn.index'))
 
-    # Instead of redirecting to professor lessons, show the test results
-    return render_template('learn_test_results.html',
-                         subject=subject_data['name'],
-                         subject_key=subject_key,
-                         subject_color=subject_data['color'],
-                         subject_icon=subject_data['icon'],
-                         test_title=lesson_title,
-                         professor_email=professor_email,
-                         lesson_title=lesson_title,
-                         score=result['score'],
-                         raw_score=result['raw_score'],
-                         raw_total=result['raw_total'],
-                         completed_at=datetime.now().strftime('%Y-%m-%d %H:%M'))
-
-@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/test-results')
+@learn_bp.route('/results/<subject_key>', methods=['GET'])
 @login_required
-def view_test_results(subject_key, professor_email):
-    """View test results for professors and admins"""
-    subject_data = None
-    for key, data in SUBJECTS.items():
-        if key.lower() == subject_key.lower():
-            subject_data = data
-            subject_key = key
-            break
-
-    if not subject_data:
+def view_results(subject_key):
+    if subject_key not in SUBJECTS:
         flash('Invalid subject', 'error')
-        return redirect(url_for('account.account'))
-
-    if not current_user.is_admin and current_user.email != professor_email:
-        flash('You do not have permission to view these results', 'error')
-        return redirect(url_for('learn.subject_page', subject_key=subject_key))
-
-    results = []
+        return redirect(url_for('learn.index'))
+        
     try:
-        # Get test results from storage API
-        response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}/results")
+        results = []
+        # Get all professors
+        response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
         if response.status_code == 200:
-            result_files = response.json()
-            for result_file in result_files:
-                if result_file['type'] == 'file' and result_file['name'].endswith('.json'):
-                    # Get individual result file
-                    result_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{result_file['name']}")
-                    if result_response.status_code == 200:
-                        result_data = result_response.json()
-
-                        student = User.query.filter_by(email=result_data['student_email']).first()
-                        student_name = student.name if student else result_data['student_email']
-
-                        results.append({
-                            'student_name': student_name,
-                            'student_email': result_data['student_email'],
-                            'lesson_title': result_data['lesson_title'],
-                            'score': result_data['score'],
-                            'total': result_data['total'],
-                            'timestamp': result_data['timestamp']
-                        })
+            # The API returns a list directly, not a dictionary with 'folders' key
+            professors = [item for item in response.json() if item['type'] == 'folder']
+            
+            for professor in professors:
+                professor_email = professor['name']
+                # Get results for each professor
+                results_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}/results")
+                if results_response.status_code == 200:
+                    # The API returns a list directly, not a dictionary with 'files' key
+                    result_files = [item for item in results_response.json() if item['type'] == 'file']
+                    
+                    # Filter results for current user
+                    for result_file in result_files:
+                        if current_user.email in result_file['name']:
+                            result_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{result_file['name']}")
+                            if result_response.status_code == 200:
+                                result_data = result_response.json()
+                                results.append(result_data)
+                                
+        return render_template('view_results.html',
+                            user=current_user,
+                            subject=subject_key,
+                            results=results)
+                            
     except Exception as e:
-        print(f"Error getting test results: {e}")
-        flash('Error loading test results', 'error')
+        print(f"Error viewing results: {str(e)}")
+        flash('Error viewing results', 'error')
+        return redirect(url_for('learn.index'))
 
-    results.sort(key=lambda x: x['timestamp'], reverse=True)
-
-    return render_template('test_results.html',
-                         subject=subject_data['name'],
-                         subject_key=subject_key,
-                         subject_color=subject_data['color'],
-                         subject_icon=subject_data['icon'],
-                         professor_email=professor_email,
-                         results=results)
-
-@learn_bp.route('/subject/<subject_key>/professor/<professor_email>/lesson/<lesson_title>/student/<student_email>/result')
+@learn_bp.route('/results/<subject_key>/<professor_email>/<lesson_title>/<student_email>', methods=['GET'])
 @login_required
-def view_test_result(subject_key, professor_email, lesson_title, student_email):
-    """View detailed test result for a specific student"""
-    subject_data = None
-    for key, data in SUBJECTS.items():
-        if key.lower() == subject_key.lower():
-            subject_data = data
-            subject_key = key
-            break
-
-    if not subject_data:
+@require_professor
+def view_student_result(subject_key, professor_email, lesson_title, student_email):
+    if subject_key not in SUBJECTS:
         flash('Invalid subject', 'error')
-        return redirect(url_for('account.account'))
-
-    if not current_user.is_admin and current_user.email != professor_email:
-        flash('You do not have permission to view these results', 'error')
-        return redirect(url_for('learn.subject_page', subject_key=subject_key))
-
+        return redirect(url_for('studio.index'))
+        
     try:
-        # Get test result from storage API
-        result_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/results/{lesson_title}_{student_email}.json")
-        if result_response.status_code != 200:
-            flash('Test result not found', 'error')
-            return redirect(url_for('learn.view_test_results',
-                                  subject_key=subject_key,
-                                  professor_email=professor_email))
-        result = result_response.json()
-
-        # Get original test from storage API
-        test_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/{lesson_title}_test.json")
+        # Get test data
+        test_path = get_test_path(subject_key, professor_email, f"{lesson_title}_test.json")
+        test_response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
         if test_response.status_code != 200:
-            flash('Original test not found', 'error')
-            return redirect(url_for('learn.view_test_results',
-                                  subject_key=subject_key,
-                                  professor_email=professor_email))
-        test = test_response.json()
-
-        student = User.query.filter_by(email=student_email).first()
-        student_name = student.name if student else student_email
-
-        return render_template('view_test_result.html',
-                             subject=subject_data['name'],
-                             subject_key=subject_key,
-                             subject_color=subject_data['color'],
-                             subject_icon=subject_data['icon'],
-                             professor_email=professor_email,
-                             lesson_title=lesson_title,
-                             student_name=student_name,
-                             student_email=student_email,
-                             result=result,
-                             test=test)
+            flash('Test not found', 'error')
+            return redirect(url_for('studio.index'))
+            
+        # Get result data
+        result_path = get_test_result_path(subject_key, professor_email, lesson_title, student_email)
+        result_response = requests.get(f"{STORAGE_API_URL}/files/{result_path}")
+        if result_response.status_code != 200:
+            flash('Result not found', 'error')
+            return redirect(url_for('studio.index'))
+            
+        test_data = test_response.json()
+        result_data = result_response.json()
+        
+        return render_template('view_student_result.html',
+                            user=current_user,
+                            subject=subject_key,
+                            test=test_data,
+                            result=result_data)
+                            
     except Exception as e:
-        print(f"Error getting test result: {e}")
-        flash('Error loading test result', 'error')
-        return redirect(url_for('learn.view_test_results',
-                              subject_key=subject_key,
-                              professor_email=professor_email))
+        print(f"Error viewing student result: {str(e)}")
+        flash('Error viewing student result', 'error')
+        return redirect(url_for('studio.index'))
