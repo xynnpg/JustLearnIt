@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Learn{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+    .subjects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 2rem;
+    }
+
+    .subject-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .subject-header {
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+
+    .subject-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .subject-content {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .subject-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .btn-explore {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        text-decoration: none;
+        color: white;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .btn-explore:hover {
+        opacity: 0.9;
+        color: white;
+    }
+
+    .page-header {
+        text-align: center;
+        padding: 3rem 0;
+        background: #f8f9fa;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .page-description {
+        font-size: 1.1rem;
+        color: #666;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Choose Your Subject</h1>
+    <p class="page-description">
+        Select a subject to explore lessons created by our expert professors
+    </p>
+</div>
+
+<div class="container">
+    <div class="subjects-grid">
+        {% for subject_key, subject in subjects.items() %}
+            <div class="subject-card">
+                <div class="subject-header" style="background-color: {{ subject.color }}">
+                    <i class="{{ subject.icon }} subject-icon"></i>
+                </div>
+                <div class="subject-content">
+                    <h2 class="subject-title">{{ subject.name }}</h2>
+                    <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}" 
+                       class="btn btn-explore" 
+                       style="background-color: {{ subject.color }}">
+                        Explore Lessons
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

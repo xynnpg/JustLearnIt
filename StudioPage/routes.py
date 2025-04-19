@@ -267,6 +267,8 @@ def tests(subject):
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
 
+    tests_by_subject = {}
+
     if request.method == 'POST':
         subject = request.form.get('subject')
         test_name = request.form.get('test_name')
@@ -300,20 +302,19 @@ def tests(subject):
             else:
                 flash('Error creating test', 'error')
                 return redirect(url_for('studio.tests', subject=subject))
-                
         except Exception as e:
             print(f"Error creating test: {str(e)}")
             flash('Error creating test', 'error')
             return redirect(url_for('studio.tests', subject=subject))
-            
+    
+    # GET request handling
     try:
-        tests_by_subject = {}
         if subject:
             # Get tests for specific subject
             test_path = get_professor_path(subject, 'teste')
             response = requests.get(f"{STORAGE_API_URL}/folders/{test_path}")
             if response.status_code == 200:
-                files = response.json()  # API returns a list directly
+                files = response.json()
                 tests_by_subject[subject] = [
                     {'name': file['name'].replace('.json', '')}
                     for file in files
@@ -321,27 +322,26 @@ def tests(subject):
                 ]
         else:
             # Get tests for all subjects
-            for subject in SUBJECTS:
-                test_path = get_professor_path(subject, 'teste')
+            for subj in SUBJECTS:
+                test_path = get_professor_path(subj, 'teste')
                 response = requests.get(f"{STORAGE_API_URL}/folders/{test_path}")
                 if response.status_code == 200:
-                    files = response.json()  # API returns a list directly
-                    tests_by_subject[subject] = [
+                    files = response.json()
+                    tests_by_subject[subj] = [
                         {'name': file['name'].replace('.json', '')}
                         for file in files
                         if file['type'] == 'file' and file['name'].endswith('.json')
                     ]
-                    
-        return render_template('studio_tests.html',
-                            user=current_user,
-                            subjects=SUBJECTS,
-                            tests=tests_by_subject,
-                            selected_subject=subject)
-                            
     except Exception as e:
         print(f"Error fetching tests: {str(e)}")
         flash('Error fetching tests', 'error')
         return redirect(url_for('studio.studio'))
+
+    return render_template('studio_tests.html',
+                       user=current_user,
+                       subjects=SUBJECTS,
+                       tests=tests_by_subject,
+                       selected_subject=subject)
 
 @studio_bp.route('/test/<subject>/<test>', methods=['GET', 'POST'])
 @login_required
@@ -351,10 +351,8 @@ def view_test(subject, test):
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
 
+    test_path = f"{get_professor_path(subject, 'teste')}/{test}.json"
     try:
-        test_path = f"{get_professor_path(subject, 'teste')}/{test}.json"
-        
-        # GET request - fetch test content
         response = requests.get(f"{STORAGE_API_URL}/files/{test_path}")
         if response.status_code == 200:
             test_data = response.json()
@@ -366,7 +364,6 @@ def view_test(subject, test):
         else:
             flash('Test not found', 'error')
             return redirect(url_for('studio.tests', subject=subject))
-            
     except Exception as e:
         print(f"Error viewing test: {str(e)}")
         flash('Error viewing test', 'error')
@@ -711,3 +708,55 @@ def edit_lesson(subject, title):
         print(f"Error editing lesson: {str(e)}")
         flash('Error editing lesson', 'error')
         return redirect(url_for('studio.lessons', subject=subject))
+
+@studio_bp.route('/delete-lesson/<subject>/<title>', methods=['POST'])
+@login_required
+@require_professor
+def delete_lesson(subject, title):
+    if subject not in SUBJECTS:
+        flash('Invalid subject selected', 'error')
+        return redirect(url_for('studio.lessons'))
+        
+    try:
+        lesson_path = f"lectii/{subject}/profesori/{current_user.email}/{title}.html"
+        
+        # Delete the lesson file from storage API
+        response = requests.delete(f"{STORAGE_API_URL}/files/{lesson_path}")
+        
+        if response.status_code == 200:
+            flash('Lesson deleted successfully', 'success')
+        else:
+            flash('Error deleting lesson', 'error')
+            
+        return redirect(url_for('studio.lessons', subject=subject))
+            
+    except Exception as e:
+        print(f"Error deleting lesson: {str(e)}")
+        flash('Error deleting lesson', 'error')
+        return redirect(url_for('studio.lessons', subject=subject))
+
+@studio_bp.route('/delete-test/<subject>/<title>', methods=['POST'])
+@login_required
+@require_professor
+def delete_test(subject, title):
+    if subject not in SUBJECTS:
+        flash('Invalid subject selected', 'error')
+        return redirect(url_for('studio.tests'))
+        
+    try:
+        test_path = f"teste/{subject}/profesori/{current_user.email}/{title}.json"
+        
+        # Delete the test file from storage API
+        response = requests.delete(f"{STORAGE_API_URL}/files/{test_path}")
+        
+        if response.status_code == 200:
+            flash('Test deleted successfully', 'success')
+        else:
+            flash('Error deleting test', 'error')
+            
+        return redirect(url_for('studio.tests', subject=subject))
+            
+    except Exception as e:
+        print(f"Error deleting test: {str(e)}")
+        flash('Error deleting test', 'error')
+        return redirect(url_for('studio.tests', subject=subject))

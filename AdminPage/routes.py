@@ -346,44 +346,31 @@ def get_test_path(subject, professor_email, test_name):
 def get_test_result_path(subject, professor_email, test_name, student_email):
     return f"teste/{subject}/profesori/{professor_email}/results/{test_name}_{student_email}.json"
 
-@admin_bp.route('/tests/<subject_key>', methods=['GET'])
+@admin_bp.route('/tests/<subject_key>/<test>/<professor_email>', methods=['GET'])
 @login_required
 @require_admin
-def view_tests(subject_key):
+def view_tests(subject_key, test, professor_email):
     if subject_key not in SUBJECTS:
         flash('Invalid subject', 'error')
         return redirect(url_for('admin.index'))
         
     try:
-        tests_by_professor = {}
-        # Get all professors
-        response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori")
-        if response.status_code == 200:
-            # The API returns a list directly, not a dictionary with 'folders' key
-            professors = [item for item in response.json() if item['type'] == 'folder']
-            
-            for professor in professors:
-                professor_email = professor['name']
-                # Get tests for each professor
-                prof_response = requests.get(f"{STORAGE_API_URL}/folders/teste/{subject_key}/profesori/{professor_email}")
-                if prof_response.status_code == 200:
-                    # The API returns a list directly, not a dictionary with 'files' key
-                    tests = [
-                        {'name': file['name'].replace('.json', '')}
-                        for file in prof_response.json()
-                        if file['type'] == 'file' and file['name'].endswith('.json')
-                    ]
-                    if tests:
-                        tests_by_professor[professor_email] = tests
-                        
-        return render_template('admin_tests.html',
-                            user=current_user,
-                            subject=subject_key,
-                            tests=tests_by_professor)
+        # Get the specific test
+        test_response = requests.get(f"{STORAGE_API_URL}/files/teste/{subject_key}/profesori/{professor_email}/{test}.json")
+        if test_response.status_code == 200:
+            test_data = test_response.json()
+            return render_template('admin_tests.html',
+                                user=current_user,
+                                subject=subject_key,
+                                test=test_data,
+                                professor_email=professor_email)
+        else:
+            flash('Test not found', 'error')
+            return redirect(url_for('admin.index'))
                             
     except Exception as e:
-        print(f"Error viewing tests: {str(e)}")
-        flash('Error viewing tests', 'error')
+        print(f"Error viewing test: {str(e)}")
+        flash('Error viewing test', 'error')
         return redirect(url_for('admin.index'))
 
 @admin_bp.route('/results/<subject_key>', methods=['GET'])
@@ -430,3 +417,31 @@ def view_results(subject_key):
         print(f"Error viewing results: {str(e)}")
         flash('Error viewing results', 'error')
         return redirect(url_for('admin.index'))
+
+@admin_bp.route('/delete_item', methods=['POST'])
+@login_required
+@require_admin
+def delete_item():
+    action = request.form.get('action')
+    
+    if action == 'delete_test':
+        test_title = request.form.get('test_title')
+        subject = request.form.get('subject')
+        professor_email = request.form.get('professor_email')
+        
+        if test_title and subject and professor_email:
+            try:
+                # Delete the test file
+                test_path = f"teste/{subject}/profesori/{professor_email}/{test_title}.json"
+                response = requests.delete(f"{STORAGE_API_URL}/files/{test_path}")
+                
+                if response.status_code == 200:
+                    flash(f'Test {test_title} has been deleted.', 'success')
+                else:
+                    flash(f'Error deleting test {test_title}.', 'error')
+                    
+            except Exception as e:
+                print(f"Error deleting test: {str(e)}")
+                flash('Error deleting test', 'error')
+                
+    return redirect(url_for('admin.admin_panel'))
