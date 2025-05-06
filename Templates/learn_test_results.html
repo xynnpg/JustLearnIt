@@ -1,0 +1,161 @@
+{% extends "learn_base.html" %}
+
+{% block title %}Test Results - {{ test_title }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="result-header" style="border-bottom: 3px solid {{ subject_color }};">
+        <h1><i class="{{ subject_icon }}"></i> Test Results</h1>
+        <h2>{{ test_title }}</h2>
+    </div>
+
+    <div class="result-card">
+        <div class="score-section">
+            <div class="score-circle" style="background-color: {{ subject_color }}">
+                <span class="score">{{ "%.1f"|format(score) }}</span>
+                <span class="total">/10</span>
+            </div>
+            <div class="score-label">Your Score</div>
+        </div>
+
+        <div class="details-section">
+            <div class="detail-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Correct Answers: {{ raw_score }}/{{ raw_total }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-clock"></i>
+                <span>Completed: {{ completed_at }}</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson_title) }}" class="btn btn-primary" style="background-color: {{ subject_color }}">
+                <i class="fas fa-book"></i> Back to Lesson
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.learn-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+}
+
+.result-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-header h2 {
+    font-size: 1.5rem;
+    color: #666;
+    margin: 0;
+}
+
+.result-card {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.score-section {
+    margin-bottom: 2rem;
+}
+
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: white;
+}
+
+.score {
+    font-size: 3rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.total {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.score-label {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.details-section {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #666;
+}
+
+.detail-item i {
+    color: #28a745;
+}
+
+.actions {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    border: none;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .learn-container {
+        padding: 10px;
+    }
+
+    .score-circle {
+        width: 120px;
+        height: 120px;
+    }
+
+    .score {
+        font-size: 2.5rem;
+    }
+}
+</style>
+{% endblock %} 

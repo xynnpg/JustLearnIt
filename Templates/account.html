@@ -1,0 +1,358 @@
+{% extends "account_base.html" %}
+
+{% block title %}My Account - JustLearnIt{% endblock %}
+
+{% block content %}
+    <h1>My Account Dashboard</h1>
+    <div class="account-wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Progress Section - Only for students -->
+        {% if user.user_type == 'elev' %}
+        <div class="progress-section">
+            <h2>Your Progress</h2>
+            <div class="level-card">
+                <div class="level-header">
+                    <div class="level-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="level-info">
+                        <h3>Level {{ user.level }}</h3>
+                        <p class="xp-text">{{ user.xp }} XP</p>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    {% set xp_needed = user.xp_needed_for_next_level() %}
+                    {% set progress = (user.xp / xp_needed * 100) if xp_needed > 0 else 100 %}
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+                            <span class="progress-text">{{ "%.1f"|format(progress) }}%</span>
+                        </div>
+                    </div>
+                    <p class="progress-label">Progress to Level {{ user.level + 1 }}</p>
+                </div>
+                <div class="rank-info">
+                    <div class="rank-item">
+                        <i class="fas fa-medal"></i>
+                        <span>Rank #{{ user.get_rank() }}</span>
+                    </div>
+                    <div class="rank-item">
+                        <i class="fas fa-star"></i>
+                        <span>{{ user.xp }} Total XP</span>
+                    </div>
+                </div>
+                <div class="progress-actions">
+                    <a href="{{ url_for('ranking.my_ranking') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        View Detailed Progress
+                    </a>
+                    <a href="{{ url_for('ranking.ranking') }}" class="btn btn-secondary">
+                        <i class="fas fa-trophy"></i>
+                        View Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="profile-section">
+            <h2>Profile Details</h2>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" value="{{ user.name or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">New Password (optional)</label>
+                    <input type="password" id="password" name="password" placeholder="Enter new password (min 8 chars)">
+                </div>
+                <div class="form-group">
+                    <label for="bio">Bio (optional)</label>
+                    <textarea id="bio" name="bio" rows="3" placeholder="Tell us about yourself">{{ user.bio or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="profile_picture">Profile Picture URL (optional)</label>
+                    <input type="url" id="profile_picture" name="profile_picture" value="{{ user.profile_picture or '' }}" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <h3>Change Role</h3>
+                <div class="radio-input">
+                    <label class="label">
+                        <input type="radio" id="elev" name="value-radio" value="elev" {% if user.user_type == 'elev' %}checked{% endif %}>
+                        <p class="text">Student</p>
+                    </label>
+                    <label class="label">
+                        <input type="radio" id="profesor" name="value-radio" value="profesor" {% if user.user_type == 'profesor' %}checked{% endif %}>
+                        <p class="text">Professor</p>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject (for professors)</label>
+                    <select id="subject" name="subject" {% if user.user_type != 'profesor' %}disabled{% endif %}>
+                        <option value="">Select a subject</option>
+                        <option value="bio" {% if user.subject == 'bio' %}selected{% endif %}>Biology</option>
+                        <option value="isto" {% if user.subject == 'isto' %}selected{% endif %}>History</option>
+                        <option value="geogra" {% if user.subject == 'geogra' %}selected{% endif %}>Geography</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="email_notifications" name="email_notifications" {% if user.email_notifications %}checked{% endif %}>
+                        <span class="checkmark"></span>
+                        Receive email notifications
+                    </label>
+                </div>
+
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+
+        <div class="info-section">
+            <h2>Account Information</h2>
+            <div class="info-card">
+                <div class="info-item">
+                    <span class="info-label">User Type:</span>
+                    <span class="info-value">{{ user.user_type|capitalize or 'Not set' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Subject:</span>
+                    <span class="info-value">{{ user.subject|capitalize or 'Not set' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Account Created:</span>
+                    <span class="info-value">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Unknown' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Last Login:</span>
+                    <span class="info-value">{{ user.last_login.strftime('%B %d, %Y %H:%M') if user.last_login else 'Unknown' }}</span>
+                </div>
+                {% if user.user_type == 'profesor' %}
+                    <div class="info-item">
+                        <span class="info-label">Approval Status:</span>
+                        <span class="info-value {% if user.is_professor_approved %}status-approved{% else %}status-pending{% endif %}">
+                            {% if user.is_professor_approved %}Approved{% else %}Pending Approval{% endif %}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="account-stats">
+                <h3>Your Activity</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div class="stat-value">{{ user.lessons_completed|default(0) }}</div>
+                        <div class="stat-label">Lessons Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+                        <div class="stat-value">{{ user.tests_taken|default(0) }}</div>
+                        <div class="stat-label">Tests Taken</div>
+                    </div>
+                    {% if user.user_type == 'profesor' %}
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                            <div class="stat-value">{{ user.lessons_created|default(0) }}</div>
+                            <div class="stat-label">Lessons Created</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="actions">
+                {% if user.user_type == 'elev' %}
+                    <a href="{{ url_for('learn.learn') }}" class="learn-link">
+                        <i class="fas fa-graduation-cap"></i>
+                        Start Learning
+                    </a>
+                {% endif %}
+                {% if user.user_type == 'profesor' and user.is_professor_approved %}
+                    <a href="{{ url_for('studio.studio') }}" class="studio-link">Go to Studio</a>
+                {% endif %}
+                <a href="{{ url_for('login.logout') }}" class="logout-link">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .progress-section {
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+
+        .level-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .level-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #28a745, #34c759);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .level-info h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .xp-text {
+            margin: 0;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar-container {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #34c759);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-text {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .progress-label {
+            text-align: center;
+            color: #666;
+            margin: 0;
+        }
+
+        .rank-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #333;
+        }
+
+        .rank-item i {
+            color: #28a745;
+        }
+
+        .progress-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .learn-link, .studio-link, .logout-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .learn-link {
+            background: #28a745;
+        }
+
+        .studio-link {
+            background: #28a745;
+        }
+
+        .logout-link {
+            background: #dc3545;
+        }
+
+        .learn-link:hover, .studio-link:hover, .logout-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: white;
+        }
+    </style>
+{% endblock %}

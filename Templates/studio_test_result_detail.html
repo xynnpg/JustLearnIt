@@ -1,0 +1,378 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Test Result - {{ subject.name }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="result-detail-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-chart-bar"></i> Test Result Details</h1>
+            <a href="{{ url_for('studio.view_test_results', subject=subject.key) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Results
+            </a>
+        </div>
+    </div>
+
+    <!-- Debug info -->
+    <div style="display: none;">
+        <p>Debug Info:</p>
+        <p>Subject: {{ subject|tojson }}</p>
+        <p>Test: {{ test|tojson }}</p>
+        <p>Result: {{ result|tojson }}</p>
+        <p>Student Name: {{ student_name }}</p>
+    </div>
+
+    <div class="result-info">
+        <div class="info-card">
+            <div class="test-header">
+                <h2>{{ test.title if test and test.title else 'Untitled Test' }}</h2>
+                <div class="score-display" style="background-color: {{ subject.color }}">
+                    <span class="score">{{ "%.1f"|format(result.total_score|float) }}%</span>
+                </div>
+            </div>
+            <div class="info-details">
+                <div class="detail-item">
+                    <i class="fas fa-user"></i>
+                    <div class="detail-content">
+                        <span class="label">Student</span>
+                        <span class="value">{{ student_name }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <div class="detail-content">
+                        <span class="label">Submitted</span>
+                        <span class="value">{{ result.submission_date if result.submission_date else 'N/A' }}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-book"></i>
+                    <div class="detail-content">
+                        <span class="label">Subject</span>
+                        <span class="value">{{ subject.name }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="questions-container">
+        {% if test and test.questions %}
+            {% for question in test.questions %}
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-title">
+                            <h3>Question {{ loop.index }}</h3>
+                            <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
+                        </div>
+                        {% if result.grades and loop.index0|string in result.grades %}
+                            <div class="grade-info">
+                                <span class="grade-badge">Grade: {{ "%.1f"|format(result.grades[loop.index0|string]|float) }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="question-content">
+                        <div class="question-text">{{ question.content|safe if question.content else 'No question content' }}</div>
+                        
+                        {% if question.type == 'multiple_choice' and question.options %}
+                            <div class="options">
+                                {% for option in question.options %}
+                                    <div class="option {% if result.answers and loop.parent.loop.index0|string in result.answers and option == result.answers[loop.parent.loop.index0|string] %}selected{% endif %}">
+                                        <span class="option-marker">{{ loop.index }}.</span>
+                                        {{ option|safe }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif question.type == 'true_false' %}
+                            <div class="options">
+                                <div class="option {% if result.answers and loop.index0|string in result.answers and 'True' == result.answers[loop.index0|string] %}selected{% endif %}">
+                                    <span class="option-marker">T</span>
+                                    True
+                                </div>
+                                <div class="option {% if result.answers and loop.index0|string in result.answers and 'False' == result.answers[loop.index0|string] %}selected{% endif %}">
+                                    <span class="option-marker">F</span>
+                                    False
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-questions">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>No questions available for this test.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.result-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: #e9ecef;
+    color: #000;
+}
+
+.result-info {
+    margin-bottom: 30px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.test-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.test-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.score-display {
+    background: #007bff;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.score {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.info-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail-item i {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-content .label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.detail-content .value {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.questions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.question-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.question-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.question-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.question-title h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.question-type {
+    background: #e9ecef;
+    color: #666;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.grade-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.grade-badge {
+    background: #28a745;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.question-content {
+    padding: 25px;
+}
+
+.question-text {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.option-marker {
+    background: #f8f9fa;
+    color: #666;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.option.selected {
+    background: #e9ecef;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.option.selected .option-marker {
+    background: #007bff;
+    color: white;
+}
+
+.no-questions {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    color: #666;
+}
+
+.no-questions i {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .result-detail-container {
+        padding: 15px;
+    }
+
+    .test-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .info-details {
+        grid-template-columns: 1fr;
+    }
+
+    .question-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .question-title {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+</style>
+{% endblock %} 

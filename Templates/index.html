@@ -1,0 +1,119 @@
+{% extends "landing_base.html" %}
+
+{% block title %}JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="container">
+    <details>
+        <summary>
+            <i class="fa-regular fa-circle-user fa-3x animate__animated animate__fadeInDown icon"></i>
+        </summary>
+        <nav class="menu">
+            <a href="{{ url_for('landing.index') }}">Home</a>
+            <a href="{{ url_for('account.account') }}">Account</a>
+            {% if show_studio_button %}
+                <a href="{{ url_for('studio.lessons') }}" class="studio-btn">Go to Studio</a>
+            {% endif %}
+            <a href="{{ url_for('about.about') }}">About</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('login.logout') }}">Logout</a>
+            {% endif %}
+        </nav>
+    </details>
+</div>
+
+<div class="hero-section">
+    <h1 class="animate__animated animate__fadeInDown">JustLearnIt</h1>
+    <div class="hero-content animate__animated animate__fadeInUp">
+        <p class="hero-text">Transformă învățarea într-o aventură captivantă</p>
+    </div>
+</div>
+
+<section class="features-section">
+    <div class="card wow animate__animated animate__fadeInUp">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3><span class="highlight">JustLearnIt</span> este un site dedicat învățării ușoare și interactive a <span class="highlight">geografiei</span>, <span class="highlight">biologiei</span> și <span class="highlight">istoriei</span>. Indiferent dacă ești elev, profesor sau doar pasionat de cunoaștere, aici vei găsi lecții bine structurate, resurse vizuale captivante și metode inovatoare pentru a face învățarea mai simplă și mai <span class="highlight">distractivă</span>.</h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="{{ url_for('static', filename='images/JustLearnIt.png') }}" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</section>
+
+<section class="subjects-section">
+    <h2 class="wow animate__animated animate__fadeInRight">Ce materii oferim?</h2>
+    <div class="card wow animate__animated animate__fadeInUp">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3>
+                <div class="subject-item">
+                    <span class="subject-icon">🌍</span>
+                    <span class="subject-text">Geografie – Explorează continentele, țările, relieful, fenomenele naturale și schimbările climatice prin hărți interactive și explicații clare.</span>
+                </div>
+                <div class="subject-item">
+                    <span class="subject-icon">🧬</span>
+                    <span class="subject-text">Biologie – Descoperă lumea vieții, de la celule la ecosisteme, cu ilustrații detaliate și experimente virtuale.</span>
+                </div>
+                <div class="subject-item">
+                    <span class="subject-icon">🏛</span>
+                    <span class="subject-text">Istorie – Învață despre marile civilizații, evenimentele-cheie și personalitățile care au schimbat lumea, prin povești și cronologii interactive.</span>
+                </div>
+            </h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="  {{ url_for('static', filename='images/Materii.png') }}" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</section>
+
+<section class="benefits-section">
+    <h2 class="wow animate__animated animate__fadeInLeft">De ce ai alege JustLearnIt?</h2>
+    <div class="card wow animate__animated animate__fadeInUp">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✅</span>
+                    <span class="benefit-text">Învățare ușoară și interactivă – Lecții structurate clar, fără termeni complicați.</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✅</span>
+                    <span class="benefit-text">Teste și quiz-uri – Verifică-ți cunoștințele cu întrebări rapide și provocări educative.</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✅</span>
+                    <span class="benefit-text">Hărți, diagrame și animații – Explicații vizuale pentru o mai bună înțelegere.</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="benefit-icon">✅</span>
+                    <span class="benefit-text">Platformă accesibilă – Poți învăța de pe telefon, tabletă sau laptop, oriunde și oricând.</span>
+                </div>
+            </h3>
+        </div>
+        <div class="card-image wow animate__animated animate__fadeInRight">
+            <img src="{{ url_for('static', filename='images/dece.png') }}" alt="Imagine JustLearnIt" class="image">
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2 class="wow animate__animated animate__fadeInRight">Începe acum!</h2>
+    <div class="card wow animate__animated animate__fadeInUp">
+        <div class="card2 wow animate__animated animate__fadeInLeft">
+            <h3>Ești gata să descoperi o nouă modalitate de a învăța? Alătură-te acum <span class="highlight">JustLearnIt</span> și transformă fiecare lecție într-o aventură captivantă! 🚀</h3>
+        </div>
+        <div class="card-button wow animate__animated animate__fadeInRight">
+            {% if request.cookies.get('logged_in') == 'true' and current_user.is_authenticated %}
+                <a href="{{ url_for('landing.inscrie_te') }}" class="button">
+            {% else %}
+                <a href="{{ url_for('login.login') }}" class="button">
+            {% endif %}
+                <span class="button__icon-wrapper">
+                    <svg viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg" class="button__icon-svg">
+                        <path d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z" fill="currentColor"></path>
+                    </svg>
+                </span>
+                Înscrie-te acum
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

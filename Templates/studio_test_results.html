@@ -1,0 +1,140 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Test Results - {{ subject }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-bar"></i> Test Results - {{ subject }}</h1>
+    </div>
+
+    <div class="results-grid">
+        {% for result in results %}
+            <div class="result-card">
+                <div class="result-header">
+                    <h2>{{ result.lesson_title }}</h2>
+                </div>
+                <div class="result-content">
+                    <p><strong>Student:</strong> {{ result.student_name }}</p>
+                    <p><strong>Score:</strong> {{ "%.1f"|format(result.score|float) }}%</p>
+                    <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
+                    <div class="result-actions">
+                        <a href="{{ url_for('studio.view_test_result', 
+                                          subject=subject,
+                                          lesson_title=result.lesson_title,
+                                          student_email=result.student_email) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="no-results">
+                <p>No test results available.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.results-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
+    font-size: 2rem;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.result-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.result-header {
+    background: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.result-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.result-content {
+    padding: 15px;
+}
+
+.result-content p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.result-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    text-decoration: none;
+    color: white;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 8px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .results-container {
+        padding: 10px;
+    }
+
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %} 

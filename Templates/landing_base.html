@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}JustLearnIt{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('landing.static', filename='style.css') }}">
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+    <script>new WOW().init();</script>
+
+
+</head>
+<body>
+
+{% block content %}{% endblock %}
+
+<script>
+    // Ensure the menu works properly across all browsers
+    document.addEventListener('DOMContentLoaded', function() {
+        const details = document.querySelector('details');
+        if (details) {
+            // Close the menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!details.contains(event.target)) {
+                    details.removeAttribute('open');
+                }
+            });
+            
+            // Prevent the menu from closing when clicking inside it
+            details.querySelector('.menu').addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

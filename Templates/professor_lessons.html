@@ -1,0 +1,162 @@
+{% extends "learn_base.html" %}
+
+{% block title %}{{ professor.name }}'s Lessons - {{ subject_data.name }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="subject-header" style="border-bottom: 3px solid {{ subject_data.color }};">
+        <h1><i class="{{ subject_data.icon }}"></i> {{ professor.name }}'s Lessons</h1>
+        <p class="professor-info">{{ subject_data.name }}</p>
+    </div>
+
+    {% if current_user.is_admin or current_user.email == professor_email %}
+    <div class="admin-actions">
+        <a href="{{ url_for('learn.view_test_results', subject_key=subject_key, professor_email=professor_email) }}" 
+           class="btn btn-primary" style="background-color: {{ subject_data.color }}">
+            <i class="fas fa-chart-bar"></i> View Test Results
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="lessons-grid">
+        {% for lesson in lessons %}
+        <div class="lesson-card" style="border-left: 4px solid {{ subject_data.color }}">
+            <div class="lesson-content">
+                <h3>{{ lesson.title }}</h3>
+                {% if lesson.has_test and lesson.test_data %}
+                <div class="test-info">
+                    <p><i class="fas fa-tasks"></i> Test Available</p>
+                    <p class="test-details">
+                        {{ lesson.test_data.questions|length }} questions
+                        {% if lesson.test_data.time_limit %}
+                        <br>Time limit: {{ lesson.test_data.time_limit }} minutes
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="lesson-actions">
+                <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson.title) }}" 
+                   class="btn btn-primary" style="background-color: {{ subject_data.color }}">
+                    <i class="fas fa-book-reader"></i> View Lesson
+                </a>
+                {% if lesson.has_test %}
+                <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson.title) }}" 
+                   class="btn btn-outline" style="border-color: {{ subject_data.color }}; color: {{ subject_data.color }}">
+                    <i class="fas fa-tasks"></i> Take Test
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to {{ subject_data.name }}
+        </a>
+    </div>
+</div>
+
+<style>
+.admin-actions {
+    margin: 20px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.lesson-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lesson-content h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.test-info {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.test-details {
+    font-size: 0.9em;
+    color: #666;
+    margin: 5px 0 0 0;
+}
+
+.lesson-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-outline {
+    background: white;
+    border: 1px solid;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    opacity: 0.9;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-back:hover {
+    opacity: 0.9;
+}
+
+.page-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-start;
+}
+</style>
+{% endblock %}

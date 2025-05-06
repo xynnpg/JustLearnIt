@@ -1,0 +1,85 @@
+{% extends "admin_panel.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Test Details: {{ test_name }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="test-info mb-4">
+                        <h4>Test Information</h4>
+                        <p><strong>Subject:</strong> {{ subject }}</p>
+                        <p><strong>Author:</strong> {{ email }}</p>
+                        <p><strong>Questions:</strong> {{ test_data.questions|length }}</p>
+                    </div>
+
+                    <div class="questions-section mb-4">
+                        <h4>Questions</h4>
+                        {% for question in test_data.questions %}
+                        <div class="question-card mb-3 p-3 border rounded">
+                            <h5>Question {{ loop.index }}</h5>
+                            <p>{{ question.question }}</p>
+                            <div class="options">
+                                {% for option in question.options %}
+                                <div class="option {% if option == question.correct_answer %}text-success{% endif %}">
+                                    {{ option }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="results-section">
+                        <h4>Test Results</h4>
+                        {% if test_results %}
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Score</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in test_results %}
+                                    <tr>
+                                        <td>{{ result.student_email }}</td>
+                                        <td>
+                                            <div class="progress">
+                                                <div class="progress-bar {% if result.score >= 70 %}bg-success{% elif result.score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ result.score }}%;" 
+                                                     aria-valuenow="{{ result.score }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ result.score }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ result.date }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No results available for this test.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Admin Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

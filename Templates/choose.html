@@ -1,0 +1,98 @@
+{% extends "choose_base.html" %}
+
+{% block title %}Choose Your Options - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    <span class="flash-text">{{ message }}</span>
+                    <span class="flash-close" onclick="this.parentElement.style.display='none'">×</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="cards user-type">
+            <div class="card red">
+                <input type="radio" name="user_type" value="elev" id="elev" required>
+                <label for="elev">
+                    <p class="tip">Elev</p>
+                    <p class="second-text">Sunt student</p>
+                </label>
+            </div>
+            <div class="card blue">
+                <input type="radio" name="user_type" value="profesor" id="profesor" required>
+                <label for="profesor">
+                    <p class="tip">Profesor</p>
+                    <p class="second-text">Sunt profesor</p>
+                </label>
+            </div>
+        </div>
+
+
+        <div class="cards subjects" id="subjects">
+    <div class="card red">
+        <input type="radio" name="subject" value="istorie" id="istorie" required disabled>
+        <label for="istorie">
+            <p class="tip">Istorie</p>
+            <p class="second-text">Studiază istoria</p>
+        </label>
+    </div>
+    <div class="card blue">
+        <input type="radio" name="subject" value="biologie" id="biologie" required disabled>
+        <label for="biologie">
+            <p class="tip">Biologie</p>
+            <p class="second-text">Studiază biologia</p>
+        </label>
+    </div>
+    <div class="card green">
+        <input type="radio" name="subject" value="geografie" id="geografie" required disabled>
+        <label for="geografie">
+            <p class="tip">Geografie</p>
+            <p class="second-text">Studiază geografia</p>
+        </label>
+    </div>
+</div>
+
+        <button type="submit" class="submit-btn">Save Selections</button>
+    </form>
+</div>
+
+<script>
+    const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
+    const subjectRadios = document.querySelectorAll('input[name="subject"]');
+    const submitBtn = document.querySelector('.submit-btn');
+
+    userTypeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                subjectRadios.forEach(subject => {
+                    subject.disabled = false;
+                });
+
+                // Add animation to submit button
+                submitBtn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    submitBtn.style.transform = 'scale(1)';
+                }, 300);
+            }
+        });
+    });
+
+    subjectRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                // Add animation to submit button
+                submitBtn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    submitBtn.style.transform = 'scale(1)';
+                }, 300);
+            }
+        });
+    });
+</script>
+{% endblock %}

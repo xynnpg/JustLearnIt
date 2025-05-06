@@ -1,0 +1,210 @@
+{% extends "learn_base.html" %}
+
+{% block title %}{{ subject_data.name }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="subject-header" style="border-bottom: 3px solid {{ subject_data.color }};">
+        <h1><i class="{{ subject_data.icon }}"></i> {{ subject_data.name }}</h1>
+    </div>
+
+    <div class="professors-section">
+        <h2>Professors</h2>
+        <div class="professors-grid">
+            {% for professor in professors %}
+            <div class="professor-card">
+                <h3>{{ professor.name }}</h3>
+                <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor.email) }}" 
+                   class="btn btn-primary" style="background-color: {{ subject_data.color }}">
+                    <i class="fas fa-book"></i> View Lessons
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="lessons-section">
+            <h2>Lessons</h2>
+            <div class="content-list">
+                {% for lesson in lessons %}
+                <div class="content-card">
+                    <div class="content-info">
+                        <h3>{{ lesson.title }}</h3>
+                        <p class="professor-name">By {{ lesson.professor }}</p>
+                    </div>
+                    <div class="content-actions">
+                        <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=lesson.professor_email, lesson_title=lesson.title) }}" 
+                           class="btn btn-primary" 
+                           style="background-color: {{ subject_data.color }};">
+                            <i class="fas fa-book-open"></i> View Lesson
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tests-section">
+            <h2>Tests</h2>
+            <div class="content-list">
+                {% for test in tests %}
+                <div class="content-card">
+                    <div class="content-info">
+                        <h3>{{ test.title }}</h3>
+                        <p class="professor-name">By {{ test.professor }}</p>
+                        {% if test.test_data and test.test_data.questions %}
+                        <p class="test-details">
+                            {{ test.test_data.questions|length }} questions
+                            {% if test.test_data.time_limit %}
+                            <br>Time limit: {{ test.test_data.time_limit }} minutes
+                            {% endif %}
+                        </p>
+                        {% else %}
+                        <p class="test-details">Test is being prepared</p>
+                        {% endif %}
+                    </div>
+                    <div class="content-actions">
+                        {% if test.test_data and test.test_data.questions %}
+                        <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=test.professor_email, lesson_title=test.title) }}" 
+                           class="btn btn-primary" 
+                           style="background-color: {{ subject_data.color }};">
+                            <i class="fas fa-pen"></i> Take Test
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ url_for('learn.learn') }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Subjects
+        </a>
+    </div>
+</div>
+
+<style>
+.professors-section, .content-section {
+    margin: 30px 0;
+}
+
+.content-section {
+    display: flex;
+    gap: 40px;
+}
+
+.lessons-section, .tests-section {
+    flex: 1;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.professors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.professor-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.professor-card h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.content-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.content-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.professor-name {
+    color: #666;
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+}
+
+.test-details {
+    font-size: 0.9em;
+    color: #666;
+    margin: 5px 0 0 0;
+}
+
+.content-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-back:hover {
+    opacity: 0.9;
+}
+
+.page-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+    .content-section {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

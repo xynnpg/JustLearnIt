@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">My Progress</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h2 class="mb-4">Level {{ user.level }}</h2>
+                    
+                    <div class="progress mb-4" style="height: 30px;">
+                        {% set xp_needed = user.xp_needed_for_next_level() %}
+                        {% set progress = (user.xp / xp_needed * 100) if xp_needed > 0 else 100 %}
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+                            {{ user.xp }} / {{ xp_needed }} XP
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <h4>Current Rank</h4>
+                            <p class="h2">{{ rank }}</p>
+                        </div>
+                        <div class="col-6">
+                            <h4>Total XP</h4>
+                            <p class="h2">{{ user.xp }}</p>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('ranking.ranking') }}" class="btn btn-primary">
+                        View Global Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

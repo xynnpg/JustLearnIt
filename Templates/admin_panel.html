@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - JustLearnIt</title>
+    <link rel="stylesheet" href="{{ url_for('admin.static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #4e73df;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header i {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 1rem;
+            border-radius: 8px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+        
+        .user-info h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .user-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .nav-menu {
+            padding: 1rem 0;
+        }
+        
+        .nav-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-menu a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: white;
+        }
+
+        .nav-menu i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .activity-feed {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-feed h5 {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .activity-icon.bg-primary {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .activity-icon.bg-success {
+            background-color: rgba(28, 200, 138, 0.2);
+            color: white;
+        }
+        
+        .activity-icon.bg-warning {
+            background-color: rgba(246, 194, 62, 0.2);
+            color: white;
+        }
+        
+        .activity-icon.bg-danger {
+            background-color: rgba(231, 74, 59, 0.2);
+            color: white;
+        }
+        
+        .activity-content {
+            flex-grow: 1;
+        }
+        
+        .activity-content h5 {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .activity-content p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .subject-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .subject-badge i {
+            margin-right: 6px;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            padding: 12px;
+            text-align: left;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1rem 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: white;
+        }
+
+        .dashboard-section {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .dashboard-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-section h2 {
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .dashboard-section h2 i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .stats-card {
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+        
+        .stats-card.bg-primary::before {
+            background-color: #2e59d9;
+        }
+        
+        .stats-card.bg-success::before {
+            background-color: #17a673;
+        }
+        
+        .stats-card.bg-info::before {
+            background-color: #2a96a5;
+        }
+        
+        .stats-card.bg-warning::before {
+            background-color: #dda20a;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .stats-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .stats-card p {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-right: 5px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs {
+            border-bottom: none;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--secondary-color);
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            background-color: rgba(78, 115, 223, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .progress {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: width 0.3s ease;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .whitelist-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .whitelist-form {
+            flex: 1;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .whitelist-table {
+            flex: 2;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            
+            .sidebar.active {
+                width: var(--sidebar-width);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .main-content.active {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .toggle-sidebar {
+                display: block;
+            }
+        }
+        
+        .toggle-sidebar {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .bg-success {
+            background-color: #28a745;
+        }
+
+        .bg-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .bg-danger {
+            background-color: #dc3545;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stat-info p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="toggle-sidebar">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-tachometer-alt"></i>
+            <h2>Dashboard</h2>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">
+                A
+            </div>
+            <div class="user-info">
+                <h4>Admin</h4>
+                <p>Administrator</p>
+            </div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="#overview" class="active" data-toggle="tab" role="tab">
+                <i class="fas fa-chart-line"></i> Overview
+            </a>
+            <a href="#users" data-toggle="tab" role="tab">
+                <i class="fas fa-users"></i> Users
+            </a>
+            <a href="#lessons" data-toggle="tab" role="tab">
+                <i class="fas fa-book"></i> Lessons
+            </a>
+            <a href="#tests" data-toggle="tab" role="tab">
+                <i class="fas fa-tasks"></i> Tests
+            </a>
+            <a href="#grades" data-toggle="tab" role="tab">
+                <i class="fas fa-star"></i> Results
+            </a>
+            <a href="#whitelist" data-toggle="tab" role="tab">
+                <i class="fas fa-shield-alt"></i> IP Whitelist
+            </a>
+            <a href="{{ url_for('admin.admin_logout') }}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+        
+        <div class="activity-feed">
+            <h5>Recent Activity</h5>
+            <div class="activity-item">
+                <div class="activity-icon bg-primary">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="activity-content">
+                    <h5>New Professor Added</h5>
+                    <p>John Doe registered as a professor</p>
+                    <span class="activity-time">2 hours ago</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="activity-content">
+                    <h5>Professor Approved</h5>
+                    <p>Jane Smith was approved as a professor</p>
+                    <span class="activity-time">5 hours ago</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="activity-content">
+                    <h5>Test Submission</h5>
+                    <p>New test was submitted for review</p>
+                    <span class="activity-time">Yesterday</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Overview Section -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="dashboard-section">
+                <h2><i class="fas fa-chart-line"></i> Overview</h2>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #4e73df;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Users</h3>
+                            <p>{{ stats.total_users }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #1cc88a;">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Professors</h3>
+                            <p>{{ stats.total_professors }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #36b9cc;">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Students</h3>
+                            <p>{{ stats.total_students }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #f6c23e;">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Lessons</h3>
+                            <p>{{ stats.total_lessons }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #e74a3b;">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Tests</h3>
+                            <p>{{ stats.total_tests }}</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: #858796;">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Results</h3>
+                            <p>{{ stats.total_grades }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- User Activity Chart -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-line"></i> User Activity (Last 7 Days)</h3>
+                        <div class="chart-container">
+                            <canvas id="userActivityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- User Types Chart -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie"></i> User Types</h3>
+                        <div class="chart-container">
+                            <canvas id="userTypesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Subject Distribution Chart -->
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar"></i> Subject Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="subjectDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Users Section -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="dashboard-section">
+                <h2><i class="fas fa-users"></i> Users</h2>
+                
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="professors">Professors</button>
+                        <button class="tab-btn" data-tab="students">Students</button>
+                        <button class="tab-btn" data-tab="pending">Pending Approvals</button>
+                    </div>
+                    
+                    <!-- Professors Tab -->
+                    <div class="tab-content active" id="professors-tab">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for professor in professors %}
+                                    <tr>
+                                        <td>{{ professor.name }}</td>
+                                        <td>{{ professor.email }}</td>
+                                        <td>
+                                            <span class="subject-badge" style="background-color: {{ SUBJECTS[professor.subject]['color'] if professor.subject in SUBJECTS else '#6c757d' }}">
+                                                <i class="{{ SUBJECTS[professor.subject]['icon'] if professor.subject in SUBJECTS else 'fas fa-book' }}"></i>
+                                                {{ SUBJECTS[professor.subject]['name'] if professor.subject in SUBJECTS else professor.subject }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if professor.is_professor_approved %}
+                                            <span class="badge badge-success">Approved</span>
+                                            {% else %}
+                                            <span class="badge badge-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not professor.is_professor_approved %}
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="user_id" value="{{ professor.id }}">
+                                                <input type="hidden" name="action" value="approve">
+                                                <button type="submit" class="btn btn-sm btn-success action-btn">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="user_id" value="{{ professor.id }}">
+                                                <input type="hidden" name="action" value="decline">
+                                                <button type="submit" class="btn btn-sm btn-danger action-btn">
+                                                    <i class="fas fa-times"></i> Decline
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="user_id" value="{{ professor.id }}">
+                                                <input type="hidden" name="action" value="revoke">
+                                                <button type="submit" class="btn btn-sm btn-warning action-btn">
+                                                    <i class="fas fa-ban"></i> Revoke
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="user_id" value="{{ professor.id }}">
+                                                <input type="hidden" name="action" value="delete">
+                                                <button type="submit" class="btn btn-sm btn-danger action-btn">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No professors found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Tab -->
+                    <div class="tab-content" id="students-tab">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.name }}</td>
+                                        <td>{{ student.email }}</td>
+                                        <td>
+                                            <span class="subject-badge" style="background-color: {{ SUBJECTS[student.subject]['color'] if student.subject in SUBJECTS else '#6c757d' }}">
+                                                <i class="{{ SUBJECTS[student.subject]['icon'] if student.subject in SUBJECTS else 'fas fa-book' }}"></i>
+                                                {{ SUBJECTS[student.subject]['name'] if student.subject in SUBJECTS else student.subject }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="user_id" value="{{ student.id }}">
+                                                <input type="hidden" name="action" value="delete">
+                                                <button type="submit" class="btn btn-sm btn-danger action-btn">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No students found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Approvals Tab -->
+                    <div class="tab-content" id="pending-tab">
+                        {% if unapproved %}
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Applied On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prof in unapproved %}
+                                    <tr>
+                                        <td>{{ prof.name or 'N/A' }}</td>
+                                        <td>{{ prof.email }}</td>
+                                        <td>{{ prof.subject or 'N/A' }}</td>
+                                        <td>{{ prof.last_login.strftime('%Y-%m-%d') if prof.last_login else 'N/A' }}</td>
+                                        <td>
+                                            <form method="POST" style="display:inline;">
+                                                <input type="hidden" name="user_id" value="{{ prof.id }}">
+                                                <button type="submit" name="action" value="approve" class="action-btn approve">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                                <button type="submit" name="action" value="decline" class="action-btn decline">
+                                                    <i class="fas fa-times"></i> Decline
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="no-data">No pending professor approvals.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lessons Section -->
+        <div class="tab-pane fade" id="lessons" role="tabpanel">
+            <div class="dashboard-section">
+                <h2><i class="fas fa-book"></i> Lessons ({{ lessons|length }})</h2>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Professor</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if lessons %}
+                                {% for lesson in lessons %}
+                                <tr>
+                                    <td>{{ lesson.title }}</td>
+                                    <td>{{ lesson.subject }}</td>
+                                    <td>{{ lesson.professor }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('admin.delete_item') }}" style="display:inline;">
+                                            <input type="hidden" name="action" value="delete_lesson">
+                                            <input type="hidden" name="lesson_title" value="{{ lesson.title }}">
+                                            <input type="hidden" name="subject" value="{{ lesson.subject_key }}">
+                                            <input type="hidden" name="professor_email" value="{{ lesson.professor_email }}">
+                                            <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this lesson?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No lessons found</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tests Section -->
+        <div class="tab-pane fade" id="tests" role="tabpanel">
+            <div class="dashboard-section">
+                <h2><i class="fas fa-tasks"></i> Tests ({{ tests|length }})</h2>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Author</th>
+                                <th>Questions</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if tests %}
+                                {% for test in tests %}
+                                <tr>
+                                    <td>{{ test.title }}</td>
+                                    <td>{{ test.subject }}</td>
+                                    <td>{{ test.professor }}</td>
+                                    <td>{{ test.questions }}</td>
+                                    <td>{{ test.created_at }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('admin.delete_item') }}" style="display:inline;">
+                                            <input type="hidden" name="action" value="delete_test">
+                                            <input type="hidden" name="test_title" value="{{ test.title }}">
+                                            <input type="hidden" name="subject" value="{{ test.subject_key }}">
+                                            <input type="hidden" name="professor_email" value="{{ test.professor_email }}">
+                                            <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure you want to delete this test?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No tests found</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="tab-pane fade" id="grades" role="tabpanel">
+            <div class="dashboard-section">
+                <h2><i class="fas fa-chart-bar"></i> Recent Test Results</h2>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Test</th>
+                                <th>Subject</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in grades %}
+                            <tr>
+                                <td>{{ grade.student.name }}</td>
+                                <td>{{ grade.test_title }}</td>
+                                <td>
+                                    <span class="subject-badge" style="background-color: {{ SUBJECTS[grade.subject]['color'] if grade.subject in SUBJECTS else '#6c757d' }}">
+                                        <i class="{{ SUBJECTS[grade.subject]['icon'] if grade.subject in SUBJECTS else 'fas fa-book' }}"></i>
+                                        {{ SUBJECTS[grade.subject]['name'] if grade.subject in SUBJECTS else grade.subject }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar {% if grade.score >= 70 %}bg-success{% elif grade.score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ grade.score }}%;" 
+                                             aria-valuenow="{{ grade.score }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ grade.score }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ grade.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No results found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // User Activity Chart
+        const activityCtx = document.getElementById('userActivityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: {{ activity_labels|tojson }},
+                datasets: [{
+                    label: 'Active Users',
+                    data: {{ activity_data|tojson }},
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: '#4e73df',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // User Types Chart
+        const typesCtx = document.getElementById('userTypesChart').getContext('2d');
+        const typesChart = new Chart(typesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Students', 'Professors', 'Admins'],
+                datasets: [{
+                    data: {{ user_types_data|tojson }},
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc'
+                    ],
+                    hoverBackgroundColor: [
+                        '#2e59d9',
+                        '#17a673',
+                        '#2c9faf'
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                cutoutPercentage: 80,
+            },
+        });
+
+        // Subject Distribution Chart
+        const subjectCtx = document.getElementById('subjectDistributionChart').getContext('2d');
+        const subjectChart = new Chart(subjectCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ subject_labels|tojson }},
+                datasets: [{
+                    label: 'Tests per Subject',
+                    data: {{ subject_data|tojson }},
+                    backgroundColor: {{ subject_colors|tojson }},
+                    borderColor: {{ subject_colors|tojson }},
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Results Distribution Chart
+        const resultsCtx = document.getElementById('resultsDistributionChart').getContext('2d');
+        const resultsChart = new Chart(resultsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-10%', '11-20%', '21-30%', '31-40%', '41-50%', '51-60%', '61-70%', '71-80%', '81-90%', '91-100%'],
+                datasets: [{
+                    label: 'Number of Results',
+                    data: {{ results_distribution|tojson }},
+                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                    borderColor: '#4e73df',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Update active button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    });
+
+    // Lesson management functions
+    function editLesson(subject, lessonName, email) {
+        window.location.href = `/admin/lessons/${subject}/${lessonName}/${email}/edit`;
+    }
+
+    function deleteLesson(subject, lessonName, email) {
+        if (confirm('Are you sure you want to delete this lesson?')) {
+            fetch(`/admin/lessons/${subject}/${lessonName}/${email}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Lesson deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Failed to delete lesson: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the lesson');
+            });
+        }
+    }
+    </script>
+</body>
+</html>
