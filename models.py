@@ -2,11 +2,10 @@ from app import db
 from datetime import datetime
 import uuid
 from flask_login import UserMixin
-from api_base import Base
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 
-class User(Base, UserMixin):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
@@ -127,7 +126,7 @@ class User(Base, UserMixin):
                     return i
         return 0
 
-class Lesson(Base):
+class Lesson(db.Model):
     __tablename__ = 'lessons'
 
     id = Column(Integer, primary_key=True)
@@ -160,7 +159,7 @@ class Lesson(Base):
             'likes': self.likes
         }
 
-class Test(Base):
+class Test(db.Model):
     __tablename__ = 'tests'
 
     id = Column(Integer, primary_key=True)
@@ -191,7 +190,7 @@ class Test(Base):
             'passing_score': self.passing_score
         }
 
-class Grade(Base):
+class Grade(db.Model):
     __tablename__ = 'grades'
 
     id = Column(Integer, primary_key=True)
@@ -216,11 +215,13 @@ class Grade(Base):
         }
 
 class AdminWhitelist(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ip_address = db.Column(db.String(45), unique=True, nullable=False)  # IPv6 addresses can be up to 45 chars
-    description = db.Column(db.String(200), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.String(120), nullable=False)  # Email of admin who added it
+    __tablename__ = 'admin_whitelist'
+    
+    id = Column(Integer, primary_key=True)
+    ip_address = Column(String(45), unique=True, nullable=False)  # IPv6 addresses can be up to 45 chars
+    description = Column(String(200), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String(120), nullable=False)  # Email of admin who added it
 
     def __repr__(self):
         return f"AdminWhitelist('{self.ip_address}', '{self.description}')"
