@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Global Leaderboard</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-1">Rank</div>
+                        <div class="col-4">Name</div>
+                        <div class="col-2">Level</div>
+                        <div class="col-3">XP</div>
+                        <div class="col-2">Progress</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for user in users %}
+                    <div class="row mb-2 {% if user.id == current_user.id %}bg-light{% endif %}">
+                        <div class="col-1">{{ user.rank }}</div>
+                        <div class="col-4">{{ user.name or user.email }}</div>
+                        <div class="col-2">Level {{ user.level }}</div>
+                        <div class="col-3">{{ user.xp }} XP</div>
+                        <div class="col-2">
+                            <div class="progress">
+                                {% set xp_needed = user.xp_needed_for_next_level() %}
+                                {% set progress = (user.xp / xp_needed * 100) if xp_needed > 0 else 100 %}
+                                <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+                                    {{ "%.1f"|format(progress) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

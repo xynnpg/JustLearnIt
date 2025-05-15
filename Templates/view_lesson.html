@@ -1,0 +1,258 @@
+{% extends "learn_base.html" %}
+
+{% block title %}{{ lesson_title }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="subject-header" style="border-bottom: 3px solid {{ subject_color }};">
+        <h1><i class="{{ subject_icon }}"></i> {{ lesson_title }}</h1>
+        <p class="professor-info">Created by: {{ professor.name }}</p>
+    </div>
+
+    <div class="lesson-content-container">
+        <div class="lesson-content">
+            {{ content|safe }}
+        </div>
+    </div>
+
+    {% if test %}
+    <div class="lesson-test" style="border-top: 4px solid {{ subject_color }};">
+        <h2><i class="fas fa-question-circle"></i> Lesson Test</h2>
+        <p>Test your knowledge with {{ test.questions|length }} questions.</p>
+        {% if is_professor %}
+        <div class="test-actions">
+            <a href="{{ url_for('studio.view_test', subject=subject_key, test=lesson_title) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Test
+            </a>
+            <a href="{{ url_for('studio.tests', subject=subject_key) }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> View All Tests
+            </a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson_title) }}" 
+           class="test-btn" style="background-color: {{ subject_color }};">
+            <i class="fas fa-play"></i> Start Test
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="navigation-buttons">
+        {% if is_professor %}
+        <a href="{{ url_for('studio.edit_lesson', subject=subject_key, title=lesson_title) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Edit Lesson
+        </a>
+        {% if request.endpoint.startswith('studio.') %}
+        <a href="{{ url_for('studio.lessons', subject=subject_key) }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Lessons
+        </a>
+        {% else %}
+        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email) }}"
+           class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Lessons
+        </a>
+        <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}"
+           class="btn btn-back">
+            <i class="fas fa-book"></i> Back to {{ subject }}
+        </a>
+        {% endif %}
+        {% else %}
+        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email) }}"
+           class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Lessons
+        </a>
+        <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}"
+           class="btn btn-back">
+            <i class="fas fa-book"></i> Back to {{ subject }}
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.learn-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.subject-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    background-color: white;
+}
+
+.subject-header h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.professor-info {
+    color: #555;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.lesson-content-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid #eee;
+}
+
+.lesson-content {
+    color: #333;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.lesson-content h1, 
+.lesson-content h2, 
+.lesson-content h3,
+.lesson-content h4,
+.lesson-content h5,
+.lesson-content h6 {
+    color: #333;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.lesson-content h1 { font-size: 28px; }
+.lesson-content h2 { font-size: 24px; }
+.lesson-content h3 { font-size: 20px; }
+.lesson-content h4 { font-size: 18px; }
+.lesson-content h5 { font-size: 16px; }
+.lesson-content h6 { font-size: 14px; }
+
+.lesson-content p {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.lesson-content strong,
+.lesson-content b {
+    font-weight: 600;
+}
+
+.lesson-content em,
+.lesson-content i {
+    font-style: italic;
+}
+
+.lesson-content ul,
+.lesson-content ol {
+    margin-bottom: 20px;
+    padding-left: 20px;
+}
+
+.lesson-content li {
+    margin-bottom: 10px;
+}
+
+.lesson-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.lesson-content video {
+    max-width: 100%;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.lesson-test {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    margin-top: 30px;
+}
+
+.lesson-test h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.test-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.test-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.test-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.navigation-buttons {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: {{ subject_color }};
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-back {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-back:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

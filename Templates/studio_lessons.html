@@ -1,0 +1,432 @@
+<!-- Templates/studio_lessons.html -->
+{% extends "studio_base.html" %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<style>
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    .lesson-creator {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .lesson-creator h2 {
+        color: #333;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #333;
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    #lesson-title {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        color: #333;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    #editor-container {
+        height: 400px;
+        margin-bottom: 20px;
+        background: white !important;
+    }
+
+    .ql-editor {
+        font-size: 16px !important;
+        color: #333 !important;
+        line-height: 1.6 !important;
+        background: white !important;
+    }
+
+    .ql-toolbar {
+        background: white !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .ql-toolbar .ql-stroke {
+        stroke: #333 !important;
+    }
+
+    .ql-toolbar .ql-fill {
+        fill: #333 !important;
+    }
+
+    .ql-toolbar .ql-picker {
+        color: #333 !important;
+    }
+
+    .ql-container {
+        border: 1px solid #ddd !important;
+        background: white !important;
+    }
+
+    .existing-lessons {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .existing-lessons h3 {
+        color: #333;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .lesson-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+
+    .lesson-item:hover {
+        border-color: #ddd;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .lesson-item span {
+        color: #333;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .lesson-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-view, .btn-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view {
+        background: #007bff;
+    }
+
+    .btn-view:hover {
+        background: #0056b3;
+    }
+
+    .btn-edit {
+        background: #28a745;
+    }
+
+    .btn-edit:hover {
+        background: #218838;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #7808d0;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background: #6006a5;
+    }
+
+    /* Select2 Customization */
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        padding: 5px;
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 28px;
+        color: #333;
+        font-size: 16px;
+    }
+
+    .select2-dropdown {
+        background: white;
+        border: 1px solid #ddd;
+    }
+
+    .select2-container--default .select2-results__option {
+        padding: 8px 12px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background: #7808d0;
+        color: white;
+    }
+
+    /* Video Styles */
+    .ql-video {
+        width: 100%;
+        height: 400px;
+        max-width: 100%;
+    }
+
+    .ql-editor iframe {
+        width: 100%;
+        height: 400px;
+        max-width: 100%;
+    }
+
+    .video-upload-container {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px dashed #ddd;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .video-upload-container p {
+        margin-bottom: 10px;
+        color: #666;
+    }
+
+    .video-upload-container input[type="file"] {
+        display: none;
+    }
+
+    .video-upload-container label {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #333;
+    }
+
+    .video-upload-container label:hover {
+        background: #e9ecef;
+    }
+
+    .video-embed-container {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px dashed #ddd;
+        border-radius: 4px;
+    }
+
+    .video-embed-container input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+
+    .video-embed-container button {
+        padding: 8px 16px;
+        background: #7808d0;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .video-embed-container button:hover {
+        background: #6006a5;
+    }
+</style>
+{% endblock %}
+
+{% block studio_content %}
+<div class="lesson-creator">
+    <h2>Create New Lesson</h2>
+    <form id="lesson-form" class="lesson-form">
+        <div class="form-group">
+            <label for="lesson-title">Lesson Title</label>
+            <input type="text" id="lesson-title" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="editor-container">Lesson Content</label>
+            <div id="editor-container"></div>
+        </div>
+        <button type="button" id="save-lesson" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Lesson
+        </button>
+    </form>
+</div>
+
+<div class="existing-lessons">
+    <h3>Existing Lessons</h3>
+    <ul class="lesson-list">
+        {% for lesson in lessons %}
+        <li class="lesson-item">
+            <span>{{ lesson.title }}</span>
+            <div class="lesson-actions">
+                <a href="{{ url_for('studio.edit_lesson', subject=subject, title=lesson.title) }}" class="btn-edit">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <button class="btn btn-danger" style="margin-left: 5px;" onclick="deleteLesson('{{ subject }}', '{{ lesson.title }}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    // Initialize Quill editor
+    var quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean'],
+                ['link', 'image', 'video']
+            ]
+        }
+    });
+
+    console.log('Quill editor initialized');
+
+    // Save button click handler
+    function saveLesson() {
+        console.log('Save button clicked');
+        
+        const title = document.getElementById('lesson-title').value;
+        const content = quill.root.innerHTML;
+        
+        console.log('Title:', title);
+        console.log('Content length:', content.length);
+        
+        if (!title) {
+            alert('Please enter a title');
+            return;
+        }
+        
+        if (!content) {
+            alert('Please enter some content');
+            return;
+        }
+        
+        console.log('Sending data to server...');
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content
+            })
+        })
+        .then(response => {
+            console.log('Server response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Server response data:', data);
+            if (data.success) {
+                alert('Lesson saved successfully!');
+                window.location.reload();
+            } else {
+                alert('Error saving lesson: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving lesson: ' + error.message);
+        });
+    }
+
+    // Add click event listener to save button
+    const saveButton = document.getElementById('save-lesson');
+    console.log('Save button element:', saveButton);
+    
+    if (saveButton) {
+        saveButton.addEventListener('click', saveLesson);
+        console.log('Save button event listener added');
+    } else {
+        console.error('Save button not found!');
+    }
+
+    function deleteLesson(subject, title) {
+        if (!confirm('Are you sure you want to delete this lesson?')) return;
+        fetch(`/studio/delete-lesson/${subject}/${title}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => {
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            alert('Error deleting lesson.');
+        });
+    }
+</script>
+{% endblock %}

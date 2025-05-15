@@ -1,0 +1,172 @@
+{% extends "learn_base.html" %}
+
+{% block title %}Test Results - {{ subject }} - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="learn-container">
+    <div class="subject-header" style="border-bottom: 3px solid {{ subject_color }};">
+        <h1><i class="{{ subject_icon }}"></i> Test Results - {{ subject }}</h1>
+        <p class="professor-info">Professor: {{ professor_email }}</p>
+    </div>
+
+    {% if results %}
+    <div class="results-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Lesson</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>
+                        <div class="student-info">
+                            <span class="student-name">{{ result.student_name }}</span>
+                            <span class="student-email">{{ result.student_email }}</span>
+                        </div>
+                    </td>
+                    <td>{{ result.lesson_title }}</td>
+                    <td>
+                        <div class="score-badge" style="background-color: {{ subject_color }}">
+                            {{ result.score }}/{{ result.total }}
+                        </div>
+                    </td>
+                    <td>{{ result.timestamp }}</td>
+                    <td>
+                        <a href="{{ url_for('learn.view_test_result', subject_key=subject_key, professor_email=professor_email, lesson_title=result.lesson_title, student_email=result.student_email) }}" 
+                           class="btn btn-view">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-clipboard-list"></i>
+        <p>No test results found</p>
+    </div>
+    {% endif %}
+
+    <div class="page-actions">
+        <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor_email) }}" 
+           class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Lessons
+        </a>
+    </div>
+</div>
+
+<style>
+.results-table {
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+.student-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-name {
+    font-weight: 500;
+}
+
+.student-email {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.score-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: white;
+    font-weight: 500;
+}
+
+.btn-view {
+    padding: 6px 12px;
+    background: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.btn-view:hover {
+    opacity: 0.9;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-results i {
+    font-size: 3em;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.no-results p {
+    color: #666;
+    font-size: 1.1em;
+}
+
+.page-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-back:hover {
+    opacity: 0.9;
+}
+</style>
+{% endblock %} 

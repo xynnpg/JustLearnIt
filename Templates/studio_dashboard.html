@@ -1,0 +1,285 @@
+{% extends "studio_base.html" %}
+
+{% block title %}Studio Dashboard - JustLearnIt{% endblock %}
+
+{% block content %}
+<div class="studio-container">
+    <div class="page-header">
+        <h1><i class="fas fa-chalkboard-teacher"></i> Studio Dashboard</h1>
+        <p class="welcome-message">Welcome back, {{ current_user.name }}!</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <i class="fas fa-book"></i>
+                <h2>My Subjects</h2>
+            </div>
+            <div class="card-content">
+                {% if subjects %}
+                <div class="subjects-list">
+                    {% for subject_key, subject in subjects.items() %}
+                    <div class="subject-item" style="border-left: 4px solid {{ subject.color }}">
+                        <div class="subject-info">
+                            <i class="{{ subject.icon }}"></i>
+                            <span>{{ subject.name }}</span>
+                        </div>
+                        <div class="subject-actions">
+                            <a href="{{ url_for('studio.lessons', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
+                                <i class="fas fa-book-reader"></i> Lessons
+                            </a>
+                            <a href="{{ url_for('studio.tests', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
+                                <i class="fas fa-question-circle"></i> Tests
+                            </a>
+                            <a href="{{ url_for('studio.view_test_results', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
+                                <i class="fas fa-chart-bar"></i> Results
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-book"></i>
+                    <p>You haven't been assigned any subjects yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <i class="fas fa-chart-line"></i>
+                <h2>Quick Stats</h2>
+            </div>
+            <div class="card-content">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ total_lessons }}</div>
+                        <div class="stat-label">Total Lessons</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ total_tests }}</div>
+                        <div class="stat-label">Total Tests</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ total_students }}</div>
+                        <div class="stat-label">Total Test Results</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-results-section">
+        <h2>Recent Test Results</h2>
+        {% for subject_key, subject_data in subjects.items() %}
+            {% if test_results[subject_key] %}
+            <div class="subject-results">
+                <h3>{{ subject_data.name }}</h3>
+                <div class="results-grid">
+                    {% for result in test_results[subject_key] %}
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h4>{{ result.lesson_title }}</h4>
+                            <p class="student-info">Student: {{ result.student_email }}</p>
+                        </div>
+                        <div class="result-details">
+                            <p><strong>Score:</strong> {{ "%.1f"|format(result.score) }}%</p>
+                            <p><strong>Correct Answers:</strong> {{ result.correct_answers }}/{{ result.total_questions }}</p>
+                            <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
+                        </div>
+                        <div class="result-actions">
+                            <a href="{{ url_for('studio.view_test_result', subject=subject_key, lesson_title=result.lesson_title, student_email=result.student_email) }}" 
+                               class="btn btn-sm btn-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header i {
+    font-size: 1.5em;
+    color: #6c757d;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.subjects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.subject-item {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subject-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subject-info i {
+    font-size: 1.2em;
+    color: #6c757d;
+}
+
+.subject-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-size: 0.9em;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.welcome-message {
+    color: #666;
+    margin-top: 10px;
+}
+
+.test-results-section {
+    margin-top: 40px;
+}
+
+.subject-results {
+    margin-bottom: 30px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.result-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.result-header {
+    margin-bottom: 15px;
+}
+
+.result-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.student-info {
+    color: #666;
+    margin: 5px 0;
+}
+
+.result-details {
+    display: grid;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.result-details p {
+    margin: 0;
+}
+
+.result-actions {
+    margin-top: 15px;
+    text-align: right;
+}
+</style>
+{% endblock %} 
