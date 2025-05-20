@@ -2,41 +2,145 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Global Leaderboard</h1>
-    
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-1">Rank</div>
-                        <div class="col-4">Name</div>
-                        <div class="col-2">Level</div>
-                        <div class="col-3">XP</div>
-                        <div class="col-2">Progress</div>
+    <div class="leaderboard-wrapper">
+        <h1 class="leaderboard-title">Global Leaderboard</h1>
+        <div class="leaderboard-card">
+            <div class="leaderboard-header row">
+                <div class="col-1">Rank</div>
+                <div class="col-4">Name</div>
+                <div class="col-2">Level</div>
+                <div class="col-3">XP</div>
+                <div class="col-2">Progress</div>
+            </div>
+            <div class="leaderboard-body">
+                {% for user in users %}
+                <div class="row leaderboard-row {% if user.id == current_user.id %}current-user{% endif %}">
+                    <div class="col-1">
+                        <span class="rank-badge rank-{{ user.rank if user.rank < 10 else 0 }}">{{ user.rank }}</span>
                     </div>
-                </div>
-                <div class="card-body">
-                    {% for user in users %}
-                    <div class="row mb-2 {% if user.id == current_user.id %}bg-light{% endif %}">
-                        <div class="col-1">{{ user.rank }}</div>
-                        <div class="col-4">{{ user.name or user.email }}</div>
-                        <div class="col-2">Level {{ user.level }}</div>
-                        <div class="col-3">{{ user.xp }} XP</div>
-                        <div class="col-2">
-                            <div class="progress">
-                                {% set xp_needed = user.xp_needed_for_next_level() %}
-                                {% set progress = (user.xp / xp_needed * 100) if xp_needed > 0 else 100 %}
-                                <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
-                                    {{ "%.1f"|format(progress) }}%
-                                </div>
-                            </div>
+                    <div class="col-4 user-name">{{ user.name or user.email }}</div>
+                    <div class="col-2">Level {{ user.level }}</div>
+                    <div class="col-3">{{ user.xp }} XP</div>
+                    <div class="col-2">
+                        <div class="progress-bar-outer">
+                            {% set progress = user.get_progress_percentage() %}
+                            <div class="progress-bar-inner" style="width: {{ progress }}%"></div>
                         </div>
+                        <span class="progress-label">{{ "%.1f"|format(progress) }}%</span>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.leaderboard-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.leaderboard-title {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+}
+
+.leaderboard-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-header {
+    font-weight: 700;
+    color: #6c757d;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.leaderboard-body {
+    width: 100%;
+}
+
+.leaderboard-row {
+    align-items: center;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.25rem;
+    transition: background 0.2s;
+}
+
+.leaderboard-row.current-user {
+    background: linear-gradient(90deg, #f3e8ff 0%, #e9ecef 100%);
+    box-shadow: 0 2px 8px rgba(120, 8, 208, 0.07);
+}
+
+.rank-badge {
+    display: inline-block;
+    min-width: 36px;
+    padding: 6px 0;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    text-align: center;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.rank-1 { background: #ffd700; color: #2c3e50; } /* Gold */
+.rank-2 { background: #c0c0c0; color: #2c3e50; } /* Silver */
+.rank-3 { background: #cd7f32; color: #fff; }   /* Bronze */
+.rank-0, .rank-4, .rank-5, .rank-6, .rank-7, .rank-8, .rank-9 {
+    background: #7808d0;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.progress-bar-outer {
+    width: 100%;
+    height: 16px;
+    background: #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #7808d0, #9b4dff);
+    border-radius: 8px;
+    transition: width 0.6s ease;
+}
+
+.progress-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-left: 2px;
+}
+
+@media (max-width: 768px) {
+    .leaderboard-wrapper {
+        padding: 10px;
+    }
+    .leaderboard-title {
+        font-size: 2rem;
+    }
+    .leaderboard-card {
+        padding: 1rem;
+    }
+    .leaderboard-header, .leaderboard-row {
+        font-size: 0.95rem;
+    }
+}
+</style>
 {% endblock %}

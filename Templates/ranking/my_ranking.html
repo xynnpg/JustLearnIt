@@ -2,39 +2,297 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">My Progress</h1>
-    
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body text-center">
-                    <h2 class="mb-4">Level {{ user.level }}</h2>
-                    
-                    <div class="progress mb-4" style="height: 30px;">
-                        {% set xp_needed = user.xp_needed_for_next_level() %}
-                        {% set progress = (user.xp / xp_needed * 100) if xp_needed > 0 else 100 %}
-                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
-                            {{ user.xp }} / {{ xp_needed }} XP
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-6">
-                            <h4>Current Rank</h4>
-                            <p class="h2">{{ rank }}</p>
-                        </div>
-                        <div class="col-6">
-                            <h4>Total XP</h4>
-                            <p class="h2">{{ user.xp }}</p>
-                        </div>
-                    </div>
-                    
-                    <a href="{{ url_for('ranking.ranking') }}" class="btn btn-primary">
-                        View Global Leaderboard
-                    </a>
+    <div class="ranking-wrapper">
+        <h1 class="ranking-title">My Progress</h1>
+        
+        <div class="ranking-card">
+            <div class="level-section">
+                <div class="level-circle">
+                    <span class="level-number">{{ user.level }}</span>
+                    <span class="level-text">Level</span>
+                </div>
+                <div class="rank-badge rank-{{ (user.level // 10) }}">
+                    Rank {{ (user.level // 10) }}
                 </div>
             </div>
+
+            <div class="progress-section">
+                <div class="progress-wrapper">
+                    <div class="progress-bar">
+                        {% set progress = user.get_progress_percentage() %}
+                        <div class="progress-fill" style="width: {{ progress }}%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="current-xp">{{ user.get_current_level_xp() }}</span>
+                        <span class="separator">/</span>
+                        <span class="total-xp">{{ user.xp_needed_for_next_level() }} XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Current Rank</h3>
+                        <p class="stat-value">Rank {{ (user.level // 10) }}</p>
+                        <p class="stat-range">Level {{ user.level - (user.level % 10) }} - {{ user.level - (user.level % 10) + 9 }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total XP</h3>
+                        <p class="stat-value">{{ user.xp }}</p>
+                        <p class="stat-range">Keep learning!</p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ url_for('ranking.ranking') }}" class="leaderboard-btn">
+                <i class="fas fa-trophy"></i>
+                View Global Leaderboard
+            </a>
         </div>
     </div>
 </div>
+
+<style>
+.ranking-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.ranking-title {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+}
+
+.ranking-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.level-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.level-circle {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #7808d0, #9b4dff);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    color: white;
+    box-shadow: 0 5px 15px rgba(120, 8, 208, 0.3);
+}
+
+.level-number {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.level-text {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.rank-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    margin-top: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.rank-0 { background: #6c757d; }
+.rank-1 { background: #28a745; }
+.rank-2 { background: #17a2b8; }
+.rank-3 { background: #007bff; }
+.rank-4 { background: #6f42c1; }
+.rank-5 { background: #fd7e14; }
+.rank-6 { background: #dc3545; }
+.rank-7 { background: #20c997; }
+.rank-8 { background: #e83e8c; }
+.rank-9 { background: #ffc107; }
+
+.progress-section {
+    margin: 2rem 0;
+}
+
+.progress-wrapper {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7808d0, #9b4dff);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.current-xp {
+    font-weight: 600;
+    color: #7808d0;
+}
+
+.separator {
+    color: #6c757d;
+}
+
+.total-xp {
+    color: #6c757d;
+}
+
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #7808d0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-info h3 {
+    font-size: 1rem;
+    color: #6c757d;
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 0.25rem 0;
+}
+
+.stat-value.rank-0,
+.stat-value.rank-1,
+.stat-value.rank-2,
+.stat-value.rank-3,
+.stat-value.rank-4,
+.stat-value.rank-5,
+.stat-value.rank-6,
+.stat-value.rank-7,
+.stat-value.rank-8,
+.stat-value.rank-9 {
+    color: #2c3e50;
+}
+
+.stat-range {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.leaderboard-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #7808d0;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+}
+
+.leaderboard-btn:hover {
+    background: #6006a5;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(120, 8, 208, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .ranking-wrapper {
+        padding: 10px;
+    }
+
+    .ranking-title {
+        font-size: 2rem;
+    }
+
+    .ranking-card {
+        padding: 1.5rem;
+    }
+
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

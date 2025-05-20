@@ -12,12 +12,8 @@
         <a href="{{ url_for('landing.index') }}" class="nav-brand">
             <i class="fas fa-home"></i> JustLearnIt
         </a>
-        <div class="user-info">
-            <span>{{ current_user.name }}</span>
-            <a href="{{ url_for('account.account') }}" class="btn btn-account">
-                <i class="fas fa-user"></i>
-            </a>
-        </div>
+        <a href="{{ url_for('learn.learn') }}" class="nav-link">Learn</a>
+        <a href="{{ url_for('account.account') }}" class="nav-link"><i class="fas fa-user"></i> Account</a>
     </nav>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

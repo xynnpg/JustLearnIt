@@ -3,41 +3,73 @@
 {% block title %}Test Results - {{ subject }} - JustLearnIt{% endblock %}
 
 {% block content %}
-<div class="results-container">
-    <div class="page-header">
-        <h1><i class="fas fa-chart-bar"></i> Test Results - {{ subject }}</h1>
-    </div>
+<div class="container mt-4">
+    <a href="/studio/" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Studio
+    </a>
+    
+    <div class="results-container">
+        <div class="page-header">
+            <h1><i class="fas fa-chart-bar"></i> Test Results - {{ subject }}</h1>
+        </div>
 
-    <div class="results-grid">
-        {% for result in results %}
-            <div class="result-card">
-                <div class="result-header">
-                    <h2>{{ result.lesson_title }}</h2>
-                </div>
-                <div class="result-content">
-                    <p><strong>Student:</strong> {{ result.student_name }}</p>
-                    <p><strong>Score:</strong> {{ "%.1f"|format(result.score|float) }}%</p>
-                    <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
-                    <div class="result-actions">
-                        <a href="{{ url_for('studio.view_test_result', 
-                                          subject=subject,
-                                          lesson_title=result.lesson_title,
-                                          student_email=result.student_email) }}" 
-                           class="btn btn-primary">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
+        <div class="results-grid">
+            {% for result in results %}
+                <div class="result-card">
+                    <div class="result-header">
+                        <h2>{{ result.lesson_title }}</h2>
+                    </div>
+                    <div class="result-content">
+                        <p><strong>Student:</strong> {{ result.student_name }}</p>
+                        <p><strong>Score:</strong> {{ "%.1f"|format(result.score|float) }}%</p>
+                        <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
+                        <div class="result-actions">
+                            <a href="{{ url_for('studio.view_test_result', 
+                                              subject=subject,
+                                              lesson_title=result.lesson_title,
+                                              student_email=result.student_email) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% else %}
-            <div class="no-results">
-                <p>No test results available.</p>
-            </div>
-        {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <p>No test results available.</p>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
 <style>
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.back-button i {
+    font-size: 18px;
+}
+
 .results-container {
     max-width: 1200px;
     margin: 0 auto;

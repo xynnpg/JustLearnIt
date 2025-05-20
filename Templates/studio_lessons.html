@@ -9,6 +9,32 @@
         background-color: #f5f7fa;
     }
     
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .back-button i {
+        font-size: 18px;
+    }
+
     .lesson-creator {
         background: white;
         padding: 30px;
@@ -282,40 +308,47 @@
 {% endblock %}
 
 {% block studio_content %}
-<div class="lesson-creator">
-    <h2>Create New Lesson</h2>
-    <form id="lesson-form" class="lesson-form">
-        <div class="form-group">
-            <label for="lesson-title">Lesson Title</label>
-            <input type="text" id="lesson-title" name="title" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="editor-container">Lesson Content</label>
-            <div id="editor-container"></div>
-        </div>
-        <button type="button" id="save-lesson" class="btn btn-primary">
-            <i class="fas fa-save"></i> Save Lesson
-        </button>
-    </form>
-</div>
-
-<div class="existing-lessons">
-    <h3>Existing Lessons</h3>
-    <ul class="lesson-list">
-        {% for lesson in lessons %}
-        <li class="lesson-item">
-            <span>{{ lesson.title }}</span>
-            <div class="lesson-actions">
-                <a href="{{ url_for('studio.edit_lesson', subject=subject, title=lesson.title) }}" class="btn-edit">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
-                <button class="btn btn-danger" style="margin-left: 5px;" onclick="deleteLesson('{{ subject }}', '{{ lesson.title }}')">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+<div class="container mt-4">
+    <a href="/studio/" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Studio
+    </a>
+    
+    <div class="lesson-creator">
+        <h2>Create New Lesson</h2>
+        <form id="lesson-form" class="lesson-form">
+            <div class="form-group">
+                <label for="lesson-title">Lesson Title</label>
+                <input type="text" id="lesson-title" name="title" class="form-control" required>
             </div>
-        </li>
-        {% endfor %}
-    </ul>
+            <div class="form-group">
+                <label for="editor-container">Lesson Content</label>
+                <div id="editor-container"></div>
+            </div>
+            <button type="button" id="save-lesson" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Lesson
+            </button>
+            
+        </form>
+    </div>
+
+    <div class="existing-lessons">
+        <h3>Existing Lessons</h3>
+        <ul class="lesson-list">
+            {% for lesson in lessons %}
+            <li class="lesson-item">
+                <span>{{ lesson.title }}</span>
+                <div class="lesson-actions">
+                    <a href="{{ url_for('studio.edit_lesson', subject=subject, title=lesson.title) }}" class="btn-edit">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button class="btn btn-danger" style="margin-left: 5px;" onclick="deleteLesson('{{ subject }}', '{{ lesson.title }}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 {% endblock %}
 

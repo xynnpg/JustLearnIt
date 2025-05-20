@@ -76,14 +76,6 @@
                     <label for="password">New Password (optional)</label>
                     <input type="password" id="password" name="password" placeholder="Enter new password (min 8 chars)">
                 </div>
-                <div class="form-group">
-                    <label for="bio">Bio (optional)</label>
-                    <textarea id="bio" name="bio" rows="3" placeholder="Tell us about yourself">{{ user.bio or '' }}</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="profile_picture">Profile Picture URL (optional)</label>
-                    <input type="url" id="profile_picture" name="profile_picture" value="{{ user.profile_picture or '' }}" placeholder="https://example.com/image.jpg">
-                </div>
 
                 <h3>Change Role</h3>
                 <div class="radio-input">
@@ -146,29 +138,6 @@
                         </span>
                     </div>
                 {% endif %}
-            </div>
-
-            <div class="account-stats">
-                <h3>Your Activity</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-book"></i></div>
-                        <div class="stat-value">{{ user.lessons_completed|default(0) }}</div>
-                        <div class="stat-label">Lessons Completed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-                        <div class="stat-value">{{ user.tests_taken|default(0) }}</div>
-                        <div class="stat-label">Tests Taken</div>
-                    </div>
-                    {% if user.user_type == 'profesor' %}
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                            <div class="stat-value">{{ user.lessons_created|default(0) }}</div>
-                            <div class="stat-label">Lessons Created</div>
-                        </div>
-                    {% endif %}
-                </div>
             </div>
 
             <div class="actions">

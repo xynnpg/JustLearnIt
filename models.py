@@ -72,6 +72,34 @@ class User(db.Model, UserMixin):
             return int(50 * self.level * 0.5)
         return 0
 
+    def xp_for_current_level(self):
+        """Return the total XP required to reach the current level (not the next level)."""
+        if self.user_type == 'elev':
+            xp = 0
+            for lvl in range(1, self.level):
+                xp += int(50 * lvl * 0.5)
+            return xp
+        return 0
+
+    def get_current_level_xp(self):
+        """Return the XP earned in the current level."""
+        if self.user_type == 'elev':
+            total_xp_for_current_level = self.xp_for_current_level()
+            xp_in_current_level = self.xp - total_xp_for_current_level
+            return xp_in_current_level
+        return 0
+
+    def get_progress_percentage(self):
+        """Calculate the progress percentage between current level and next level."""
+        if self.user_type == 'elev':
+            xp_needed = self.xp_needed_for_next_level()
+            current_level_xp = self.get_current_level_xp()
+            if xp_needed <= 0:
+                return 100
+            progress = (current_level_xp / xp_needed) * 100
+            return min(max(progress, 0), 100)  # Ensure progress is between 0 and 100
+        return 0
+
     def get_rank(self):
         """Get user's rank based on XP - only for students"""
         if self.user_type == 'elev':
@@ -79,6 +107,27 @@ class User(db.Model, UserMixin):
             for i, user in enumerate(users, 1):
                 if user.id == self.id:
                     return i
+        return 0
+
+    @property
+    def lessons_completed(self):
+        """Return the number of lessons completed by the student (based on grades with lesson_id)."""
+        if self.user_type == 'elev':
+            return len([g for g in self.grades if g.lesson_id is not None])
+        return 0
+
+    @property
+    def tests_taken(self):
+        """Return the number of tests taken by the student (based on grades with test_id)."""
+        if self.user_type == 'elev':
+            return len([g for g in self.grades if g.test_id is not None])
+        return 0
+
+    @property
+    def lessons_created(self):
+        """Return the number of lessons created by the professor."""
+        if self.user_type == 'profesor':
+            return len(self.lessons)
         return 0
 
 class Lesson(db.Model):

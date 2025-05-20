@@ -94,6 +94,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('learn.learn') }}">Learn</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('account.account') }}">Account</a>
+                        </li>
                         {% if current_user.user_type == 'profesor' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('studio.index') }}">Studio</a>

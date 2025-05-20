@@ -4,6 +4,32 @@
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <style>
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .back-button i {
+        font-size: 18px;
+    }
+
     .test-creator {
         max-width: 1000px;
         margin: 0 auto;
@@ -240,101 +266,101 @@
 {% endblock %}
 
 {% block studio_content %}
-<div class="test-creator">
-    <h2>Manage Tests</h2>
+<div class="container mt-4">
+    <a href="/studio/" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Studio
+    </a>
+    
+    <div class="test-creator">
+        <h2>Manage Tests</h2>
 
-    <div class="subject-selector mb-4">
-        <select id="subject-select" class="form-control">
-            {% for subject_key, subject_data in subjects.items() %}
-                <option value="{{ subject_key }}" {% if subject_key == selected_subject %}selected{% endif %}>
-                    {{ subject_data.name }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div id="create-test" class="mb-4">
-        <div class="form-group">
-            <label for="test-title">Test Title</label>
-            <input type="text" id="test-title" class="form-control" placeholder="Enter test title">
-        </div>
-
-        <div id="questions-container">
-            <!-- Questions will be added here -->
-        </div>
-
-        <div class="form-actions">
-            <button id="add-question" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Question
-            </button>
-            <button id="save-test" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Test
-            </button>
-        </div>
-    </div>
-
-    <h3>Existing Tests</h3>
-    {% if tests %}
-        {% for subject, subject_tests in tests.items() %}
-            {% if subject_tests %}
-                {% for test in subject_tests %}
-                <div class="test-item">
-                    <span>{{ test.name }}</span>
-                    <div class="test-actions">
-                        <a href="{{ url_for('studio.edit_test', subject=subject, test=test.name) }}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a href="{{ url_for('studio.view_test', subject=subject, test=test.name) }}" class="btn btn-info">
-                            <i class="fas fa-eye"></i> View
-                        </a>
-                        <button class="btn btn-danger" onclick="deleteTest('{{ subject }}', '{{ test.name }}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
+        <div class="subject-selector mb-4">
+            <select id="subject-select" class="form-control">
+                {% for subject_key, subject_data in subjects.items() %}
+                    <option value="{{ subject_key }}" {% if subject_key == selected_subject %}selected{% endif %}>
+                        {{ subject_data.name }}
+                    </option>
                 {% endfor %}
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <p>No tests found for this subject.</p>
-    {% endif %}
+            </select>
+        </div>
+
+        <div id="create-test" class="mb-4">
+            <div class="form-group">
+                <label for="test-title">Test Title</label>
+                <input type="text" id="test-title" class="form-control" placeholder="Enter test title">
+            </div>
+
+            <div id="questions-container">
+                <!-- Questions will be added here -->
+            </div>
+
+            <div class="form-actions">
+                <button id="add-question" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button id="save-test" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Test
+                </button>
+            </div>
+        </div>
+
+        <h3>Existing Tests</h3>
+        {% if tests %}
+            {% for subject, subject_tests in tests.items() %}
+                {% if subject_tests %}
+                    {% for test in subject_tests %}
+                    <div class="test-item">
+                        <span>{{ test.name }}</span>
+                        <div class="test-actions">
+                            <a href="{{ url_for('studio.edit_test', subject=subject, test=test.name) }}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{{ url_for('studio.view_test', subject=subject, test=test.name) }}" class="btn btn-info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <button class="btn btn-danger" onclick="deleteTest('{{ subject }}', '{{ test.name }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p>No tests found for this subject.</p>
+        {% endif %}
+    </div>
+
+    <script type="text/template" id="question-template">
+        <div class="question-card mb-4">
+            <div class="question-header">
+                <select class="question-type form-select" style="width: auto;">
+                    <option value="multiple_choice">Multiple Choice</option>
+                    <option value="short_answer">Short Answer</option>
+                    <option value="essay">Essay</option>
+                </select>
+                <button class="remove-question-btn btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Question Content</label>
+                    <div class="question-editor"></div>
+                </div>
+                <div class="options-container" style="display: none;">
+                    <div class="option-item mb-2">
+                        <input type="radio" name="correct-{id}" class="correct-option">
+                        <div class="option-editor"></div>
+                    </div>
+                    <button class="add-option-btn btn btn-info">Add Option</button>
+                </div>
+            </div>
+        </div>
+    </script>
 </div>
 
-<script type="text/template" id="question-template">
-    <div class="question-card mb-4">
-        <div class="question-header">
-            <select class="question-type form-select" style="width: auto;">
-                <option value="multiple_choice">Multiple Choice</option>
-                <option value="short_answer">Short Answer</option>
-                <option value="essay">Essay</option>
-            </select>
-            <button class="remove-question-btn btn btn-danger">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="form-group">
-                <label>Question Content</label>
-                <div class="question-editor"></div>
-            </div>
-            <div class="options-container" style="display: none;">
-                <div class="option-item mb-2">
-                    <input type="radio" name="correct-{id}" class="correct-option">
-                    <div class="option-editor"></div>
-                </div>
-                <button class="add-option-btn btn btn-info">Add Option</button>
-            </div>
-        </div>
-    </div>
-</script>
-{% endblock %}
-
-{% block extra_js %}
-<!-- Add jQuery first -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
+<script type="text/javascript">
     $(document).ready(function() {
         // Initialize Select2
         $('#subject-select').select2();
