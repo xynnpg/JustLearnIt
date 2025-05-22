@@ -1,8 +1,13 @@
 {% extends "studio_base.html" %}
 
 {% block extra_css %}
+<!-- First load jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Then load other dependencies -->
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <style>
     .back-button {
         display: inline-flex;
@@ -274,6 +279,12 @@
     <div class="test-creator">
         <h2>Manage Tests</h2>
 
+        <form id="test-form" method="POST" action="{{ url_for('studio.tests', subject=selected_subject) }}">
+            <input type="hidden" id="test_content" name="test_content">
+            <input type="hidden" name="subject" id="subject-input" value="{{ selected_subject }}">
+            <input type="hidden" name="test_name" id="test-name-input">
+        </form>
+
         <div class="subject-selector mb-4">
             <select id="subject-select" class="form-control">
                 {% for subject_key, subject_data in subjects.items() %}
@@ -295,10 +306,10 @@
             </div>
 
             <div class="form-actions">
-                <button id="add-question" class="btn btn-primary">
+                <button type="button" id="add-question" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Question
                 </button>
-                <button id="save-test" class="btn btn-primary">
+                <button type="button" id="save-changes" class="btn btn-primary">
                     <i class="fas fa-save"></i> Save Test
                 </button>
             </div>
@@ -332,14 +343,14 @@
     </div>
 
     <script type="text/template" id="question-template">
-        <div class="question-card mb-4">
+        <div class="question-card mb-4" data-index="{id}">
             <div class="question-header">
                 <select class="question-type form-select" style="width: auto;">
                     <option value="multiple_choice">Multiple Choice</option>
                     <option value="short_answer">Short Answer</option>
                     <option value="essay">Essay</option>
                 </select>
-                <button class="remove-question-btn btn btn-danger">
+                <button type="button" class="remove-question-btn btn btn-danger">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -348,225 +359,227 @@
                     <label>Question Content</label>
                     <div class="question-editor"></div>
                 </div>
-                <div class="options-container" style="display: none;">
+                <div class="options-container">
                     <div class="option-item mb-2">
                         <input type="radio" name="correct-{id}" class="correct-option">
                         <div class="option-editor"></div>
+                        <button type="button" class="remove-option-btn btn btn-danger">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <button class="add-option-btn btn btn-info">Add Option</button>
+                    <button type="button" class="add-option-btn btn btn-info">
+                        <i class="fas fa-plus"></i> Add Option
+                    </button>
                 </div>
             </div>
         </div>
     </script>
-</div>
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Initialize Select2
-        $('#subject-select').select2();
-
-        // Handle add question button
-        $('#add-question').on('click', function(e) {
-            e.preventDefault();
-            addQuestion();
-        });
-
-        // Handle save test button
-        $('#save-test').on('click', function(e) {
-            e.preventDefault();
-            saveTest();
-        });
-
-        // Handle subject change
-        $('#subject-select').on('change', function() {
-            const subject = $(this).val();
-            if (subject) {
-                window.location.href = "/studio/tests/" + subject;
-            } else {
-                window.location.href = "/studio/tests";
-            }
-        });
-    });
-
-    function addQuestion() {
-        const id = Date.now();
-        const template = $('#question-template').html().replace(/{id}/g, id);
-        const $template = $(template);
-        $('#questions-container').append($template);
-
-        // Initialize Quill editor for question
-        const questionEditor = new Quill($template.find('.question-editor')[0], {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['image', 'link'],
-                    ['clean']
-                ]
-            },
-            placeholder: 'Enter your question here...'
-        });
-
-        // Initialize Quill editors for options (if any)
-        let optionEditors = [];
-
-        function addOption(container) {
-            const $optionItem = container.find('.option-item').first().clone();
-            const optionEditor = new Quill($optionItem.find('.option-editor')[0], {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['image', 'link']
-                    ]
-                },
-                placeholder: 'Enter option text...'
-            });
-            optionEditors.push(optionEditor);
-            container.find('.options-container').append($optionItem);
-        }
-
-        // Update options visibility based on question type
-        function updateOptionsVisibility() {
-            const type = $template.find('.question-type').val();
-            const $optionsContainer = $template.find('.options-container');
-            $optionsContainer.toggle(type === 'multiple_choice');
-
-            if (type === 'multiple_choice' && $template.find('.option-item').length === 1) {
-                addOption($template);
-            }
-        }
-
-        // Set up event handlers
-        $template.find('.question-type').on('change', updateOptionsVisibility);
-        $template.find('.remove-question-btn').on('click', function() {
-            $template.remove();
-        });
-        $template.find('.add-option-btn').on('click', function(e) {
-            e.preventDefault();
-            addOption($template);
-        });
-
-        // Initial visibility update
-        updateOptionsVisibility();
-    }
-
-    function saveTest() {
-        const title = $('#test-title').val();
-        const subject = $('#subject-select').val();
-        const questions = [];
-
-        // Validate test title
-        if (!title) {
-            alert('Please enter a test title');
-            return;
-        }
-
-        // Collect questions data
-        $('.question-card').each(function() {
-            const $question = $(this);
-            const type = $question.find('.question-type').val();
-            const questionContent = $question.find('.question-editor .ql-editor').html();
+    <script>
+        $(document).ready(function() {
+            console.log('Document ready');
             
-            // Skip empty questions
-            if (!questionContent || questionContent.trim() === '') {
-                return;
-            }
+            // Initialize Select2
+            $('#subject-select').select2();
 
-            const question = { type, content: questionContent };
-
-            if (type === 'multiple_choice') {
-                question.options = [];
-                let correctIndex = -1;
-
-                $question.find('.option-item').each(function(index) {
-                    const optionContent = $(this).find('.option-editor .ql-editor').html();
-                    // Skip empty options
-                    if (!optionContent || optionContent.trim() === '') {
-                        return;
+            // Handle add question button
+            $('#add-question').on('click', function(e) {
+                e.preventDefault();
+                console.log('Add question button clicked');
+                
+                try {
+                    const id = Date.now();
+                    const template = $('#question-template').html();
+                    if (!template) {
+                        throw new Error('Question template not found');
                     }
-                    question.options.push(optionContent);
-
-                    if ($(this).find('.correct-option').is(':checked')) {
-                        correctIndex = index;
+                    
+                    const replacedTemplate = template.replace(/{id}/g, id);
+                    const $template = $(replacedTemplate);
+                    
+                    if ($template.length === 0) {
+                        throw new Error('Failed to create template element');
                     }
-                });
+                    
+                    $('#questions-container').append($template);
+                    console.log('Template appended');
 
-                // Skip questions with no options
-                if (question.options.length === 0) {
+                    // Initialize Quill editor for question
+                    const questionEditor = new Quill($template.find('.question-editor')[0], {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                ['bold', 'italic', 'underline'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                ['image', 'link'],
+                                ['clean']
+                            ]
+                        },
+                        placeholder: 'Enter your question here...'
+                    });
+                    console.log('Question editor initialized');
+
+                    // Initialize Quill editor for initial option
+                    const optionEditor = new Quill($template.find('.option-editor')[0], {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                ['image', 'link']
+                            ]
+                        },
+                        placeholder: 'Enter option text...'
+                    });
+                    console.log('Option editor initialized');
+
+                    // Set up event handlers
+                    $template.find('.question-type').on('change', function() {
+                        const type = $(this).val();
+                        const $optionsContainer = $template.find('.options-container');
+                        $optionsContainer.toggle(type === 'multiple_choice');
+                    });
+
+                    $template.find('.remove-question-btn').on('click', function() {
+                        $template.remove();
+                    });
+
+                    $template.find('.add-option-btn').on('click', function() {
+                        const $optionItem = $template.find('.option-item').first().clone();
+                        new Quill($optionItem.find('.option-editor')[0], {
+                            theme: 'snow',
+                            modules: {
+                                toolbar: [
+                                    ['bold', 'italic', 'underline'],
+                                    [{ 'color': [] }, { 'background': [] }],
+                                    ['image', 'link']
+                                ]
+                            },
+                            placeholder: 'Enter option text...'
+                        });
+                        $template.find('.options-container').append($optionItem);
+                    });
+
+                    $template.find('.remove-option-btn').on('click', function() {
+                        if ($template.find('.option-item').length > 1) {
+                            $(this).closest('.option-item').remove();
+                        } else {
+                            alert('A question must have at least one option');
+                        }
+                    });
+
+                    // Initial visibility update
+                    $template.find('.question-type').trigger('change');
+                    console.log('Question setup complete');
+                    
+                } catch (error) {
+                    console.error('Error adding question:', error);
+                    alert('Error adding question: ' + error.message);
+                }
+            });
+
+            // Handle save test button
+            $('#save-changes').on('click', function() {
+                console.log('Save button clicked');
+                const title = $('#test-title').val();
+                const subject = $('#subject-select').val();
+                console.log('Title:', title, 'Subject:', subject);
+
+                if (!title) {
+                    alert('Please enter a test title');
                     return;
                 }
 
-                question.correctIndex = correctIndex;
-            }
+                const questions = [];
+                $('.question-card').each(function() {
+                    const $question = $(this);
+                    const type = $question.find('.question-type').val();
+                    const questionContent = $question.find('.question-editor .ql-editor').html();
+                    
+                    if (!questionContent || questionContent.trim() === '') {
+                        return;
+                    }
 
-            questions.push(question);
+                    const question = { type, content: questionContent };
+
+                    if (type === 'multiple_choice') {
+                        question.options = [];
+                        let correctIndex = -1;
+
+                        $question.find('.option-item').each(function(index) {
+                            const optionContent = $(this).find('.option-editor .ql-editor').html();
+                            if (!optionContent || optionContent.trim() === '') {
+                                return;
+                            }
+                            question.options.push(optionContent);
+
+                            if ($(this).find('.correct-option').is(':checked')) {
+                                correctIndex = index;
+                            }
+                        });
+
+                        if (question.options.length === 0) {
+                            return;
+                        }
+
+                        question.correctIndex = correctIndex;
+                    }
+
+                    questions.push(question);
+                });
+
+                if (questions.length === 0) {
+                    alert('Please add at least one question');
+                    return;
+                }
+
+                const testData = {
+                    title: title,
+                    questions: questions,
+                    created_at: new Date().toISOString()
+                };
+
+                console.log('Test data:', testData);
+
+                // Update hidden form fields
+                $('#test_content').val(JSON.stringify(testData));
+                $('#subject-input').val(subject);
+                $('#test-name-input').val(title);
+
+                // Submit the form
+                const form = $('#test-form');
+                console.log('Submitting form to:', form.attr('action'));
+                
+                const saveBtn = $(this);
+                saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                form.submit();
+            });
+
+            // Handle subject change
+            $('#subject-select').on('change', function() {
+                const subject = $(this).val();
+                window.location.href = subject ? `/studio/tests/${subject}` : '/studio/tests';
+            });
         });
 
-        // Validate at least one question
-        if (questions.length === 0) {
-            alert('Please add at least one question');
-            return;
+        function deleteTest(subject, title) {
+            if (!confirm('Are you sure you want to delete this test?')) return;
+            fetch(`/studio/delete-test/${subject}/${title}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => {
+                if (res.redirected) {
+                    window.location.href = res.url;
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(err => {
+                alert('Error deleting test.');
+            });
         }
-
-        // Show loading state
-        const saveBtn = $('#save-test');
-        saveBtn.prop('disabled', true);
-        saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-
-        // Create form data
-        const formData = new FormData();
-        formData.append('subject', subject);
-        formData.append('test_name', title);
-        formData.append('test_content', JSON.stringify({
-            title: title,
-            questions: questions,
-            created_at: new Date().toISOString()
-        }));
-
-        // Send data to server
-        fetch("{{ url_for('studio.tests', subject=None) }}", {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text();
-        })
-        .then(() => {
-            window.location.href = "{{ url_for('studio.tests') }}?subject=" + subject;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error saving test: ' + error.message);
-        })
-        .finally(() => {
-            saveBtn.prop('disabled', false);
-            saveBtn.html('<i class="fas fa-save"></i> Save Test');
-        });
-    }
-
-    function deleteTest(subject, title) {
-        if (!confirm('Are you sure you want to delete this test?')) return;
-        fetch(`/studio/delete-test/${subject}/${title}`, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => {
-            if (res.redirected) {
-                window.location.href = res.url;
-            } else {
-                window.location.reload();
-            }
-        })
-        .catch(err => {
-            alert('Error deleting test.');
-        });
-    }
-</script>
+    </script>
 {% endblock %}

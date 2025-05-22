@@ -34,55 +34,51 @@
             {% endif %}
         </div>
         
-        <div id="questions-container">
-            {% for question in test.questions %}
-            <div class="question-card card">
-                <div class="question-header">
-                    <span class="question-type">{{ question.type|title }}</span>
-                </div>
-                <div class="question-body">
-                    <div class="question-text">{{ question.text|safe }}</div>
-                    {% if question.type == 'multiple_choice' %}
-                    <div class="options-container">
-                        {% for option in question.options %}
-                        <div class="option-item {% if loop.index0 == question.correctIndex %}correct-option{% endif %}">
-                            {{ option|safe }}
-                        </div>
-                        {% endfor %}
+        <form id="test-form" method="POST" action="{{ url_for('studio.edit_test', subject=subject, test=test.title) }}">
+            <input type="hidden" name="test_content" id="test-content-input">
+            <div id="questions-container">
+                {% for question in test.questions %}
+                <div class="question-card card">
+                    <div class="question-header">
+                        <span class="question-type">{{ question.type|title }}</span>
                     </div>
-                    {% endif %}
+                    <div class="question-body">
+                        <div class="question-text">{{ question.content|safe }}</div>
+                        {% if question.type == 'multiple_choice' %}
+                        <div class="options-container">
+                            {% for option in question.options %}
+                            <div class="option-item {% if loop.index0 == question.correctIndex %}correct-option{% endif %}">
+                                {{ option|safe }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-        
-        <div class="action-buttons">
-            {% if not is_admin %}
-            <a href="{{ url_for('studio.edit_test', subject=subject, test=test.title) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit Test
-            </a>
-            <button id="add-question" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Question
-            </button>
-            <button id="save-test" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Test
-            </button>
-            <button id="publish-test" class="btn btn-success">
-                <i class="fas fa-check"></i> Publish Test
-            </button>
-            <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Tests
-            </a>
-            {% else %}
-            <a href="{{ url_for('admin.admin_panel') }}#tests" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Admin Panel
-            </a>
-            {% endif %}
-        </div>
+            
+            <div class="action-buttons">
+                {% if user.is_professor %}
+                <button type="button" id="add-question" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button type="button" id="save-test" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Test
+                </button>
+                <button type="button" id="publish-test" class="btn btn-success">
+                    <i class="fas fa-check"></i> Publish Test
+                </button>
+                {% endif %}
+                <a href="{{ url_for('studio.tests', subject=subject) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Tests
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 
-{% if not is_admin %}
+{% if user.is_professor %}
 <script type="text/template" id="question-template">
     <div class="question-card card">
         <div class="question-header">
@@ -91,7 +87,7 @@
                 <option value="short_answer">Short Answer</option>
                 <option value="essay">Essay</option>
             </select>
-            <button class="btn btn-danger remove-question-btn">
+            <button type="button" class="btn btn-danger remove-question-btn">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -104,8 +100,11 @@
                 <div class="option-item">
                     <input type="radio" name="correct-{id}" class="correct-option">
                     <div class="option-editor"></div>
+                    <button type="button" class="btn btn-danger remove-option-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <button class="btn btn-info add-option-btn">
+                <button type="button" class="btn btn-info add-option-btn">
                     <i class="fas fa-plus"></i> Add Option
                 </button>
             </div>
@@ -116,7 +115,9 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Quill editors for questions
+    console.log('Document ready');
+    
+    // Initialize Quill editors for existing questions
     document.querySelectorAll('.question-editor').forEach(editor => {
         new Quill(editor, {
             theme: 'snow',
@@ -127,14 +128,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['link', 'image'],
                     ['clean']
                 ]
-            },
-            readOnly: true
+            }
         });
     });
 
-    // Initialize Quill editors for options
-    document.querySelectorAll('.option-editor').forEach(editor => {
-        new Quill(editor, {
+    // Handle add question button
+    document.getElementById('add-question').addEventListener('click', function() {
+        console.log('Add question button clicked');
+        const template = document.getElementById('question-template').innerHTML;
+        const id = Date.now();
+        const questionHtml = template.replace(/{id}/g, id);
+        document.getElementById('questions-container').insertAdjacentHTML('beforeend', questionHtml);
+        
+        // Initialize new editors
+        const newQuestion = document.querySelector('.question-card:last-child');
+        const questionEditor = new Quill(newQuestion.querySelector('.question-editor'), {
             theme: 'snow',
             modules: {
                 toolbar: [
@@ -143,9 +151,116 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['link', 'image'],
                     ['clean']
                 ]
-            },
-            readOnly: true
+            }
         });
+        
+        const optionEditor = new Quill(newQuestion.querySelector('.option-editor'), {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Show options container for multiple choice questions
+        const typeSelect = newQuestion.querySelector('.question-type');
+        typeSelect.addEventListener('change', function() {
+            const optionsContainer = newQuestion.querySelector('.options-container');
+            optionsContainer.style.display = this.value === 'multiple_choice' ? 'block' : 'none';
+        });
+    });
+
+    // Handle save test button
+    document.getElementById('save-test').addEventListener('click', function() {
+        console.log('Save test button clicked');
+        const questions = [];
+        document.querySelectorAll('.question-card').forEach(card => {
+            const type = card.querySelector('.question-type').value;
+            const content = card.querySelector('.question-editor .ql-editor').innerHTML;
+            
+            if (!content || content.trim() === '') return;
+            
+            const question = { type, content };
+            
+            if (type === 'multiple_choice') {
+                question.options = [];
+                let correctIndex = -1;
+                
+                card.querySelectorAll('.option-item').forEach((item, index) => {
+                    const optionContent = item.querySelector('.option-editor .ql-editor').innerHTML;
+                    if (!optionContent || optionContent.trim() === '') return;
+                    
+                    question.options.push(optionContent);
+                    if (item.querySelector('.correct-option').checked) {
+                        correctIndex = index;
+                    }
+                });
+                
+                if (question.options.length === 0) return;
+                question.correctIndex = correctIndex;
+            }
+            
+            questions.push(question);
+        });
+        
+        if (questions.length === 0) {
+            alert('Please add at least one question');
+            return;
+        }
+        
+        const testData = {
+            title: '{{ test.title }}',
+            questions: questions,
+            created_at: new Date().toISOString()
+        };
+        
+        // Set the form data and submit
+        document.getElementById('test-content-input').value = JSON.stringify(testData);
+        document.getElementById('test-form').submit();
+    });
+
+    // Handle remove question button
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-question-btn')) {
+            e.target.closest('.question-card').remove();
+        }
+    });
+
+    // Handle add option button
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-option-btn')) {
+            const optionsContainer = e.target.closest('.options-container');
+            const optionTemplate = optionsContainer.querySelector('.option-item').cloneNode(true);
+            const newId = Date.now();
+            optionTemplate.querySelector('.correct-option').name = `correct-${newId}`;
+            optionTemplate.querySelector('.option-editor').innerHTML = '';
+            new Quill(optionTemplate.querySelector('.option-editor'), {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+            optionsContainer.insertBefore(optionTemplate, e.target.closest('.add-option-btn'));
+        }
+    });
+
+    // Handle remove option button
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-option-btn')) {
+            const optionsContainer = e.target.closest('.options-container');
+            if (optionsContainer.querySelectorAll('.option-item').length > 1) {
+                e.target.closest('.option-item').remove();
+            }
+        }
     });
 });
 </script>
@@ -209,9 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
 .question-card {
     margin-bottom: 1.5rem;
     padding: 1.5rem;
-    background: white;
+    border: 1px solid #eee;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .question-header {
@@ -229,14 +343,9 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 0.9rem;
 }
 
-.question-body {
-    color: #333;
-}
-
 .question-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
     margin-bottom: 1rem;
+    color: #333;
 }
 
 .options-container {
@@ -248,12 +357,14 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 0.5rem;
     background: #f8f9fa;
     border-radius: 4px;
-    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.option-item.correct-option {
-    background: #e8f5e9;
-    border-color: #4caf50;
+.correct-option {
+    background: #d4edda;
+    border-color: #c3e6cb;
 }
 
 .action-buttons {
@@ -288,6 +399,24 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #6a07b8;
 }
 
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
 .btn-success {
     background: #28a745;
     color: white;
@@ -306,43 +435,12 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #5a6268;
 }
 
-.badge {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.badge-primary {
-    background: #7808d0;
-    color: white;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-
 /* Editor styles */
-.question-editor {
+.question-editor, .option-editor {
     background: white;
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-bottom: 1rem;
-}
-
-.option-editor {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-left: 0.5rem;
 }
 
 .ql-toolbar {

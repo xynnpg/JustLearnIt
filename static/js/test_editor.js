@@ -3,6 +3,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let questionEditors = [];
     let optionEditors = [];
     
+    // Initialize Select2
+    $('#subject-select').select2();
+    
+    // Handle subject change
+    $('#subject-select').on('change', function() {
+        const subject = $(this).val();
+        $('#subject-input').val(subject);
+    });
+    
+    // Initialize subject input
+    $('#subject-input').val($('#subject-select').val());
+    
     function createQuillEditor(container, placeholder) {
         return new Quill(container, {
             theme: 'snow',
@@ -156,8 +168,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Save changes handler
     document.getElementById('save-changes').addEventListener('click', () => {
+        const title = document.getElementById('test-title').value;
+        if (!title) {
+            alert('Please enter a test title');
+            return;
+        }
+        
         const data = getTestData();
+        if (data.questions.length === 0) {
+            alert('Please add at least one question');
+            return;
+        }
+        
+        // Populate hidden form inputs
         document.getElementById('test_content').value = JSON.stringify(data);
+        document.getElementById('test-name-input').value = title;
+        
+        // Submit the form
         document.getElementById('test-form').submit();
     });
 }); 

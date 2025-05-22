@@ -331,7 +331,6 @@ def tests(subject):
 
 @studio_bp.route('/test/<subject>/<test>', methods=['GET', 'POST'])
 @login_required
-@require_professor
 def view_test(subject, test):
     if subject not in SUBJECTS:
         flash('Invalid subject', 'error')
@@ -360,42 +359,30 @@ def view_test(subject, test):
 @require_professor
 def edit_test(subject, test):
     if subject not in SUBJECTS:
-        flash('Invalid subject selected', 'error')
+        flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
-        
+
+    test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{test}.json")
+    
     try:
-        test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{test}.json")
-        
         if request.method == 'POST':
-            content = request.form.get('test_content')
-            if not content:
-                flash('Test content cannot be empty', 'error')
+            test_content = request.form.get('test_content')
+            if not test_content:
+                flash('No test content provided', 'error')
                 return redirect(url_for('studio.edit_test', subject=subject, test=test))
             
             try:
-                # Validate JSON content
-                test_data = json.loads(content)
-                # Ensure required fields are present
+                test_data = json.loads(test_content)
+                
+                # Validate test data
+                if not isinstance(test_data, dict):
+                    raise ValueError('Invalid test data format')
+                
                 if 'title' not in test_data or 'questions' not in test_data:
-                    flash('Invalid test format: missing required fields', 'error')
-                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                    raise ValueError('Missing required fields')
                 
-                # Validate questions format
                 if not isinstance(test_data['questions'], list):
-                    flash('Invalid test format: questions must be a list', 'error')
-                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
-                
-                for question in test_data['questions']:
-                    if not isinstance(question, dict):
-                        flash('Invalid question format', 'error')
-                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
-                    
-                    if 'content' not in question:
-                        flash('Invalid question format: missing content', 'error')
-                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
-                
-                # Ensure directory exists
-                os.makedirs(os.path.dirname(test_path), exist_ok=True)
+                    raise ValueError('Questions must be a list')
                 
                 # Write content to file
                 with open(test_path, 'w') as f:
