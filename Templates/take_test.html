@@ -1,19 +1,19 @@
 {% extends "learn_base.html" %}
 
-{% block title %}Take Test: {{ test.title }} - JustLearnIt{% endblock %}
+{% block title %}Sustine Test: {{ test.title }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="learn-container">
     <div class="subject-header">
         <h1>Test: {{ test.title }}</h1>
-        <p class="professor-info">Created by: {{ professor_email }}</p>
+        <p class="professor-info">Creat de: {{ professor_email }}</p>
     </div>
 
     <form method="POST" action="{{ url_for('learn.submit_test', subject_key=subject, professor_email=professor_email, lesson_title=lesson_title) }}" class="test-form">
         {% for question in test.questions %}
         <div class="question-card">
             <div class="question-content">
-                {{ question.text|safe }}
+                {{ question.content|default(question.text)|safe }}
             </div>
 
             <div class="options-list">
@@ -26,7 +26,7 @@
                            id="option_{{ question_index }}_{{ loop.index0 }}" 
                            required>
                     <label for="option_{{ question_index }}_{{ loop.index0 }}">
-                        {{ option|safe }}
+                        {{ option|safe if option else 'Optiune goala' }}
                     </label>
                 </div>
                 {% endfor %}
@@ -36,11 +36,11 @@
 
         <div class="test-actions">
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Submit Test
+                <i class="fas fa-paper-plane"></i> Trimite Testul
             </button>
             <a href="{{ url_for('learn.view_lesson', subject_key=subject, professor_email=professor_email, lesson_title=lesson_title) }}" 
                class="btn btn-back">
-                <i class="fas fa-arrow-left"></i> Back to Lesson
+                <i class="fas fa-arrow-left"></i> Inapoi la Lectie
             </a>
         </div>
     </form>

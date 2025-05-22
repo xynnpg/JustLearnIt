@@ -1,9 +1,9 @@
 {% extends "account_base.html" %}
 
-{% block title %}My Account - JustLearnIt{% endblock %}
+{% block title %}Contul meu - JustLearnIt{% endblock %}
 
 {% block content %}
-    <h1>My Account Dashboard</h1>
+    <h1>Panou cont</h1>
     <div class="account-wrapper">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -16,14 +16,14 @@
         <!-- Progress Section - Only for students -->
         {% if user.user_type == 'elev' %}
         <div class="progress-section">
-            <h2>Your Progress</h2>
+            <h2>Progresul tau</h2>
             <div class="level-card">
                 <div class="level-header">
                     <div class="level-icon">
                         <i class="fas fa-trophy"></i>
                     </div>
                     <div class="level-info">
-                        <h3>Level {{ user.level }}</h3>
+                        <h3>Nivel {{ user.level }}</h3>
                         <p class="xp-text">{{ user.xp }} XP</p>
                     </div>
                 </div>
@@ -35,12 +35,12 @@
                             <span class="progress-text">{{ "%.1f"|format(progress) }}%</span>
                         </div>
                     </div>
-                    <p class="progress-label">Progress to Level {{ user.level + 1 }}</p>
+                    <p class="progress-label">Progres spre Nivel {{ user.level + 1 }}</p>
                 </div>
                 <div class="rank-info">
                     <div class="rank-item">
                         <i class="fas fa-medal"></i>
-                        <span>Rank #{{ user.get_rank() }}</span>
+                        <span>Pozitia #{{ user.get_rank() }}</span>
                     </div>
                     <div class="rank-item">
                         <i class="fas fa-star"></i>
@@ -50,11 +50,11 @@
                 <div class="progress-actions">
                     <a href="{{ url_for('ranking.my_ranking') }}" class="btn btn-primary">
                         <i class="fas fa-chart-line"></i>
-                        View Detailed Progress
+                        Vezi progres detaliat
                     </a>
                     <a href="{{ url_for('ranking.ranking') }}" class="btn btn-secondary">
                         <i class="fas fa-trophy"></i>
-                        View Leaderboard
+                        Vezi clasament
                     </a>
                 </div>
             </div>
@@ -62,40 +62,40 @@
         {% endif %}
 
         <div class="profile-section">
-            <h2>Profile Details</h2>
+            <h2>Detalii profil</h2>
             <form method="POST">
                 <div class="form-group">
-                    <label for="name">Full Name</label>
+                    <label for="name">Nume complet</label>
                     <input type="text" id="name" name="name" value="{{ user.name or '' }}" required>
                 </div>
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+                    <label for="email">Adresa email</label>
                     <input type="email" id="email" name="email" value="{{ user.email }}" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">New Password (optional)</label>
-                    <input type="password" id="password" name="password" placeholder="Enter new password (min 8 chars)">
+                    <label for="password">Parola noua (optional)</label>
+                    <input type="password" id="password" name="password" placeholder="Introdu parola noua (minim 8 caractere)">
                 </div>
 
-                <h3>Change Role</h3>
+                <h3>Schimba rol</h3>
                 <div class="radio-input">
                     <label class="label">
                         <input type="radio" id="elev" name="value-radio" value="elev" {% if user.user_type == 'elev' %}checked{% endif %}>
-                        <p class="text">Student</p>
+                        <p class="text">Elev</p>
                     </label>
                     <label class="label">
                         <input type="radio" id="profesor" name="value-radio" value="profesor" {% if user.user_type == 'profesor' %}checked{% endif %}>
-                        <p class="text">Professor</p>
+                        <p class="text">Profesor</p>
                     </label>
                 </div>
 
                 <div class="form-group">
-                    <label for="subject">Subject (for professors)</label>
+                    <label for="subject">Materie (pentru profesori)</label>
                     <select id="subject" name="subject" {% if user.user_type != 'profesor' %}disabled{% endif %}>
-                        <option value="">Select a subject</option>
-                        <option value="bio" {% if user.subject == 'bio' %}selected{% endif %}>Biology</option>
-                        <option value="isto" {% if user.subject == 'isto' %}selected{% endif %}>History</option>
-                        <option value="geogra" {% if user.subject == 'geogra' %}selected{% endif %}>Geography</option>
+                        <option value="">Selecteaza o materie</option>
+                        <option value="bio" {% if user.subject == 'bio' %}selected{% endif %}>Biologie</option>
+                        <option value="isto" {% if user.subject == 'isto' %}selected{% endif %}>Istorie</option>
+                        <option value="geogra" {% if user.subject == 'geogra' %}selected{% endif %}>Geografie</option>
                     </select>
                 </div>
 
@@ -103,38 +103,38 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="email_notifications" name="email_notifications" {% if user.email_notifications %}checked{% endif %}>
                         <span class="checkmark"></span>
-                        Receive email notifications
+                        Primeste notificari prin email
                     </label>
                 </div>
 
-                <button type="submit">Save Changes</button>
+                <button type="submit">Salveaza modificarile</button>
             </form>
         </div>
 
         <div class="info-section">
-            <h2>Account Information</h2>
+            <h2>Informatii cont</h2>
             <div class="info-card">
                 <div class="info-item">
-                    <span class="info-label">User Type:</span>
-                    <span class="info-value">{{ user.user_type|capitalize or 'Not set' }}</span>
+                    <span class="info-label">Tip utilizator:</span>
+                    <span class="info-value">{{ user.user_type|capitalize or 'Nesetat' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Subject:</span>
-                    <span class="info-value">{{ user.subject|capitalize or 'Not set' }}</span>
+                    <span class="info-label">Materie:</span>
+                    <span class="info-value">{{ user.subject|capitalize or 'Nesetata' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Account Created:</span>
-                    <span class="info-value">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Unknown' }}</span>
+                    <span class="info-label">Cont creat:</span>
+                    <span class="info-value">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Necunoscut' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Last Login:</span>
-                    <span class="info-value">{{ user.last_login.strftime('%B %d, %Y %H:%M') if user.last_login else 'Unknown' }}</span>
+                    <span class="info-label">Ultima autentificare:</span>
+                    <span class="info-value">{{ user.last_login.strftime('%B %d, %Y %H:%M') if user.last_login else 'Necunoscut' }}</span>
                 </div>
                 {% if user.user_type == 'profesor' %}
                     <div class="info-item">
-                        <span class="info-label">Approval Status:</span>
+                        <span class="info-label">Status aprobare:</span>
                         <span class="info-value {% if user.is_professor_approved %}status-approved{% else %}status-pending{% endif %}">
-                            {% if user.is_professor_approved %}Approved{% else %}Pending Approval{% endif %}
+                            {% if user.is_professor_approved %}Aprobat{% else %}In asteptare aprobare{% endif %}
                         </span>
                     </div>
                 {% endif %}
@@ -144,13 +144,13 @@
                 {% if user.user_type == 'elev' %}
                     <a href="{{ url_for('learn.learn') }}" class="learn-link">
                         <i class="fas fa-graduation-cap"></i>
-                        Start Learning
+                        Incepe sa inveti
                     </a>
                 {% endif %}
                 {% if user.user_type == 'profesor' and user.is_professor_approved %}
-                    <a href="{{ url_for('studio.studio') }}" class="studio-link">Go to Studio</a>
+                    <a href="{{ url_for('studio.studio') }}" class="studio-link">Mergi la Studio</a>
                 {% endif %}
-                <a href="{{ url_for('login.logout') }}" class="logout-link">Logout</a>
+                <a href="{{ url_for('login.logout') }}" class="logout-link">Deconectare</a>
             </div>
         </div>
     </div>

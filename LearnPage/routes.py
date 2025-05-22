@@ -454,6 +454,11 @@ def submit_test(subject_key, professor_email, lesson_title):
         with open(result_path, 'w') as rf:
             json.dump(result, rf, indent=2)
 
+        # Award XP to student after submitting test
+        student = User.query.filter_by(email=current_user.email).first()
+        if student:
+            student.add_xp(10)  # You can adjust the XP amount here
+
         flash(f'Test submitted successfully. Your score: {score:.1f}%', 'success')
         return redirect(url_for('learn.view_results', subject_key=subject_key))
 

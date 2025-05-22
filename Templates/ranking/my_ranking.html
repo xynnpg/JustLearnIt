@@ -3,16 +3,16 @@
 {% block content %}
 <div class="container mt-5">
     <div class="ranking-wrapper">
-        <h1 class="ranking-title">My Progress</h1>
+        <h1 class="ranking-title">Progresul meu</h1>
         
         <div class="ranking-card">
             <div class="level-section">
                 <div class="level-circle">
                     <span class="level-number">{{ user.level }}</span>
-                    <span class="level-text">Level</span>
+                    <span class="level-text">Nivel</span>
                 </div>
                 <div class="rank-badge rank-{{ (user.level // 10) }}">
-                    Rank {{ (user.level // 10) }}
+                    Rang {{ (user.level // 10) }}
                 </div>
             </div>
 
@@ -36,9 +36,9 @@
                         <i class="fas fa-medal"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>Current Rank</h3>
-                        <p class="stat-value">Rank {{ (user.level // 10) }}</p>
-                        <p class="stat-range">Level {{ user.level - (user.level % 10) }} - {{ user.level - (user.level % 10) + 9 }}</p>
+                        <h3>Rang curent</h3>
+                        <p class="stat-value">Rang {{ (user.level // 10) }}</p>
+                        <p class="stat-range">Nivel {{ user.level - (user.level % 10) }} - {{ user.level - (user.level % 10) + 9 }}</p>
                     </div>
                 </div>
 
@@ -49,14 +49,14 @@
                     <div class="stat-info">
                         <h3>Total XP</h3>
                         <p class="stat-value">{{ user.xp }}</p>
-                        <p class="stat-range">Keep learning!</p>
+                        <p class="stat-range">Continua sa inveti!</p>
                     </div>
                 </div>
             </div>
 
             <a href="{{ url_for('ranking.ranking') }}" class="leaderboard-btn">
                 <i class="fas fa-trophy"></i>
-                View Global Leaderboard
+                Vezi clasamentul global
             </a>
         </div>
     </div>

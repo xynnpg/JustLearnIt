@@ -1,50 +1,74 @@
 {% extends "studio_base.html" %}
 
-{% block title %}Test Results - {{ subject }} - JustLearnIt{% endblock %}
+{% block title %}Rezultate Teste - JustLearnIt{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <a href="/studio/" class="back-button">
-        <i class="fas fa-arrow-left"></i> Back to Studio
-    </a>
-    
-    <div class="results-container">
-        <div class="page-header">
-            <h1><i class="fas fa-chart-bar"></i> Test Results - {{ subject }}</h1>
+<a href="{{ url_for('studio.studio') }}" class="back-btn-main">
+    <i class="fas fa-arrow-left"></i> Inapoi la Studio
+</a>
+<div class="test-results-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-chart-bar"></i> Rezultate Teste</h1>
+            <div class="subject-filter">
+                <a href="{{ url_for('studio.view_test_results') }}" class="filter-btn {% if not subject %}active{% endif %}">
+                    Toate Subiectele
+                </a>
+                {% for subj_key, subj_data in subjects.items() %}
+                <a href="{{ url_for('studio.view_test_results', subject=subj_key) }}" 
+                   class="filter-btn {% if subject == subj_key %}active{% endif %}"
+                   style="--subject-color: {{ subj_data.color }}">
+                    <i class="{{ subj_data.icon }}"></i>
+                    {{ subj_data.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
         </div>
 
+    {% if results %}
         <div class="results-grid">
             {% for result in results %}
                 <div class="result-card">
                     <div class="result-header">
-                        <h2>{{ result.lesson_title }}</h2>
+                <div class="test-info">
+                    <h3>{{ result.lesson_title }}</h3>
+                    <span class="subject-badge" style="background-color: {{ subjects[result.subject].color }}">
+                        <i class="{{ subjects[result.subject].icon }}"></i>
+                        {{ subjects[result.subject].name }}
+                    </span>
                     </div>
-                    <div class="result-content">
-                        <p><strong>Student:</strong> {{ result.student_name }}</p>
-                        <p><strong>Score:</strong> {{ "%.1f"|format(result.score|float) }}%</p>
-                        <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
-                        <div class="result-actions">
-                            <a href="{{ url_for('studio.view_test_result', 
-                                              subject=subject,
-                                              lesson_title=result.lesson_title,
-                                              student_email=result.student_email) }}" 
-                               class="btn btn-primary">
-                                <i class="fas fa-eye"></i> View Details
-                            </a>
+                <div class="score-display" style="background-color: {{ subjects[result.subject].color }}">
+                    <span class="score">{{ "%.1f"|format(result.score|float) }}%</span>
                         </div>
                     </div>
+            <div class="result-details">
+                <div class="detail-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ result.student_name }}</span>
                 </div>
-            {% else %}
-                <div class="no-results">
-                    <p>No test results available.</p>
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>{{ result.submission_date }}</span>
                 </div>
-            {% endfor %}
+            </div>
+            <a href="{{ url_for('studio.view_test_result', subject=result.subject, lesson_title=result.lesson_title, student_email=result.student_email) }}" 
+               class="view-details-btn">
+                Vezi Detalii
+            </a>
         </div>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-clipboard-list"></i>
+        <p>Nu au fost gasite rezultate pentru teste.</p>
+    </div>
+    {% endif %}
 </div>
 
 <style>
-.back-button {
+.back-btn-main {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -59,18 +83,15 @@
     margin-bottom: 20px;
     transition: all 0.2s ease;
 }
-
-.back-button:hover {
+.back-btn-main:hover {
     background: #5a6268;
     color: white;
     text-decoration: none;
 }
-
-.back-button i {
+.back-btn-main i {
     font-size: 18px;
 }
-
-.results-container {
+.test-results-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
@@ -80,12 +101,50 @@
     margin-bottom: 30px;
 }
 
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
 .page-header h1 {
     display: flex;
     align-items: center;
     gap: 10px;
     color: #333;
     font-size: 2rem;
+    margin: 0;
+}
+
+.subject-filter {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background: #e9ecef;
+    color: #000;
+}
+
+.filter-btn.active {
+    background: var(--subject-color, #007bff);
+    color: white;
 }
 
 .results-grid {
@@ -96,77 +155,106 @@
 
 .result-card {
     background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .result-header {
-    background: #f8f9fa;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.result-header h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #333;
-}
-
-.result-content {
-    padding: 15px;
-}
-
-.result-content p {
-    margin: 5px 0;
-    color: #666;
-}
-
-.result-actions {
-    margin-top: 15px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
 }
 
-.btn {
+.test-info {
+    flex: 1;
+}
+
+.test-info h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.subject-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.2s;
-}
-
-.btn-primary {
+    gap: 6px;
+    padding: 4px 8px;
     background: #007bff;
     color: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
 }
 
-.btn-primary:hover {
-    opacity: 0.9;
-    text-decoration: none;
+.score-display {
+    background: #007bff;
     color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.score {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.result-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.detail-item i {
+    width: 16px;
+    color: #999;
+}
+
+.view-details-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.view-details-btn:hover {
+    background: #e9ecef;
+    color: #000;
 }
 
 .no-results {
-    grid-column: 1 / -1;
     text-align: center;
     padding: 40px;
     background: white;
-    border-radius: 8px;
+    border-radius: 12px;
     color: #666;
-}
-
-@media (max-width: 768px) {
-    .results-container {
-        padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     }
 
-    .results-grid {
-        grid-template-columns: 1fr;
-    }
+.no-results i {
+    font-size: 2rem;
+    color: #dc3545;
 }
 </style>
 {% endblock %} 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Admin - JustLearnIt</title>
+    <title>Creare Administrator - JustLearnIt</title>
     <style>
         body {
             background: linear-gradient(135deg, #74ebd5, #acb6e5);
@@ -39,7 +39,7 @@
 </head>
 <body>
     <div class="form-container">
-        <h2>Create Admin Account</h2>
+        <h2>Creare Cont Administrator</h2>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
@@ -48,10 +48,10 @@
             {% endif %}
         {% endwith %}
         <form method="POST">
-            <input type="text" name="name" placeholder="Name" required>
+            <input type="text" name="name" placeholder="Nume" required>
             <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Create Admin</button>
+            <input type="password" name="password" placeholder="Parola" required>
+            <button type="submit">Creare Administrator</button>
         </form>
     </div>
 </body>

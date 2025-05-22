@@ -3,14 +3,14 @@
 {% block content %}
 <div class="container mt-5">
     <div class="leaderboard-wrapper">
-        <h1 class="leaderboard-title">Global Leaderboard</h1>
+        <h1 class="leaderboard-title">Clasament global</h1>
         <div class="leaderboard-card">
             <div class="leaderboard-header row">
-                <div class="col-1">Rank</div>
-                <div class="col-4">Name</div>
-                <div class="col-2">Level</div>
+                <div class="col-1">Rang</div>
+                <div class="col-4">Nume</div>
+                <div class="col-2">Nivel</div>
                 <div class="col-3">XP</div>
-                <div class="col-2">Progress</div>
+                <div class="col-2">Progres</div>
             </div>
             <div class="leaderboard-body">
                 {% for user in users %}
@@ -19,7 +19,7 @@
                         <span class="rank-badge rank-{{ user.rank if user.rank < 10 else 0 }}">{{ user.rank }}</span>
                     </div>
                     <div class="col-4 user-name">{{ user.name or user.email }}</div>
-                    <div class="col-2">Level {{ user.level }}</div>
+                    <div class="col-2">Nivel {{ user.level }}</div>
                     <div class="col-3">{{ user.xp }} XP</div>
                     <div class="col-2">
                         <div class="progress-bar-outer">
@@ -143,4 +143,4 @@
     }
 }
 </style>
-{% endblock %}
+{% endblock %} 

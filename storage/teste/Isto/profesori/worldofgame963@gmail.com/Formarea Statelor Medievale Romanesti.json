@@ -1,0 +1,28 @@
+{
+  "title": "Formarea Statelor Medievale Romanesti",
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "content": "<p>Cine a intemeiat Tara Romaneasca?</p>",
+      "options": [
+        "<p>Stefan cel Mare</p>",
+        "<p>Vlad Tepes</p>",
+        "<p>Basarab I</p>",
+        "<p>Alexandru cel Bun</p>"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "type": "multiple_choice",
+      "content": "<p>Care era scopul formarii statelor romanesti medievale?</p>",
+      "options": [
+        "<p>Colonizarea Europei</p>",
+        "<p>Protectie si conducere proprie</p>",
+        "<p>Controlul marilor</p>",
+        "<p>Constructia de piramide</p>"
+      ],
+      "correctIndex": 1
+    }
+  ],
+  "created_at": "2025-05-22T08:05:20.000Z"
+}

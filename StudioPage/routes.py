@@ -238,6 +238,9 @@ def lessons():
                          subjects=SUBJECTS,
                          lessons=lessons)
 
+def safe_test_name(name):
+    return "".join(c for c in name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+
 @studio_bp.route('/tests', defaults={'subject': None}, methods=['GET', 'POST'])
 @studio_bp.route('/tests/<subject>', methods=['GET', 'POST'])
 @login_required
@@ -256,9 +259,17 @@ def tests(subject):
             files = os.listdir(tests_path)
             for file in files:
                 if file.endswith('.json'):
+                    # Show original name (from file content if possible)
+                    with open(os.path.join(tests_path, file), 'r') as f:
+                        try:
+                            data = json.load(f)
+                            original_name = data.get('title', file.replace('.json', ''))
+                        except Exception:
+                            original_name = file.replace('.json', '')
+                    safe_name = file.replace('.json', '')
                     tests_by_subject[subject].append({
-                        'name': file.replace('.json', ''),
-                        'path': os.path.join(tests_path, file)
+                        'name': original_name,
+                        'safe_name': safe_name
                     })
     except Exception as e:
         flash('Error accessing tests. Please try again.', 'error')
@@ -267,62 +278,47 @@ def tests(subject):
     if request.method == 'POST':
         subject = request.form.get('subject')
         test_name = request.form.get('test_name')
-        
         if not subject or not test_name:
             flash('Subject and test name are required', 'error')
             return redirect(url_for('studio.tests'))
-            
         if subject not in SUBJECTS:
             flash('Invalid subject', 'error')
             return redirect(url_for('studio.tests'))
-            
         try:
-            # Get test content from form data
             test_content = request.form.get('test_content')
             if not test_content:
                 flash('Test content cannot be empty', 'error')
                 return redirect(url_for('studio.tests', subject=subject))
-            
             try:
-                # Validate JSON content
                 test_data = json.loads(test_content)
-                # Ensure required fields are present
                 if 'title' not in test_data or 'questions' not in test_data:
                     flash('Invalid test format: missing required fields', 'error')
                     return redirect(url_for('studio.tests', subject=subject))
-                
-                # Validate questions format
                 if not isinstance(test_data['questions'], list):
                     flash('Invalid test format: questions must be a list', 'error')
                     return redirect(url_for('studio.tests', subject=subject))
-                
                 for question in test_data['questions']:
                     if not isinstance(question, dict):
                         flash('Invalid question format', 'error')
                         return redirect(url_for('studio.tests', subject=subject))
-                    
                     if 'content' not in question:
                         flash('Invalid question format: missing content', 'error')
                         return redirect(url_for('studio.tests', subject=subject))
-                
             except json.JSONDecodeError as e:
                 flash(f'Invalid JSON content: {str(e)}', 'error')
                 return redirect(url_for('studio.tests', subject=subject))
-            
             # Create test file
             os.makedirs(os.path.join(TESTE_DIR, subject, 'profesori', current_user.email), exist_ok=True)
-            test_file = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{test_name}.json")
+            safe_name = safe_test_name(test_name)
+            test_file = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{safe_name}.json")
             with open(test_file, 'w') as f:
                 f.write(test_content)
-            
             flash('Test created successfully', 'success')
-            return redirect(url_for('studio.view_test', subject=subject, test=test_name))
-            
+            return redirect(url_for('studio.view_test', subject=subject, test=safe_name))
         except Exception as e:
             print(f"Error creating test: {str(e)}")
             flash('Error creating test', 'error')
             return redirect(url_for('studio.tests', subject=subject))
-    
     return render_template('studio_tests.html',
                           user=current_user,
                           selected_subject=subject,
@@ -331,12 +327,13 @@ def tests(subject):
 
 @studio_bp.route('/test/<subject>/<test>', methods=['GET', 'POST'])
 @login_required
+@require_professor
 def view_test(subject, test):
     if subject not in SUBJECTS:
         flash('Invalid subject', 'error')
         return redirect(url_for('studio.tests'))
-
-    test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{test}.json")
+    safe_name = safe_test_name(test)
+    test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{safe_name}.json")
     try:
         if os.path.exists(test_path):
             with open(test_path, 'r') as f:
@@ -359,43 +356,39 @@ def view_test(subject, test):
 @require_professor
 def edit_test(subject, test):
     if subject not in SUBJECTS:
-        flash('Invalid subject', 'error')
+        flash('Invalid subject selected', 'error')
         return redirect(url_for('studio.tests'))
-
-    test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{test}.json")
-    
     try:
+        safe_name = safe_test_name(test)
+        test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{safe_name}.json")
         if request.method == 'POST':
-            test_content = request.form.get('test_content')
-            if not test_content:
-                flash('No test content provided', 'error')
+            content = request.form.get('test_content')
+            if not content:
+                flash('Test content cannot be empty', 'error')
                 return redirect(url_for('studio.edit_test', subject=subject, test=test))
-            
             try:
-                test_data = json.loads(test_content)
-                
-                # Validate test data
-                if not isinstance(test_data, dict):
-                    raise ValueError('Invalid test data format')
-                
+                test_data = json.loads(content)
                 if 'title' not in test_data or 'questions' not in test_data:
-                    raise ValueError('Missing required fields')
-                
+                    flash('Invalid test format: missing required fields', 'error')
+                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
                 if not isinstance(test_data['questions'], list):
-                    raise ValueError('Questions must be a list')
-                
-                # Write content to file
+                    flash('Invalid test format: questions must be a list', 'error')
+                    return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                for question in test_data['questions']:
+                    if not isinstance(question, dict):
+                        flash('Invalid question format', 'error')
+                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                    if 'content' not in question:
+                        flash('Invalid question format: missing content', 'error')
+                        return redirect(url_for('studio.edit_test', subject=subject, test=test))
+                os.makedirs(os.path.dirname(test_path), exist_ok=True)
                 with open(test_path, 'w') as f:
                     json.dump(test_data, f, indent=4)
-                
                 flash('Test updated successfully', 'success')
-                return redirect(url_for('studio.view_test', subject=subject, test=test))
-                
+                return redirect(url_for('studio.view_test', subject=subject, test=safe_name))
             except json.JSONDecodeError:
                 flash('Invalid JSON format', 'error')
                 return redirect(url_for('studio.edit_test', subject=subject, test=test))
-        
-        # GET request - fetch test content
         if os.path.exists(test_path):
             with open(test_path, 'r') as f:
                 test_data = json.load(f)
@@ -408,23 +401,25 @@ def edit_test(subject, test):
         else:
             flash('Test not found', 'error')
             return redirect(url_for('studio.tests', subject=subject))
-            
     except Exception as e:
         print(f"Error editing test: {str(e)}")
         flash('Error editing test', 'error')
         return redirect(url_for('studio.tests', subject=subject))
 
+@studio_bp.route('/test-results', defaults={'subject': None})
 @studio_bp.route('/test-results/<subject>')
 @login_required
 @require_professor
 def view_test_results(subject):
-    if subject not in SUBJECTS:
-        flash('Invalid subject', 'error')
-        return redirect(url_for('studio.studio'))
-
     try:
         results = []
-        results_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, 'results')
+        subjects_to_check = [subject] if subject else SUBJECTS.keys()
+        
+        for current_subject in subjects_to_check:
+            if current_subject not in SUBJECTS:
+                continue
+                
+            results_path = os.path.join(TESTE_DIR, current_subject, 'profesori', current_user.email, 'results')
         print(f"Checking results path: {results_path}")
         
         if os.path.exists(results_path):
@@ -448,6 +443,7 @@ def view_test_results(subject):
                         # Add required fields to result data
                         result_data['lesson_title'] = test_name
                         result_data['student_email'] = student_email
+                        result_data['subject'] = current_subject  # Add subject to result data
                         
                         # Get student name if available
                         student = User.query.filter_by(email=student_email).first()
@@ -510,14 +506,19 @@ def view_test_result(subject, lesson_title, student_email):
         test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{lesson_title}.json")
         print(f"Looking for test at path: {test_path}")
         
-        if not os.path.exists(test_path):
+        test = None
+        if os.path.exists(test_path):
+            with open(test_path, 'r') as f:
+                test = json.load(f)
+            print(f"Found test: {test}")
+        else:
             print(f"Original test not found at path: {test_path}")
-            flash('Original test not found.', 'error')
-            return redirect(url_for('studio.view_test_results', subject=subject))
-        
-        with open(test_path, 'r') as f:
-            test = json.load(f)
-        print(f"Found test: {test}")
+            # Create a minimal test object with the information we have
+            test = {
+                'title': lesson_title,
+                'questions': [],
+                'missing': True
+            }
         
         # Get student info
         student = User.query.filter_by(email=student_email).first()
@@ -530,16 +531,15 @@ def view_test_result(subject, lesson_title, student_email):
             total_score += graded_score
         result['total_score'] = total_score
         
-        # Debug print all data being passed to template
-        print("\nData being passed to template:")
-        print(f"subject: {SUBJECTS[subject]}")
-        print(f"test: {test}")
-        print(f"result: {result}")
-        print(f"student_name: {student_name}")
-        print(f"subjects: {SUBJECTS}")
+        # Get subject color from SUBJECTS dictionary
+        subject_color = SUBJECTS[subject].get('color', '#007bff')  # Default to blue if no color specified
         
         return render_template('studio_test_result_detail.html',
-                            subject=SUBJECTS[subject],
+                            subject={
+                                'key': subject,
+                                'name': SUBJECTS[subject]['name'],
+                                'color': subject_color
+                            },
                             test=test,
                             result=result,
                             student_name=student_name,
@@ -701,7 +701,8 @@ def delete_test(subject, title):
         flash('Invalid subject selected', 'error')
         return redirect(url_for('studio.tests'))
     try:
-        test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{title}.json")
+        safe_name = safe_test_name(title)
+        test_path = os.path.join(TESTE_DIR, subject, 'profesori', current_user.email, f"{safe_name}.json")
         if os.path.exists(test_path):
             os.remove(test_path)
             flash('Test deleted successfully', 'success')

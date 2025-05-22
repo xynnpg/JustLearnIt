@@ -1,31 +1,31 @@
 {% extends "studio_base.html" %}
 
-{% block title %}Test Result - {{ subject.name }} - JustLearnIt{% endblock %}
+{% block title %}Detalii Rezultat Test - {{ subject.name }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="result-detail-container">
+    <a href="{{ url_for('studio.view_test_results', subject=subject.key) }}" class="back-btn-main">
+        <i class="fas fa-arrow-left"></i> Inapoi la Rezultate
+    </a>
     <div class="page-header">
         <div class="header-content">
-            <h1><i class="fas fa-chart-bar"></i> Test Result Details</h1>
-            <a href="{{ url_for('studio.view_test_results', subject=subject.key) }}" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Results
-            </a>
+            <h1><i class="fas fa-chart-bar"></i> Detalii Rezultat Test</h1>
         </div>
     </div>
 
     <!-- Debug info -->
     <div style="display: none;">
         <p>Debug Info:</p>
-        <p>Subject: {{ subject|tojson }}</p>
+        <p>Subiect: {{ subject|tojson }}</p>
         <p>Test: {{ test|tojson }}</p>
-        <p>Result: {{ result|tojson }}</p>
-        <p>Student Name: {{ student_name }}</p>
+        <p>Rezultat: {{ result|tojson }}</p>
+        <p>Nume Student: {{ student_name }}</p>
     </div>
 
     <div class="result-info">
         <div class="info-card">
             <div class="test-header">
-                <h2>{{ test.title if test and test.title else 'Untitled Test' }}</h2>
+                <h2>{{ test.title if test and test.title else 'Test Fara Titlu' }}</h2>
                 <div class="score-display" style="background-color: {{ subject.color }}">
                     <span class="score">{{ "%.1f"|format(result.total_score|float) }}%</span>
                 </div>
@@ -41,14 +41,14 @@
                 <div class="detail-item">
                     <i class="fas fa-calendar"></i>
                     <div class="detail-content">
-                        <span class="label">Submitted</span>
+                        <span class="label">Trimis</span>
                         <span class="value">{{ result.submission_date if result.submission_date else 'N/A' }}</span>
                     </div>
                 </div>
                 <div class="detail-item">
                     <i class="fas fa-book"></i>
                     <div class="detail-content">
-                        <span class="label">Subject</span>
+                        <span class="label">Subiect</span>
                         <span class="value">{{ subject.name }}</span>
                     </div>
                 </div>
@@ -56,42 +56,65 @@
         </div>
     </div>
 
+    {% if test.missing %}
+    <div class="missing-test-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Fisierul original al testului nu mai este disponibil. Sunt afisate doar rezultatele testului.</p>
+    </div>
+    {% endif %}
+
     <div class="questions-container">
         {% if test and test.questions %}
             {% for question in test.questions %}
                 <div class="question-card">
                     <div class="question-header">
                         <div class="question-title">
-                            <h3>Question {{ loop.index }}</h3>
+                            <h3>Intrebare {{ loop.index }}</h3>
                             <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
                         </div>
                         {% if result.grades and loop.index0|string in result.grades %}
                             <div class="grade-info">
-                                <span class="grade-badge">Grade: {{ "%.1f"|format(result.grades[loop.index0|string]|float) }}</span>
+                                <span class="grade-badge">Nota: {{ "%.1f"|format(result.grades[loop.index0|string]|float) }}</span>
                             </div>
                         {% endif %}
                     </div>
                     <div class="question-content">
-                        <div class="question-text">{{ question.content|safe if question.content else 'No question content' }}</div>
+                        <div class="question-text">{{ question.content|safe if question.content else 'Fara continut pentru intrebare' }}</div>
                         
                         {% if question.type == 'multiple_choice' and question.options %}
                             <div class="options">
                                 {% for option in question.options %}
-                                    <div class="option {% if result.answers and loop.parent.loop.index0|string in result.answers and option == result.answers[loop.parent.loop.index0|string] %}selected{% endif %}">
+                                    {% set is_selected = result.answers and loop.parent.loop.index0|string in result.answers and option == result.answers[loop.parent.loop.index0|string] %}
+                                    {% set is_correct = question.correct_answer is defined and option == question.correct_answer %}
+                                    {% set selected_class = '' %}
+                                    {% if is_selected %}
+                                        {% if is_correct %}
+                                            {% set selected_class = 'selected correct' %}
+                                        {% else %}
+                                            {% set selected_class = 'selected wrong' %}
+                                        {% endif %}
+                                    {% elif is_correct %}
+                                        {% set selected_class = 'correct' %}
+                                    {% endif %}
+                                    <div class="option {{ selected_class }}">
                                         <span class="option-marker">{{ loop.index }}.</span>
-                                        {{ option|safe }}
+                                        {{ option|safe if option else 'Optiune goala' }}
                                     </div>
                                 {% endfor %}
                             </div>
                         {% elif question.type == 'true_false' %}
                             <div class="options">
-                                <div class="option {% if result.answers and loop.index0|string in result.answers and 'True' == result.answers[loop.index0|string] %}selected{% endif %}">
-                                    <span class="option-marker">T</span>
-                                    True
+                                {% set true_selected = result.answers and loop.index0|string in result.answers and 'True' == result.answers[loop.index0|string] %}
+                                {% set false_selected = result.answers and loop.index0|string in result.answers and 'False' == result.answers[loop.index0|string] %}
+                                {% set true_correct = question.correct_answer is defined and question.correct_answer == 'True' %}
+                                {% set false_correct = question.correct_answer is defined and question.correct_answer == 'False' %}
+                                <div class="option {% if true_selected and true_correct %}selected correct{% elif true_selected and not true_correct %}selected wrong{% elif true_correct %}correct{% endif %}">
+                                    <span class="option-marker">A</span>
+                                    Adevarat
                                 </div>
-                                <div class="option {% if result.answers and loop.index0|string in result.answers and 'False' == result.answers[loop.index0|string] %}selected{% endif %}">
+                                <div class="option {% if false_selected and false_correct %}selected correct{% elif false_selected and not false_correct %}selected wrong{% elif false_correct %}correct{% endif %}">
                                     <span class="option-marker">F</span>
-                                    False
+                                    Fals
                                 </div>
                             </div>
                         {% endif %}
@@ -101,7 +124,7 @@
         {% else %}
             <div class="no-questions">
                 <i class="fas fa-exclamation-circle"></i>
-                <p>No questions available for this test.</p>
+                <p>Nu exista intrebari pentru acest test.</p>
             </div>
         {% endif %}
     </div>
@@ -133,22 +156,30 @@
     margin: 0;
 }
 
-.back-btn {
+.back-btn-main {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    background: #f8f9fa;
-    color: #333;
-    text-decoration: none;
-    border-radius: 4px;
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
     font-weight: 500;
-    transition: all 0.2s;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
 }
 
-.back-btn:hover {
-    background: #e9ecef;
-    color: #000;
+.back-btn-main:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.back-btn-main i {
+    font-size: 18px;
 }
 
 .result-info {
@@ -225,6 +256,21 @@
     font-weight: 500;
 }
 
+.missing-test-warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.missing-test-warning i {
+    font-size: 1.2rem;
+}
+
 .questions-container {
     display: flex;
     flex-direction: column;
@@ -250,13 +296,13 @@
 .question-title {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .question-title h3 {
     margin: 0;
     color: #333;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
 }
 
 .question-type {
@@ -277,61 +323,53 @@
     background: #28a745;
     color: white;
     padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    border-radius: 4px;
     font-weight: 500;
 }
 
 .question-content {
-    padding: 25px;
+    padding: 20px;
 }
 
 .question-text {
-    margin: 0 0 20px 0;
+    margin-bottom: 20px;
     color: #333;
     font-size: 1.1rem;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
 .options {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .option {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    color: #666;
+    background: #f8f9fa;
+    border-radius: 6px;
     transition: all 0.2s;
 }
 
+.option.selected {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+}
+
 .option-marker {
-    background: #f8f9fa;
+    background: #e9ecef;
     color: #666;
     width: 24px;
     height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 50%;
     font-size: 0.9rem;
     font-weight: 500;
-}
-
-.option.selected {
-    background: #e9ecef;
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.option.selected .option-marker {
-    background: #007bff;
-    color: white;
 }
 
 .no-questions {
@@ -340,39 +378,26 @@
     background: white;
     border-radius: 12px;
     color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 .no-questions i {
-    font-size: 3rem;
-    color: #ccc;
-    margin-bottom: 15px;
+    font-size: 2rem;
+    color: #dc3545;
 }
 
-@media (max-width: 768px) {
-    .result-detail-container {
-        padding: 15px;
-    }
-
-    .test-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-
-    .info-details {
-        grid-template-columns: 1fr;
-    }
-
-    .question-header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-
-    .question-title {
-        flex-direction: column;
-        gap: 5px;
-    }
+.option.correct {
+    background: #e6f9ed;
+    border: 1.5px solid #28a745;
+    color: #218838;
+}
+.option.wrong {
+    background: #fdeaea;
+    border: 1.5px solid #dc3545;
+    color: #c82333;
 }
 </style>
 {% endblock %} 

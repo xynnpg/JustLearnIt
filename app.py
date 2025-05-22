@@ -68,25 +68,25 @@ def generate_random_credentials():
 
 def save_credentials(username, password, timestamp):
     try:
-        # Save directly to database instead of using API
-        cred = AdminCredentials(
-            username=username,
-            password=password,
-            timestamp=timestamp
-        )
-        db.session.add(cred)
-        db.session.commit()
-        return True
+        with app.app_context():
+            cred = AdminCredentials(
+                username=username,
+                password=password,
+                timestamp=timestamp
+            )
+            db.session.add(cred)
+            db.session.commit()
+            return True
     except Exception as e:
         logger.error(f"Error saving admin credentials: {e}")
         return False
 
 def load_credentials():
     try:
-        # Load directly from database instead of using API
-        cred = AdminCredentials.query.order_by(AdminCredentials.timestamp.desc()).first()
-        if cred:
-            return cred.username, cred.password, float(cred.timestamp)
+        with app.app_context():
+            cred = AdminCredentials.query.order_by(AdminCredentials.timestamp.desc()).first()
+            if cred:
+                return cred.username, cred.password, float(cred.timestamp)
     except Exception as e:
         logger.error(f"Error loading admin credentials: {e}")
     return None, None, 0
@@ -133,7 +133,7 @@ def regenerate_credentials():
         return username, password, timestamp
     return None, None, 0
 
-# Check if admin credentials exist, if not create them
+# Move the admin credentials check inside the app context
 with app.app_context():
     cred = AdminCredentials.query.first()
     if not cred:
