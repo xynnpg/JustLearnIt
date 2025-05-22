@@ -6,7 +6,7 @@
         <h1 class="leaderboard-title">Clasament global</h1>
         <div class="leaderboard-card">
             <div class="leaderboard-header row">
-                <div class="col-1">Rang</div>
+                <div class="col-1">Pozitie</div>
                 <div class="col-4">Nume</div>
                 <div class="col-2">Nivel</div>
                 <div class="col-3">XP</div>
@@ -16,7 +16,7 @@
                 {% for user in users %}
                 <div class="row leaderboard-row {% if user.id == current_user.id %}current-user{% endif %}">
                     <div class="col-1">
-                        <span class="rank-badge rank-{{ user.rank if user.rank < 10 else 0 }}">{{ user.rank }}</span>
+                        <span class="rank-badge rank-{{ user.rank if user.rank < 10 else 0 }}" title="Pozitia in clasament">{{ user.rank }}</span>
                     </div>
                     <div class="col-4 user-name">{{ user.name or user.email }}</div>
                     <div class="col-2">Nivel {{ user.level }}</div>

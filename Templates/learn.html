@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Learn{% endblock %}
+{% block title %}Invata{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -88,9 +88,9 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">Choose Your Subject</h1>
+    <h1 class="page-title">Alege materia</h1>
     <p class="page-description">
-        Select a subject to explore lessons created by our expert professors
+        Selecteaza o materie pentru a explora lectiile create de profesorii nostri experti
     </p>
 </div>
 
@@ -106,11 +106,11 @@
                     <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}" 
                        class="btn btn-explore" 
                        style="background-color: {{ subject.color }}">
-                        Explore Lessons
+                        Exploreaza lectii
                     </a>
                 </div>
             </div>
         {% endfor %}
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

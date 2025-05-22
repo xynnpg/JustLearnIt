@@ -11,8 +11,8 @@
                     <span class="level-number">{{ user.level }}</span>
                     <span class="level-text">Nivel</span>
                 </div>
-                <div class="rank-badge rank-{{ (user.level // 10) }}">
-                    Rang {{ (user.level // 10) }}
+                <div class="rank-badge rank-{{ rank if rank < 10 else 0 }}">
+                    Rank {{ rank }}
                 </div>
             </div>
 
@@ -36,9 +36,9 @@
                         <i class="fas fa-medal"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>Rang curent</h3>
-                        <p class="stat-value">Rang {{ (user.level // 10) }}</p>
-                        <p class="stat-range">Nivel {{ user.level - (user.level % 10) }} - {{ user.level - (user.level % 10) + 9 }}</p>
+                        <h3>Rank</h3>
+                        <p class="stat-value">Rank {{ rank }}</p>
+                        <p class="stat-range">Pozitia ta in clasament</p>
                     </div>
                 </div>
 

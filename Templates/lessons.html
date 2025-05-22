@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Lessons - {{ subject }}{% endblock %}
+{% block title %}Lectii - {{ subject }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -8,13 +8,13 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Lessons for {{ subject }}</h4>
+                    <h4 class="mb-0">Lectii pentru {{ subject }}</h4>
                     <div>
                         <a href="{{ url_for('studio.create_lesson', subject=subject) }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Create New Lesson
+                            <i class="fas fa-plus"></i> Creeaza lectie noua
                         </a>
                         <a href="{{ url_for('studio.subject', subject=subject) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Subject
+                            <i class="fas fa-arrow-left"></i> Inapoi la materie
                         </a>
                     </div>
                 </div>
@@ -24,10 +24,10 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
-                                        <th>Professor</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
+                                        <th>Titlu</th>
+                                        <th>Profesor</th>
+                                        <th>Creat</th>
+                                        <th>Actiuni</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -39,10 +39,10 @@
                                         <td>
                                             <div class="btn-group">
                                                 <a href="{{ url_for('studio.edit_lesson', subject=subject, title=lesson.title) }}" class="btn btn-sm btn-warning">
-                                                    <i class="fas fa-edit"></i> Edit
+                                                    <i class="fas fa-edit"></i> Editeaza
                                                 </a>
                                                 <button type="button" class="btn btn-sm btn-danger" onclick="deleteLesson('{{ lesson.title }}')">
-                                                    <i class="fas fa-trash"></i> Delete
+                                                    <i class="fas fa-trash"></i> Sterge
                                                 </button>
                                             </div>
                                         </td>
@@ -53,7 +53,7 @@
                         </div>
                     {% else %}
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No lessons found for this subject.
+                            <i class="fas fa-info-circle"></i> Nu s-au gasit lectii pentru aceasta materie.
                         </div>
                     {% endif %}
                 </div>
@@ -64,7 +64,7 @@
 
 <script>
 function deleteLesson(title) {
-    if (confirm('Are you sure you want to delete this lesson?')) {
+    if (confirm('Esti sigur ca vrei sa stergi aceasta lectie?')) {
         fetch(`{{ url_for('studio.delete_lesson', subject=subject) }}`, {
             method: 'POST',
             headers: {
@@ -79,14 +79,14 @@ function deleteLesson(title) {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Error deleting lesson: ' + data.error);
+                alert('Eroare la stergerea lectiei: ' + data.error);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while deleting the lesson.');
+            console.error('Eroare:', error);
+            alert('A aparut o eroare la stergerea lectiei.');
         });
     }
 }
 </script>
-{% endblock %} 
+{% endblock %}

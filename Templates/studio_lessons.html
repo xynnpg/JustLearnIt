@@ -1,4 +1,3 @@
-<!-- Templates/studio_lessons.html -->
 {% extends "studio_base.html" %}
 
 {% block extra_css %}
@@ -310,39 +309,39 @@
 {% block studio_content %}
 <div class="container mt-4">
     <a href="/studio/" class="back-button">
-        <i class="fas fa-arrow-left"></i> Back to Studio
+        <i class="fas fa-arrow-left"></i> Inapoi la Studio
     </a>
     
     <div class="lesson-creator">
-        <h2>Create New Lesson</h2>
+        <h2>Creeaza lectie noua</h2>
         <form id="lesson-form" class="lesson-form">
             <div class="form-group">
-                <label for="lesson-title">Lesson Title</label>
+                <label for="lesson-title">Titlu lectie</label>
                 <input type="text" id="lesson-title" name="title" class="form-control" required>
             </div>
             <div class="form-group">
-                <label for="editor-container">Lesson Content</label>
+                <label for="editor-container">Continut lectie</label>
                 <div id="editor-container"></div>
             </div>
             <button type="button" id="save-lesson" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Lesson
+                <i class="fas fa-save"></i> Salveaza lectia
             </button>
             
         </form>
     </div>
 
     <div class="existing-lessons">
-        <h3>Existing Lessons</h3>
+        <h3>Lectii existente</h3>
         <ul class="lesson-list">
             {% for lesson in lessons %}
             <li class="lesson-item">
                 <span>{{ lesson.title }}</span>
                 <div class="lesson-actions">
                     <a href="{{ url_for('studio.edit_lesson', subject=subject, title=lesson.title) }}" class="btn-edit">
-                        <i class="fas fa-edit"></i> Edit
+                        <i class="fas fa-edit"></i> Editeaza
                     </a>
                     <button class="btn btn-danger" style="margin-left: 5px;" onclick="deleteLesson('{{ subject }}', '{{ lesson.title }}')">
-                        <i class="fas fa-trash"></i> Delete
+                        <i class="fas fa-trash"></i> Sterge
                     </button>
                 </div>
             </li>
@@ -379,29 +378,29 @@
         }
     });
 
-    console.log('Quill editor initialized');
+    console.log('Editor Quill initializat');
 
     // Save button click handler
     function saveLesson() {
-        console.log('Save button clicked');
+        console.log('Buton salvare apasat');
         
         const title = document.getElementById('lesson-title').value;
         const content = quill.root.innerHTML;
         
-        console.log('Title:', title);
-        console.log('Content length:', content.length);
+        console.log('Titlu:', title);
+        console.log('Lungime continut:', content.length);
         
         if (!title) {
-            alert('Please enter a title');
+            alert('Te rog introdu un titlu');
             return;
         }
         
         if (!content) {
-            alert('Please enter some content');
+            alert('Te rog introdu continut');
             return;
         }
         
-        console.log('Sending data to server...');
+        console.log('Se trimit date catre server...');
         
         fetch(window.location.href, {
             method: 'POST',
@@ -415,37 +414,37 @@
             })
         })
         .then(response => {
-            console.log('Server response status:', response.status);
+            console.log('Raspuns server status:', response.status);
             return response.json();
         })
         .then(data => {
-            console.log('Server response data:', data);
+            console.log('Date raspuns server:', data);
             if (data.success) {
-                alert('Lesson saved successfully!');
+                alert('Lectie salvata cu succes!');
                 window.location.reload();
             } else {
-                alert('Error saving lesson: ' + data.message);
+                alert('Eroare la salvarea lectiei: ' + data.message);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error saving lesson: ' + error.message);
+            console.error('Eroare:', error);
+            alert('Eroare la salvarea lectiei: ' + error.message);
         });
     }
 
     // Add click event listener to save button
     const saveButton = document.getElementById('save-lesson');
-    console.log('Save button element:', saveButton);
+    console.log('Element buton salvare:', saveButton);
     
     if (saveButton) {
         saveButton.addEventListener('click', saveLesson);
-        console.log('Save button event listener added');
+        console.log('Listener eveniment buton salvare adaugat');
     } else {
-        console.error('Save button not found!');
+        console.error('Buton salvare negasit!');
     }
 
     function deleteLesson(subject, title) {
-        if (!confirm('Are you sure you want to delete this lesson?')) return;
+        if (!confirm('Esti sigur ca vrei sa stergi aceasta lectie?')) return;
         fetch(`/studio/delete-lesson/${subject}/${title}`, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -458,7 +457,7 @@
             }
         })
         .catch(err => {
-            alert('Error deleting lesson.');
+            alert('Eroare la stergerea lectiei.');
         });
     }
 </script>

@@ -1,11 +1,11 @@
 {% extends "learn_base.html" %}
 
-{% block title %}{{ professor.name }}'s Lessons - {{ subject_data.name }} - JustLearnIt{% endblock %}
+{% block title %}Lectii {{ professor.name }} - {{ subject_data.name }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="learn-container">
     <div class="subject-header" style="border-bottom: 3px solid {{ subject_data.color }};">
-        <h1><i class="{{ subject_data.icon }}"></i> {{ professor.name }}'s Lessons</h1>
+        <h1><i class="{{ subject_data.icon }}"></i> Lectii {{ professor.name }}</h1>
         <p class="professor-info">{{ subject_data.name }}</p>
     </div>
 
@@ -13,7 +13,7 @@
     <div class="admin-actions">
         <a href="{{ url_for('learn.view_test_results', subject_key=subject_key, professor_email=professor_email) }}" 
            class="btn btn-primary" style="background-color: {{ subject_data.color }}">
-            <i class="fas fa-chart-bar"></i> View Test Results
+            <i class="fas fa-chart-bar"></i> Vezi rezultate teste
         </a>
     </div>
     {% endif %}
@@ -25,11 +25,11 @@
                 <h3>{{ lesson.title }}</h3>
                 {% if lesson.has_test and lesson.test_data %}
                 <div class="test-info">
-                    <p><i class="fas fa-tasks"></i> Test Available</p>
+                    <p><i class="fas fa-tasks"></i> Test disponibil</p>
                     <p class="test-details">
-                        {{ lesson.test_data.questions|length }} questions
+                        {{ lesson.test_data.questions|length }} intrebari
                         {% if lesson.test_data.time_limit %}
-                        <br>Time limit: {{ lesson.test_data.time_limit }} minutes
+                        <br>Limita de timp: {{ lesson.test_data.time_limit }} minute
                         {% endif %}
                     </p>
                 </div>
@@ -38,12 +38,12 @@
             <div class="lesson-actions">
                 <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson.title) }}" 
                    class="btn btn-primary" style="background-color: {{ subject_data.color }}">
-                    <i class="fas fa-book-reader"></i> View Lesson
+                    <i class="fas fa-book-reader"></i> Vezi lectia
                 </a>
                 {% if lesson.has_test %}
                 <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson.title) }}" 
                    class="btn btn-outline" style="border-color: {{ subject_data.color }}; color: {{ subject_data.color }}">
-                    <i class="fas fa-tasks"></i> Take Test
+                    <i class="fas fa-tasks"></i> Sustine test
                 </a>
                 {% endif %}
             </div>
@@ -53,7 +53,7 @@
 
     <div class="page-actions">
         <a href="{{ url_for('learn.subject_page', subject_key=subject_key) }}" class="btn btn-back">
-            <i class="fas fa-arrow-left"></i> Back to {{ subject_data.name }}
+            <i class="fas fa-arrow-left"></i> Inapoi la {{ subject_data.name }}
         </a>
     </div>
 </div>

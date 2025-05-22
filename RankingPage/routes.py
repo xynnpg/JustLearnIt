@@ -12,8 +12,8 @@ def ranking():
         flash('Only students can access the ranking page.', 'error')
         return redirect(url_for('landing.index'))
         
-    # Get all students ordered by XP
-    users = User.query.filter_by(user_type='elev').order_by(User.xp.desc()).all()
+    # Get all students ordered by level, then XP
+    users = User.query.filter_by(user_type='elev').order_by(User.level.desc(), User.xp.desc()).all()
     
     # Update ranks
     for i, user in enumerate(users, 1):

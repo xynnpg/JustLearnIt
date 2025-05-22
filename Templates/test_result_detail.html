@@ -1,14 +1,14 @@
 {% extends "learn_base.html" %}
 
-{% block title %}Test Result - {{ lesson_title }} - JustLearnIt{% endblock %}
+{% block title %}Rezultat Test - {{ lesson_title }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="learn-container">
     <div class="subject-header" style="border-bottom: 3px solid {{ subject_color }};">
-        <h1><i class="{{ subject_icon }}"></i> Test Result - {{ lesson_title }}</h1>
+        <h1><i class="{{ subject_icon }}"></i> Rezultat Test - {{ lesson_title }}</h1>
         <div class="result-info">
-            <p class="student-info">Student: {{ student_name }} ({{ student_email }})</p>
-            <p class="score-info">Score: <span class="score-badge" style="background-color: {{ subject_color }}">{{ result.score }}/{{ result.total }}</span></p>
+            <p class="student-info">Elev: {{ student_name }} ({{ student_email }})</p>
+            <p class="score-info">Scor: <span class="score-badge" style="background-color: {{ subject_color }}">{{ result.score }}/{{ result.total }}</span></p>
         </div>
     </div>
 
@@ -16,7 +16,7 @@
         {% for question in test.questions %}
         <div class="question-card {% if question.type == 'multiple_choice' and result.answers[loop.index0|string]|string == question.correctIndex|string %}correct{% else %}incorrect{% endif %}">
             <div class="question-header">
-                <span class="question-number">Question {{ loop.index }}</span>
+                <span class="question-number">Întrebarea {{ loop.index }}</span>
                 <span class="question-type">{{ question.type|replace('_', ' ')|title }}</span>
             </div>
             
@@ -50,7 +50,7 @@
             {% else %}
             <div class="answer-review">
                 <div class="student-answer">
-                    <h4>Student's Answer:</h4>
+                    <h4>Răspunsul Elevului:</h4>
                     <p>{{ result.answers[loop.index0|string] }}</p>
                 </div>
             </div>
@@ -62,161 +62,8 @@
     <div class="page-actions">
         <a href="{{ url_for('learn.view_test_results', subject_key=subject_key, professor_email=professor_email) }}" 
            class="btn btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Results
+            <i class="fas fa-arrow-left"></i> Înapoi la Rezultate
         </a>
     </div>
 </div>
-
-<style>
-.result-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.student-info {
-    font-size: 1.1em;
-    color: #666;
-}
-
-.score-badge {
-    display: inline-block;
-    padding: 5px 15px;
-    border-radius: 15px;
-    color: white;
-    font-weight: 500;
-    font-size: 1.1em;
-}
-
-.questions-review {
-    margin: 20px 0;
-}
-
-.question-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.question-card.correct {
-    border-left: 4px solid #4CAF50;
-}
-
-.question-card.incorrect {
-    border-left: 4px solid #f44336;
-}
-
-.question-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.question-number {
-    font-weight: 600;
-    color: #333;
-}
-
-.question-type {
-    background: #f8f9fa;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.question-content {
-    margin-bottom: 20px;
-    font-size: 1.1em;
-}
-
-.options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.option-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 4px;
-    background: #f8f9fa;
-}
-
-.option-item.selected {
-    background: #ffebee;
-}
-
-.option-item.correct {
-    background: #e8f5e9;
-}
-
-.option-marker {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #fff;
-}
-
-.option-item.selected .option-marker {
-    background: #f44336;
-    color: white;
-}
-
-.option-item.correct .option-marker {
-    background: #4CAF50;
-    color: white;
-}
-
-.option-content {
-    flex: 1;
-}
-
-.answer-review {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.student-answer h4 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
-
-.student-answer p {
-    margin: 0;
-    white-space: pre-wrap;
-}
-
-.page-actions {
-    margin-top: 30px;
-    display: flex;
-    justify-content: flex-start;
-}
-
-.btn-back {
-    padding: 10px 20px;
-    background: #6c757d;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-back:hover {
-    opacity: 0.9;
-}
-</style>
-{% endblock %} 
+{% endblock %}

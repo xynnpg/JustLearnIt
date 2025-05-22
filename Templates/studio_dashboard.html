@@ -1,19 +1,19 @@
 {% extends "studio_base.html" %}
 
-{% block title %}Studio Dashboard - JustLearnIt{% endblock %}
+{% block title %}Panou Studio - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="studio-container">
     <div class="page-header">
-        <h1><i class="fas fa-chalkboard-teacher"></i> Studio Dashboard</h1>
-        <p class="welcome-message">Welcome back, {{ current_user.name }}!</p>
+        <h1><i class="fas fa-chalkboard-teacher"></i> Panou Studio</h1>
+        <p class="welcome-message">Bine ai revenit, {{ current_user.name }}!</p>
     </div>
 
     <div class="dashboard-grid">
         <div class="dashboard-card">
             <div class="card-header">
                 <i class="fas fa-book"></i>
-                <h2>My Subjects</h2>
+                <h2>Materiile mele</h2>
             </div>
             <div class="card-content">
                 {% if subjects %}
@@ -26,13 +26,13 @@
                         </div>
                         <div class="subject-actions">
                             <a href="{{ url_for('studio.lessons', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
-                                <i class="fas fa-book-reader"></i> Lessons
+                                <i class="fas fa-book-reader"></i> Lectii
                             </a>
                             <a href="{{ url_for('studio.tests', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
-                                <i class="fas fa-question-circle"></i> Tests
+                                <i class="fas fa-question-circle"></i> Teste
                             </a>
                             <a href="{{ url_for('studio.view_test_results', subject=subject.key) }}" class="btn btn-primary" style="background-color: {{ subject.color }}">
-                                <i class="fas fa-chart-bar"></i> Results
+                                <i class="fas fa-chart-bar"></i> Rezultate
                             </a>
                         </div>
                     </div>
@@ -41,7 +41,7 @@
                 {% else %}
                 <div class="empty-state">
                     <i class="fas fa-book"></i>
-                    <p>You haven't been assigned any subjects yet.</p>
+                    <p>Nu ti-a fost asignata nicio materie inca.</p>
                 </div>
                 {% endif %}
             </div>
@@ -50,21 +50,21 @@
         <div class="dashboard-card">
             <div class="card-header">
                 <i class="fas fa-chart-line"></i>
-                <h2>Quick Stats</h2>
+                <h2>Statistici rapide</h2>
             </div>
             <div class="card-content">
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-value">{{ total_lessons }}</div>
-                        <div class="stat-label">Total Lessons</div>
+                        <div class="stat-label">Total lectii</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">{{ total_tests }}</div>
-                        <div class="stat-label">Total Tests</div>
+                        <div class="stat-label">Total teste</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">{{ total_students }}</div>
-                        <div class="stat-label">Total Test Results</div>
+                        <div class="stat-label">Total rezultate teste</div>
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
     </div>
 
     <div class="test-results-section">
-        <h2>Recent Test Results</h2>
+        <h2>Rezultate recente teste</h2>
         {% for subject_key, subject_data in subjects.items() %}
             {% if test_results[subject_key] %}
             <div class="subject-results">
@@ -82,17 +82,17 @@
                     <div class="result-card">
                         <div class="result-header">
                             <h4>{{ result.lesson_title }}</h4>
-                            <p class="student-info">Student: {{ result.student_email }}</p>
+                            <p class="student-info">Elev: {{ result.student_email }}</p>
                         </div>
                         <div class="result-details">
-                            <p><strong>Score:</strong> {{ "%.1f"|format(result.score) }}%</p>
-                            <p><strong>Correct Answers:</strong> {{ result.correct_answers }}/{{ result.total_questions }}</p>
-                            <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
+                            <p><strong>Scor:</strong> {{ "%.1f"|format(result.score) }}%</p>
+                            <p><strong>Raspunsuri corecte:</strong> {{ result.correct_answers }}/{{ result.total_questions }}</p>
+                            <p><strong>Trimis:</strong> {{ result.submission_date }}</p>
                         </div>
                         <div class="result-actions">
                             <a href="{{ url_for('studio.view_test_result', subject=subject_key, lesson_title=result.lesson_title, student_email=result.student_email) }}" 
                                class="btn btn-sm btn-primary">
-                                View Details
+                                Vezi detalii
                             </a>
                         </div>
                     </div>
@@ -282,4 +282,4 @@
     text-align: right;
 }
 </style>
-{% endblock %} 
+{% endblock %}

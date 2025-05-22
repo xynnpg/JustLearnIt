@@ -1,11 +1,11 @@
 {% extends "learn_base.html" %}
 
-{% block title %}Test Results - {{ test_title }} - JustLearnIt{% endblock %}
+{% block title %}Rezultate test - {{ test_title }} - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="learn-container">
     <div class="result-header" style="border-bottom: 3px solid {{ subject_color }};">
-        <h1><i class="{{ subject_icon }}"></i> Test Results</h1>
+        <h1><i class="{{ subject_icon }}"></i> Rezultate test</h1>
         <h2>{{ test_title }}</h2>
     </div>
 
@@ -15,23 +15,23 @@
                 <span class="score">{{ "%.1f"|format(score) }}</span>
                 <span class="total">/10</span>
             </div>
-            <div class="score-label">Your Score</div>
+            <div class="score-label">Scorul tau</div>
         </div>
 
         <div class="details-section">
             <div class="detail-item">
                 <i class="fas fa-check-circle"></i>
-                <span>Correct Answers: {{ raw_score }}/{{ raw_total }}</span>
+                <span>Raspunsuri corecte: {{ raw_score }}/{{ raw_total }}</span>
             </div>
             <div class="detail-item">
                 <i class="fas fa-clock"></i>
-                <span>Completed: {{ completed_at }}</span>
+                <span>Finalizat: {{ completed_at }}</span>
             </div>
         </div>
 
         <div class="actions">
             <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=professor_email, lesson_title=lesson_title) }}" class="btn btn-primary" style="background-color: {{ subject_color }}">
-                <i class="fas fa-book"></i> Back to Lesson
+                <i class="fas fa-book"></i> Inapoi la lectie
             </a>
         </div>
     </div>
@@ -158,4 +158,4 @@
     }
 }
 </style>
-{% endblock %} 
+{% endblock %}

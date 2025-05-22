@@ -101,9 +101,9 @@ class User(db.Model, UserMixin):
         return 0
 
     def get_rank(self):
-        """Get user's rank based on XP - only for students"""
+        """Get user's rank based on level and XP - only for students"""
         if self.user_type == 'elev':
-            users = User.query.filter_by(user_type='elev').order_by(User.xp.desc()).all()
+            users = User.query.filter_by(user_type='elev').order_by(User.level.desc(), User.xp.desc()).all()
             for i, user in enumerate(users, 1):
                 if user.id == self.id:
                     return i

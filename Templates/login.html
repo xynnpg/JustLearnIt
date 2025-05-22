@@ -3,7 +3,7 @@
 {% block title %}JustLearnIt{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('landing.index') }}"><button>Go Back</button></a>
+<a href="{{ url_for('landing.index') }}"><button>Inapoi</button></a>
 
 <div class="wrapper">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -24,20 +24,20 @@
             <span class="card-side"></span>
             <div class="flip-card__inner">
                 <div class="flip-card__front">
-                    <div class="title">Log in</div>
+                    <div class="title">Conectare</div>
                     <form class="flip-card__form" method="POST" action="{{ url_for('login.login') }}">
                         <input class="flip-card__input" name="email" placeholder="Email" type="email" required>
-                        <input class="flip-card__input" name="password" placeholder="Password" type="password" required>
-                        <button class="flip-card__btn" type="submit">Let`s go!</button>
+                        <input class="flip-card__input" name="password" placeholder="Parola" type="password" required>
+                        <button class="flip-card__btn" type="submit">Confirma!</button>
                     </form>
                 </div>
                 <div class="flip-card__back">
-                    <div class="title">Sign up</div>
+                    <div class="title">Inregistrare</div>
                     <form class="flip-card__form" method="POST" action="{{ url_for('login.signup') }}">
-                        <input class="flip-card__input" name="name" placeholder="Name" type="text" required>
+                        <input class="flip-card__input" name="name" placeholder="Nume" type="text" required>
                         <input class="flip-card__input" name="email" placeholder="Email" type="email" required>
-                        <input class="flip-card__input" name="password" placeholder="Password" type="password" required>
-                        <button class="flip-card__btn" type="submit">Confirm!</button>
+                        <input class="flip-card__input" name="password" placeholder="Parola" type="password" required>
+                        <button class="flip-card__btn" type="submit">Confirma!</button>
                     </form>
                 </div>
             </div>

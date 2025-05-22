@@ -9,14 +9,14 @@
     </div>
 
     <div class="professors-section">
-        <h2>Professors</h2>
+        <h2>Profesori</h2>
         <div class="professors-grid">
             {% for professor in professors %}
             <div class="professor-card">
                 <h3>{{ professor.name }}</h3>
                 <a href="{{ url_for('learn.professor_lessons', subject_key=subject_key, professor_email=professor.email) }}" 
                    class="btn btn-primary" style="background-color: {{ subject_data.color }}">
-                    <i class="fas fa-book"></i> View Lessons
+                    <i class="fas fa-book"></i> Vezi lectii
                 </a>
             </div>
             {% endfor %}
@@ -25,43 +25,43 @@
 
     <div class="content-section">
         <div class="lessons-section">
-            <h2>Lessons</h2>
+            <h2>Lectii</h2>
             <div class="content-list">
                 {% for lesson in lessons %}
                 <div class="content-card">
                     <div class="content-info">
                         <h3>{{ lesson.title }}</h3>
-                        <p class="professor-name">By {{ lesson.professor }}</p>
+                        <p class="professor-name">De {{ lesson.professor }}</p>
                     </div>
                     <div class="content-actions">
                         <a href="{{ url_for('learn.view_lesson', subject_key=subject_key, professor_email=lesson.professor_email, lesson_title=lesson.title) }}" 
                            class="btn btn-primary" 
                            style="background-color: {{ subject_data.color }};">
-                            <i class="fas fa-book-open"></i> View Lesson
+                            <i class="fas fa-book-open"></i> Vezi lectia
                         </a>
                     </div>
                 </div>
                 {% endfor %}
-            </div>
+        </div>
         </div>
 
         <div class="tests-section">
-            <h2>Tests</h2>
+            <h2>Teste</h2>
             <div class="content-list">
                 {% for test in tests %}
                 <div class="content-card">
                     <div class="content-info">
                         <h3>{{ test.title }}</h3>
-                        <p class="professor-name">By {{ test.professor }}</p>
+                        <p class="professor-name">De {{ test.professor }}</p>
                         {% if test.test_data and test.test_data.questions %}
                         <p class="test-details">
-                            {{ test.test_data.questions|length }} questions
+                            {{ test.test_data.questions|length }} intrebari
                             {% if test.test_data.time_limit %}
-                            <br>Time limit: {{ test.test_data.time_limit }} minutes
+                            <br>Limita de timp: {{ test.test_data.time_limit }} minute
                             {% endif %}
                         </p>
                         {% else %}
-                        <p class="test-details">Test is being prepared</p>
+                        <p class="test-details">Testul este in pregatire</p>
                         {% endif %}
                     </div>
                     <div class="content-actions">
@@ -69,7 +69,7 @@
                         <a href="{{ url_for('learn.take_test', subject_key=subject_key, professor_email=test.professor_email, lesson_title=test.title) }}" 
                            class="btn btn-primary" 
                            style="background-color: {{ subject_data.color }};">
-                            <i class="fas fa-pen"></i> Take Test
+                            <i class="fas fa-pen"></i> Sustine testul
                         </a>
                         {% endif %}
                     </div>
@@ -81,7 +81,7 @@
 
     <div class="page-actions">
         <a href="{{ url_for('learn.learn') }}" class="btn btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Subjects
+            <i class="fas fa-arrow-left"></i> Inapoi la materii
         </a>
     </div>
 </div>

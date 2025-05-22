@@ -1,12 +1,12 @@
 {% extends "learn_base.html" %}
 
-{% block title %}Test Results - JustLearnIt{% endblock %}
+{% block title %}Rezultate Teste - JustLearnIt{% endblock %}
 
 {% block content %}
 <div class="learn-container">
     <div class="subject-header">
-        <h1>Test Results</h1>
-        <p class="subject-info">Subject: {{ subject }}</p>
+        <h1>Rezultate Teste</h1>
+        <p class="subject-info">Materie: {{ subject }}</p>
     </div>
 
     <div class="results-list">
@@ -15,102 +15,26 @@
             <div class="result-card">
                 <div class="result-header">
                     <h3>{{ result.lesson_title }}</h3>
-                    <p class="professor-info">Professor: {{ result.professor_email }}</p>
+                    <p class="professor-info">Profesor: {{ result.professor_email }}</p>
                 </div>
                 <div class="result-details">
-                    <p><strong>Score:</strong> {{ "%.1f"|format(result.score) }}%</p>
-                    <p><strong>Correct Answers:</strong> {{ result.correct_answers }}/{{ result.total_questions }}</p>
-                    <p><strong>Submitted:</strong> {{ result.submission_date }}</p>
+                    <p><strong>Scor:</strong> {{ "%.1f"|format(result.score) }}%</p>
+                    <p><strong>Răspunsuri Corecte:</strong> {{ result.correct_answers }}/{{ result.total_questions }}</p>
+                    <p><strong>Trimis:</strong> {{ result.submission_date }}</p>
                 </div>
             </div>
             {% endfor %}
         {% else %}
             <div class="no-results">
-                <p>No test results found.</p>
+                <p>Nu s-au găsit rezultate pentru teste.</p>
             </div>
         {% endif %}
     </div>
 
     <div class="test-actions">
         <a href="{{ url_for('learn.learn') }}" class="btn btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Learning
+            <i class="fas fa-arrow-left"></i> Înapoi la Învățare
         </a>
     </div>
 </div>
-
-<style>
-.results-list {
-    max-width: 800px;
-    margin: 20px auto;
-}
-
-.result-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.result-header {
-    margin-bottom: 15px;
-}
-
-.result-header h3 {
-    margin: 0;
-    color: #333;
-}
-
-.professor-info {
-    color: #666;
-    margin: 5px 0;
-}
-
-.result-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-.result-details p {
-    margin: 0;
-}
-
-.no-results {
-    text-align: center;
-    padding: 40px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    color: #666;
-}
-
-.test-actions {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 1em;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-}
-
-.btn-back {
-    background: #6c757d;
-    color: white;
-}
-
-.btn:hover {
-    opacity: 0.9;
-}
-</style>
-{% endblock %} 
+{% endblock %}

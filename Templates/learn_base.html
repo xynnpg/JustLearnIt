@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Learn - JustLearnIt{% endblock %}</title>
+    <title>{% block title %}Invata - JustLearnIt{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -12,8 +12,8 @@
         <a href="{{ url_for('landing.index') }}" class="nav-brand">
             <i class="fas fa-home"></i> JustLearnIt
         </a>
-        <a href="{{ url_for('learn.learn') }}" class="nav-link">Learn</a>
-        <a href="{{ url_for('account.account') }}" class="nav-link"><i class="fas fa-user"></i> Account</a>
+        <a href="{{ url_for('learn.learn') }}" class="nav-link">Invata</a>
+        <a href="{{ url_for('account.account') }}" class="nav-link"><i class="fas fa-user"></i> Cont</a>
     </nav>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
