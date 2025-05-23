@@ -801,10 +801,17 @@
                                     <td>
                                         <form method="post" class="d-inline">
                                             <input type="hidden" name="user_id" value="{{ professor.id }}">
+                                            {% if not professor.is_professor_approved %}
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="btn btn-sm btn-success action-btn">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            {% else %}
                                             <input type="hidden" name="action" value="revoke">
                                             <button type="submit" class="btn btn-sm btn-warning action-btn">
                                                 <i class="fas fa-ban"></i> Revoke
                                             </button>
+                                            {% endif %}
                                         </form>
                                         <form method="post" class="d-inline">
                                             <input type="hidden" name="user_id" value="{{ professor.id }}">
