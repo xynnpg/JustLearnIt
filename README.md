@@ -68,18 +68,60 @@ O platformă de învățare complexă construită cu Flask care oferă o experie
    ```
 
 4. Configurați variabilele de mediu:
-   Creați un fișier `.env` în directorul rădăcină cu următoarele variabile:
+   Creați un fișier `.env` în directorul rădăcină:
+   ```bash
+   cp env.example .env
    ```
-   SECRET_KEY=cheia_ta_secreta
+   Apoi editați fișierul `.env` cu valorile reale:
+   ```
+   SECRET_KEY=cheia_ta_secreta_securizata
    MAIL_USERNAME=emailul_tau
-   MAIL_PASSWORD=parola_emailului_tau
+   MAIL_PASSWORD=parola_aplicatiei_emailului_tau
    MAIL_DEFAULT_SENDER=emailul_tau
    ADMIN_EMAIL=email_administrator
    ```
+   
+   **IMPORTANT**: Nu comiteți niciodată fișierul `.env` în repository!
 
 5. Inițializați baza de date:
    ```bash
    python init_db.py
+   ```
+   
+   **Opțiuni suplimentare pentru gestionarea bazei de date:**
+   ```bash
+   # Recrearea completă a bazei de date
+   python init_db.py recreate
+   
+   # Verificarea integrității bazei de date
+   python init_db.py verify
+   
+   # Informații despre baza de date
+   python init_db.py info
+   
+   # Backup al bazei de date
+   python init_db.py backup
+   ```
+   
+   **Utilitar pentru backup și restaurare:**
+   ```bash
+   # Crearea unui backup
+   python db_backup.py backup
+   
+   # Restaurarea din backup
+   python db_backup.py restore storage/storage.db.backup.20241201_120000
+   
+   # Exportarea datelor în JSON
+   python db_backup.py export
+   
+   # Importarea datelor din JSON
+   python db_backup.py import storage/exports/data_export_20241201_120000
+   
+   # Listarea backup-urilor disponibile
+   python db_backup.py list-backups
+   
+   # Listarea export-urilor disponibile
+   python db_backup.py list-exports
    ```
 
 ## Rularea Aplicației
